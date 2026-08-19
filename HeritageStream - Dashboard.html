@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        window.FontAwesomeConfig = {
+          autoReplaceSvg: 'nest'
+        };
+      </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeritageStream — Administrator Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f5f0e8;
+        }
+        .display-font {
+            font-family: 'Playfair Display', serif;
+        }
+        .pattern-overlay {
+            background-image: url('https://www.transparenttextures.com/patterns/az-subtle.png');
+            opacity: 0.05;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Top Navigation -->
+    <nav id="header" class="bg-[#1a1a2e] px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg">
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-2">
+                <span class="display-font text-2xl font-bold text-[#c9a84c] tracking-tight">HeritageStream</span>
+                <span class="text-white/40 text-xs font-bold uppercase tracking-widest ml-2 border-l border-white/20 pl-3">Admin Portal</span>
+            </div>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="#" class="text-[#c9a84c] text-sm font-bold border-b-2 border-[#c9a84c] pb-1">Dashboard</a>
+                <a href="#" class="text-white/70 hover:text-white transition-colors text-sm font-medium">Manage Films</a>
+                <a href="#" class="text-white/70 hover:text-white transition-colors text-sm font-medium">Feedback</a>
+                <a href="#" class="text-white/70 hover:text-white transition-colors text-sm font-medium">Reports</a>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3 pr-4 border-r border-white/10">
+                <div class="text-right hidden sm:block">
+                    <p class="text-white text-xs font-bold">Lesedi Molefe</p>
+                    <p class="text-white/40 text-[10px] uppercase tracking-tighter">Super Admin</p>
+                </div>
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg" class="w-9 h-9 rounded-full border-2 border-[#c9a84c]" alt="Lesedi">
+            </div>
+            <a href="#" class="text-white/80 hover:text-[#c9a84c] transition-colors text-sm font-medium">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-10 relative">
+        <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+        <!-- Page Title -->
+        <div class="mb-10 z-10 relative">
+            <h1 class="display-font text-3xl font-bold text-[#1a1a2e]">Administrator Dashboard</h1>
+            <p class="text-[#8a7f73] text-sm mt-1">Welcome back, Lesedi. Here's what's happening on HeritageStream today.</p>
+        </div>
+
+        <!-- Action Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 z-10 relative">
+            <!-- Manage Films Card -->
+            <div class="bg-white p-8 rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] hover:shadow-2xl hover:shadow-black/[0.05] transition-all group">
+                <div class="w-14 h-14 bg-[#f5f0e8] rounded-2xl flex items-center justify-center text-[#c9a84c] mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-film text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-[#1a1a2e] mb-3">Manage Films</h3>
+                <p class="text-[#8a7f73] text-sm leading-relaxed mb-8">Upload new films, edit metadata, and manage your content catalogue.</p>
+                <button class="w-full bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#c9a84c]/20">
+                    Go to Films
+                </button>
+            </div>
+
+            <!-- Customer Feedback Card -->
+            <div class="bg-white p-8 rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] hover:shadow-2xl hover:shadow-black/[0.05] transition-all group">
+                <div class="w-14 h-14 bg-[#f5f0e8] rounded-2xl flex items-center justify-center text-[#c9a84c] mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-comments text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-[#1a1a2e] mb-3">Customer Feedback</h3>
+                <p class="text-[#8a7f73] text-sm leading-relaxed mb-8">View and respond to user reviews, ratings, and cultural suggestions.</p>
+                <button class="w-full bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#c9a84c]/20">
+                    View Feedback
+                </button>
+            </div>
+
+            <!-- Generate Reports Card -->
+            <div class="bg-white p-8 rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] hover:shadow-2xl hover:shadow-black/[0.05] transition-all group">
+                <div class="w-14 h-14 bg-[#f5f0e8] rounded-2xl flex items-center justify-center text-[#c9a84c] mb-6 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-chart-line text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-[#1a1a2e] mb-3">Generate Reports</h3>
+                <p class="text-[#8a7f73] text-sm leading-relaxed mb-8">Access sales reports, content performance analytics, and user insights.</p>
+                <button class="w-full bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#c9a84c]/20">
+                    View Reports
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats and Activity Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 z-10 relative">
+            <!-- Summary Stats -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Films</p>
+                        <h4 class="text-2xl font-bold text-[#1a1a2e]">3</h4>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Users</p>
+                        <h4 class="text-2xl font-bold text-[#1a1a2e]">24</h4>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Revenue</p>
+                        <h4 class="text-2xl font-bold text-[#1a1a2e]">R1,000</h4>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Reviews</p>
+                        <h4 class="text-2xl font-bold text-[#1a1a2e]">12</h4>
+                    </div>
+                </div>
+                
+                <!-- Promotional/Info Section -->
+                <div class="bg-[#1a1a2e] p-6 rounded-2xl text-white relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h4 class="display-font text-lg font-bold text-[#c9a84c] mb-2">Cultured Africa</h4>
+                        <p class="text-white/70 text-xs leading-relaxed">Preserving our stories, one film at a time. Keep building the legacy.</p>
+                    </div>
+                    <div class="absolute -right-4 -bottom-4 opacity-10">
+                         <i class="fa-solid fa-om text-8xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="lg:col-span-8">
+                <div class="bg-white rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] overflow-hidden">
+                    <div class="px-8 py-6 border-b border-[#f5f0e8] flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-[#1a1a2e]">Recent Activity</h3>
+                        <i class="fa-solid fa-clock-rotate-left text-[#8a7f73]"></i>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="bg-[#f5f0e8]/30">
+                                    <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Activity</th>
+                                    <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Entity</th>
+                                    <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#f5f0e8]">
+                                <tr class="hover:bg-[#f5f0e8]/20 transition-colors">
+                                    <td class="px-8 py-5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+                                                <i class="fa-solid fa-upload text-xs"></i>
+                                            </div>
+                                            <span class="text-sm font-medium text-[#2d2d2d]">Film uploaded</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-sm font-bold text-[#1a1a2e]">Yanga</span>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-xs text-[#8a7f73]">2 hours ago</span>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-[#f5f0e8]/20 transition-colors">
+                                    <td class="px-8 py-5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center text-green-500">
+                                                <i class="fa-solid fa-user-plus text-xs"></i>
+                                            </div>
+                                            <span class="text-sm font-medium text-[#2d2d2d]">New user registered</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-sm font-bold text-[#1a1a2e]">Thabo Nkosi</span>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-xs text-[#8a7f73]">5 hours ago</span>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-[#f5f0e8]/20 transition-colors">
+                                    <td class="px-8 py-5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
+                                                <i class="fa-solid fa-cart-shopping text-xs"></i>
+                                            </div>
+                                            <span class="text-sm font-medium text-[#2d2d2d]">Purchase made</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-sm font-bold text-[#1a1a2e]">Yanga</span>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-xs text-[#8a7f73]">1 day ago</span>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-[#f5f0e8]/20 transition-colors">
+                                    <td class="px-8 py-5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center text-purple-500">
+                                                <i class="fa-solid fa-star text-xs"></i>
+                                            </div>
+                                            <span class="text-sm font-medium text-[#2d2d2d]">Review submitted</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-sm font-bold text-[#1a1a2e]">Nandi</span>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-xs text-[#8a7f73]">2 days ago</span>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-[#f5f0e8]/20 transition-colors">
+                                    <td class="px-8 py-5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+                                                <i class="fa-solid fa-upload text-xs"></i>
+                                            </div>
+                                            <span class="text-sm font-medium text-[#2d2d2d]">Film uploaded</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-sm font-bold text-[#1a1a2e]">Malome</span>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-xs text-[#8a7f73]">3 days ago</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-20 py-10 flex flex-col items-center">
+            <div class="flex items-center gap-3 opacity-40 mb-4">
+                <div class="h-px w-8 bg-[#8a7f73]"></div>
+                <span class="text-[10px] uppercase tracking-[0.2em] text-[#8a7f73] font-bold">Cultured Africa Command Centre</span>
+                <div class="h-px w-8 bg-[#8a7f73]"></div>
+            </div>
+            <p class="text-[10px] text-[#8a7f73]/60">© 2026 HeritageStream Admin Portal. Session active for Lesedi Molefe.</p>
+        </footer>
+    </main>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Reports' }) %>
+</head>
+<body class="min-h-screen">
+<% const active = 'reports' %>
+<%- include('partials/admin-header', { active }) %>
+
+<main class="max-w-7xl mx-auto px-6 py-10 relative">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+    <div class="mb-10 z-10 relative">
+        <h1 class="display-font text-3xl font-bold text-[#1a1a2e]">Reports</h1>
+        <p class="text-[#8a7f73] text-sm mt-1">Content performance and revenue, computed live from current activity.</p>
+    </div>
+
+    <div class="bg-white rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] overflow-hidden mb-10 z-10 relative">
+        <div class="px-8 py-6 border-b border-[#f5f0e8]">
+            <h3 class="text-lg font-bold text-[#1a1a2e]">Revenue by Film</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-[#f5f0e8]/30">
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Film</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Culture</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Purchases</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Revenue</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Avg. Rating</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#f5f0e8]">
+                    <% filmReports.forEach(f => { %>
+                        <tr class="hover:bg-[#f5f0e8]/20 transition-colors">
+                            <td class="px-8 py-5 text-sm font-bold text-[#1a1a2e]"><%= f.title %></td>
+                            <td class="px-8 py-5 text-sm text-[#2d2d2d]"><%= f.culture %></td>
+                            <td class="px-8 py-5 text-sm text-[#8a7f73]"><%= f.purchaseCount %></td>
+                            <td class="px-8 py-5 text-sm font-bold text-[#2d6b6b]">R<%= f.revenue.toFixed(0) %></td>
+                            <td class="px-8 py-5 text-sm text-[#8a7f73]"><%= f.avgRating %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] overflow-hidden z-10 relative">
+        <div class="px-8 py-6 border-b border-[#f5f0e8]">
+            <h3 class="text-lg font-bold text-[#1a1a2e]">Average Rating by Culture</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-[#f5f0e8]/30">
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Culture</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Reviews</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Avg. Rating</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#f5f0e8]">
+                    <% if (cultureReports.length === 0) { %>
+                        <tr><td colspan="3" class="px-8 py-5 text-sm text-[#8a7f73]">No reviews yet.</td></tr>
+                    <% } %>
+                    <% cultureReports.forEach(c => { %>
+                        <tr class="hover:bg-[#f5f0e8]/20 transition-colors">
+                            <td class="px-8 py-5 text-sm font-bold text-[#1a1a2e]"><%= c.culture %></td>
+                            <td class="px-8 py-5 text-sm text-[#8a7f73]"><%= c.reviewCount %></td>
+                            <td class="px-8 py-5 text-sm text-[#8a7f73]"><i class="fa-solid fa-star text-[#c9a84c] text-xs mr-1"></i><%= c.avgRating %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer class="mt-20 py-10 flex flex-col items-center">
+        <span class="text-[10px] uppercase tracking-[0.2em] text-[#8a7f73] font-bold">Cultured Africa Admin Portal</span>
+        <p class="text-[10px] text-[#8a7f73]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
+    </footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Manage Films' }) %>
+</head>
+<body class="min-h-screen">
+<% const active = 'films' %>
+<%- include('partials/admin-header', { active }) %>
+
+<main class="max-w-7xl mx-auto px-6 py-10 relative">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+    <div class="flex items-center justify-between mb-10 z-10 relative">
+        <div>
+            <h1 class="display-font text-3xl font-bold text-[#1a1a2e]">Manage Films</h1>
+            <p class="text-[#8a7f73] text-sm mt-1">Your full content catalogue — edit or remove films.</p>
+        </div>
+        <a href="/admin/upload" class="bg-[#c9a84c] hover:bg-[#b8973d] text-white px-6 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#c9a84c]/20 transition-all flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> Upload Film
+        </a>
+    </div>
+
+    <div class="bg-white rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] overflow-hidden z-10 relative">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-[#f5f0e8]/30">
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Film</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Culture</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Price</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Rating</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#f5f0e8]">
+                    <% if (films.length === 0) { %>
+                        <tr><td colspan="5" class="px-8 py-6 text-sm text-[#8a7f73]">No films uploaded yet.</td></tr>
+                    <% } %>
+                    <% films.forEach(film => { %>
+                        <tr class="hover:bg-[#f5f0e8]/20 transition-colors">
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-3">
+                                    <img src="<%= film.thumbnailUrl %>" class="w-12 h-12 rounded-lg object-cover" alt="<%= film.title %>">
+                                    <span class="text-sm font-bold text-[#1a1a2e]"><%= film.title %></span>
+                                </div>
+                            </td>
+                            <td class="px-8 py-5"><span class="text-sm text-[#2d2d2d]"><%= film.culture %></span></td>
+                            <td class="px-8 py-5">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded font-bold <%= film.price > 0 ? 'bg-[#f5f0e8] text-[#2d6b6b]' : 'bg-[#f5f0e8] text-[#c9a84c]' %>">
+                                    <%= film.price > 0 ? 'R' + film.price.toFixed(0) : 'FREE' %>
+                                </span>
+                            </td>
+                            <td class="px-8 py-5"><span class="text-sm text-[#8a7f73]"><i class="fa-solid fa-star text-[#c9a84c] text-xs mr-1"></i><%= film.rating.toFixed(1) %></span></td>
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-3">
+                                    <a href="/admin/films/<%= film.id %>/edit" class="text-[#8a7f73] hover:text-[#c9a84c]" title="Edit"><i class="fa-solid fa-pen text-sm"></i></a>
+                                    <form action="/admin/films/<%= film.id %>/delete" method="POST" onsubmit="return confirm('Remove &quot;<%= film.title %>&quot; from the catalogue?');">
+                                        <button type="submit" class="text-[#8a7f73] hover:text-red-500" title="Delete"><i class="fa-solid fa-trash text-sm"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer class="mt-20 py-10 flex flex-col items-center">
+        <span class="text-[10px] uppercase tracking-[0.2em] text-[#8a7f73] font-bold">Cultured Africa Admin Portal</span>
+        <p class="text-[10px] text-[#8a7f73]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
+    </footer>
+</main>
+</body>
+</html>

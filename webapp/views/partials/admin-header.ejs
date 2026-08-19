@@ -1,0 +1,37 @@
+<%
+  const navLink = (href, label, key) => {
+    const isActive = typeof active !== 'undefined' && active === key;
+    const cls = isActive
+      ? 'text-[#c9a84c] text-sm font-bold border-b-2 border-[#c9a84c] pb-1'
+      : 'text-white/70 hover:text-white transition-colors text-sm font-medium';
+    return `<a href="${href}" class="${cls}">${label}</a>`;
+  };
+%>
+<nav id="header" class="bg-[#1a1a2e] px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg">
+    <div class="flex items-center gap-8">
+        <div class="flex items-center gap-2">
+            <a href="/admin/dashboard" class="display-font text-2xl font-bold text-[#c9a84c] tracking-tight">Cultured Africa</a>
+            <span class="text-white/40 text-xs font-bold uppercase tracking-widest ml-2 border-l border-white/20 pl-3">Admin Portal</span>
+        </div>
+        <div class="hidden md:flex items-center gap-6">
+            <%- navLink('/admin/dashboard', 'Dashboard', 'dashboard') %>
+            <%- navLink('/admin/films', 'Manage Films', 'films') %>
+            <%- navLink('/admin/feedback', 'Feedback', 'feedback') %>
+            <%- navLink('/admin/reports', 'Reports', 'reports') %>
+        </div>
+    </div>
+    <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 pr-4 border-r border-white/10">
+            <div class="text-right hidden sm:block">
+                <p class="text-white text-xs font-bold"><%= currentUser.fullName %></p>
+                <p class="text-white/40 text-[10px] uppercase tracking-tighter">Super Admin</p>
+            </div>
+            <img src="<%= currentUser.avatar %>" class="w-9 h-9 rounded-full border-2 border-[#c9a84c]" alt="Admin avatar">
+        </div>
+        <form action="/logout" method="POST">
+            <button type="submit" class="text-white/80 hover:text-[#c9a84c] transition-colors text-sm font-medium">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </form>
+    </div>
+</nav>

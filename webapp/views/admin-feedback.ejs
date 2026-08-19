@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Feedback' }) %>
+</head>
+<body class="min-h-screen">
+<% const active = 'feedback' %>
+<%- include('partials/admin-header', { active }) %>
+
+<main class="max-w-5xl mx-auto px-6 py-10 relative">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+    <div class="mb-10 z-10 relative">
+        <h1 class="display-font text-3xl font-bold text-[#1a1a2e]">Customer Feedback</h1>
+        <p class="text-[#8a7f73] text-sm mt-1">Reviews and ratings submitted across your film catalogue.</p>
+    </div>
+
+    <div class="space-y-6 z-10 relative">
+        <% if (feedback.length === 0) { %>
+            <p class="text-[#8a7f73] text-sm">No feedback submitted yet.</p>
+        <% } %>
+        <% feedback.forEach(r => { %>
+            <div class="bg-white rounded-2xl border border-[#e8e0d5] p-6 shadow-sm">
+                <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+                    <div>
+                        <span class="font-bold text-[#1a1a2e] text-sm"><%= r.user ? r.user.fullName : 'Unknown user' %></span>
+                        <span class="text-[#8a7f73] text-xs ml-2">on <span class="font-medium"><%= r.film ? r.film.title : 'Deleted film' %></span></span>
+                    </div>
+                    <div class="text-[#c9a84c] text-xs">
+                        <% for (let i = 0; i < 5; i++) { %><i class="fa-solid fa-star<%= i < r.rating ? '' : ' opacity-20' %>"></i><% } %>
+                        <span class="text-[#8a7f73] ml-2"><%= r.createdAt.toLocaleString() %></span>
+                    </div>
+                </div>
+                <p class="text-[#2d2d2d] text-sm mb-4"><%= r.comment %></p>
+
+                <% if (r.adminReply) { %>
+                    <div class="mb-4 pl-4 border-l-2 border-[#c9a84c]/40">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-[#c9a84c] mb-1">Your reply</p>
+                        <p class="text-[#8a7f73] text-sm"><%= r.adminReply %></p>
+                    </div>
+                <% } %>
+
+                <form action="/admin/feedback/<%= r.id %>/reply" method="POST" class="flex gap-3">
+                    <input type="text" name="reply" placeholder="<%= r.adminReply ? 'Update your reply...' : 'Write a reply...' %>" value=""
+                        class="flex-1 px-4 py-2.5 bg-[#f5f0e8]/50 border border-[#e8e0d5] rounded-xl text-sm focus:border-[#c9a84c] transition-all">
+                    <button type="submit" class="bg-[#1a1a2e] hover:bg-[#252542] text-[#c9a84c] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#c9a84c]/30">Reply</button>
+                </form>
+            </div>
+        <% }) %>
+    </div>
+
+    <footer class="mt-20 py-10 flex flex-col items-center">
+        <span class="text-[10px] uppercase tracking-[0.2em] text-[#8a7f73] font-bold">Cultured Africa Admin Portal</span>
+        <p class="text-[10px] text-[#8a7f73]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
+    </footer>
+</main>
+</body>
+</html>

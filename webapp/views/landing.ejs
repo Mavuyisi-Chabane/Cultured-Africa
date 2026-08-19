@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        window.FontAwesomeConfig = {
+          autoReplaceSvg: 'nest'
+        };
+      </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cultured Africa | South African Cinema &amp; Culture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Brand identity preserved: gold accent + deep charcoal-navy for contrast.
+                        // Surfaces rebuilt as a warm neutral ladder (cream/alabaster/sand) so
+                        // white never sits directly against gold or deep navy.
+                        primary: '#f5f0e8',   // base page surface (warm cream)
+                        surface: '#ece5da',    // elevated card / section (warm alabaster)
+                        sand: '#e3d9cb',       // secondary tile (soft sand)
+                        ink: '#1a1a2e',        // primary text / dark fills (charcoal-navy)
+                        muted: '#6b6558',      // secondary text
+                        border: '#d4cbb8',     // hairline borders on light surfaces
+                        borderdark: '#323254', // hairline borders on dark surfaces
+                        accent: '#c9a84c',     // brand gold accent (interactive only)
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Cormorant Garamond', 'serif'],
+                    },
+                    keyframes: {
+                        scroll: {
+                            '0%': { transform: 'translateX(0)' },
+                            '100%': { transform: 'translateX(-50%)' },
+                        },
+                        floaty: {
+                            '0%,100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                    },
+                    animation: {
+                        scroll: 'scroll 30s linear infinite',
+                        floaty: 'floaty 6s ease-in-out infinite',
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .text-stroke { -webkit-text-stroke: 1px rgba(201,168,76,0.3); color: transparent; }
+        .link-underline { position: relative; }
+        .link-underline::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            bottom: -2px;
+            left: 0;
+            background-color: #c9a84c;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+        .link-underline:hover::after { transform: scaleX(1); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-primary text-ink font-sans antialiased overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-[#1a1a2e] border-b border-borderdark">
+        <div class="flex items-center">
+            <a href="#" class="font-serif text-2xl tracking-tight text-[#c9a84c]">Cultured Africa</a>
+        </div>
+        <nav class="hidden md:flex gap-4">
+            <a href="#" class="px-4 py-2 text-sm font-bold text-[#c9a84c] link-underline">Home</a>
+            <a href="/about" class="px-4 py-2 text-sm font-medium text-white hover:text-[#c9a84c] transition-colors link-underline">About</a>
+            <a href="#" class="px-4 py-2 text-sm font-medium text-white hover:text-[#c9a84c] transition-colors link-underline">Films</a>
+            <a href="/login" class="px-4 py-2 text-sm font-medium text-white hover:text-[#c9a84c] transition-colors link-underline">Login</a>
+            <a href="/register" class="px-4 py-2 text-sm font-medium text-white hover:text-[#c9a84c] transition-colors link-underline">Register</a>
+        </nav>
+        <button class="md:hidden text-white text-xl"><i class="fas fa-bars"></i></button>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="relative h-[800px] flex items-center justify-center overflow-hidden bg-[#1a1a2e]">
+            <div class="absolute inset-0 z-0">
+                <div class="absolute inset-0 bg-black/60 z-10"></div>
+                <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_1886ac4931_4d014b307c7cdbf7.png" alt="warm South African landscape at sunset, golden hour, vast open spaces, cinematic atmosphere" />
+            </div>
+
+            <div class="relative z-20 text-center px-4 max-w-5xl">
+                <h1 class="font-serif text-5xl md:text-7xl leading-tight tracking-tight text-[#c9a84c] mb-8 font-bold">
+                    Preserving South African Heritage Through Cinematic Storytelling
+                </h1>
+                <p class="text-xl md:text-2xl text-white mb-10 max-w-3xl mx-auto font-medium">
+                    Watch award-winning short films that explore the practices, traditions, and beliefs of South African cultures.
+                </p>
+                <div class="flex flex-col md:flex-row gap-6 justify-center items-center">
+                    <a href="#films" class="px-12 py-4 bg-[#c9a84c] text-white rounded-full font-bold hover:bg-[#b8973d] transition-all shadow-lg">
+                        Explore Films
+                    </a>
+                    <a href="#about" class="px-12 py-4 border-2 border-[#c9a84c] text-[#c9a84c] rounded-full font-bold hover:bg-[#c9a84c] hover:text-white transition-all">
+                        Learn More
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Marquee Section -->
+        <section class="py-12 border-y border-border bg-surface overflow-hidden">
+            <div class="relative flex overflow-hidden select-none">
+                <div class="flex animate-scroll whitespace-nowrap">
+                    <div class="flex items-center mx-8">
+                        <span class="font-serif text-4xl md:text-6xl text-stroke mx-4">PRESERVING HERITAGE</span>
+                        <i class="fas fa-play text-[10px] text-accent"></i>
+                    </div>
+                    <div class="flex items-center mx-8">
+                        <span class="font-serif text-4xl md:text-6xl text-stroke mx-4">CINEMATIC STORYTELLING</span>
+                        <i class="fas fa-play text-[10px] text-accent"></i>
+                    </div>
+                    <div class="flex items-center mx-8">
+                        <span class="font-serif text-4xl md:text-6xl text-stroke mx-4">SOUTH AFRICAN CINEMA</span>
+                        <i class="fas fa-play text-[10px] text-accent"></i>
+                    </div>
+                </div>
+                <div class="flex animate-scroll whitespace-nowrap ml-4">
+                    <div class="flex items-center mx-8">
+                        <span class="font-serif text-4xl md:text-6xl text-stroke mx-4">PRESERVING HERITAGE</span>
+                        <i class="fas fa-play text-[10px] text-accent"></i>
+                    </div>
+                    <div class="flex items-center mx-8">
+                        <span class="font-serif text-4xl md:text-6xl text-stroke mx-4">CINEMATIC STORYTELLING</span>
+                        <i class="fas fa-play text-[10px] text-accent"></i>
+                    </div>
+                    <div class="flex items-center mx-8">
+                        <span class="font-serif text-4xl md:text-6xl text-stroke mx-4">SOUTH AFRICAN CINEMA</span>
+                        <i class="fas fa-play text-[10px] text-accent"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-center">
+                <div class="h-px bg-accent/30 w-1/3"></div>
+            </div>
+        </section>
+
+        <!-- Featured Films Section -->
+        <section id="films" class="py-24 px-6 md:px-12 bg-primary">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+                    <div>
+                        <span class="text-accent uppercase tracking-widest text-xs font-bold mb-4 block">Featured Films</span>
+                        <h2 class="font-serif text-5xl md:text-7xl tracking-tighter">Local Masterpieces</h2>
+                    </div>
+                    <p class="text-muted max-w-md text-sm leading-relaxed">
+                        Three landmark productions from South African filmmakers, each honoring a different thread of our shared heritage.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Film Card 1 -->
+                    <article class="group cursor-pointer">
+                        <div class="relative aspect-[4/5] rounded-jumbo overflow-hidden shadow-2xl mb-6">
+                            <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-105" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_cfe14998fa_c23df9512dcade88.png" alt="cinematic film still of a regal Zulu queen in traditional attire, dramatic side lighting, historical" />
+                            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
+                            <div class="absolute bottom-6 left-6 right-6">
+                                <span class="text-[10px] uppercase tracking-widest text-[#c9a84c] border border-[#c9a84c] px-2 py-1 rounded-full bg-black/40">Zululand Heritage</span>
+                            </div>
+                        </div>
+                        <h3 class="font-serif text-3xl mb-2 group-hover:text-[#c9a84c] transition-colors">Nandi</h3>
+                        <p class="text-muted text-sm mb-6">A sweeping historical drama following the matriarch who shaped a nation.</p>
+                        <a href="#" class="inline-flex items-center gap-2 bg-[#c9a84c] text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#b8973d] transition-all">
+                            Watch Trailer <i class="fas fa-play text-[8px]"></i>
+                        </a>
+                    </article>
+
+                    <!-- Film Card 2 -->
+                    <article class="group cursor-pointer">
+                        <div class="relative aspect-[4/5] rounded-jumbo overflow-hidden shadow-2xl mb-6">
+                            <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-105" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_d13d1c028b_e36c0bf82619e33c.png" alt="cinematic film still of a young musician in a Johannesburg township, neon and sunset light, contempo" />
+                            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
+                            <div class="absolute bottom-6 left-6 right-6">
+                                <span class="text-[10px] uppercase tracking-widest text-[#c9a84c] border border-[#c9a84c] px-2 py-1 rounded-full bg-black/40">Xhosa Culture</span>
+                            </div>
+                        </div>
+                        <h3 class="font-serif text-3xl mb-2 group-hover:text-[#c9a84c] transition-colors">Yanga</h3>
+                        <p class="text-muted text-sm mb-6">An intimate portrait of rhythm, resistance, and reinvention in the city.</p>
+                        <a href="#" class="inline-flex items-center gap-2 bg-[#c9a84c] text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#b8973d] transition-all">
+                            Watch Trailer <i class="fas fa-play text-[8px]"></i>
+                        </a>
+                    </article>
+
+                    <!-- Film Card 3 -->
+                    <article class="group cursor-pointer">
+                        <div class="relative aspect-[4/5] rounded-jumbo overflow-hidden shadow-2xl mb-6">
+                            <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-105" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_459ff37a48_3e2a4463be3856d3.png" alt="cinematic film still of an elder telling stories under a baobab tree at dusk, warm amber glow, docum" />
+                            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
+                            <div class="absolute bottom-6 left-6 right-6">
+                                <span class="text-[10px] uppercase tracking-widest text-[#c9a84c] border border-[#c9a84c] px-2 py-1 rounded-full bg-black/40">Sotho Traditions</span>
+                            </div>
+                        </div>
+                        <h3 class="font-serif text-3xl mb-2 group-hover:text-[#c9a84c] transition-colors">Malome</h3>
+                        <p class="text-muted text-sm mb-6">A tender family epic passed down through generations of oral memory.</p>
+                        <a href="#" class="inline-flex items-center gap-2 bg-[#c9a84c] text-white px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#b8973d] transition-all">
+                            Watch Trailer <i class="fas fa-play text-[8px]"></i>
+                        </a>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cultural Feedback Section -->
+        <section id="about" class="py-24 bg-surface border-y border-border">
+            <div class="px-6 md:px-12 mb-16">
+                <span class="text-accent uppercase tracking-widest text-xs font-bold mb-4 block">Cultural Feedback</span>
+                <h2 class="font-serif text-5xl md:text-7xl tracking-tighter max-w-3xl">Voices From Our Community</h2>
+            </div>
+
+            <div class="flex overflow-x-auto gap-6 px-6 md:px-12 pb-12 no-scrollbar snap-x">
+                <!-- Review 1 -->
+                <div class="min-w-[300px] md:min-w-[380px] bg-sand p-8 rounded-3xl snap-center border border-border">
+                    <p class="text-lg italic mb-8 font-light">"Cultured Africa gave my grandmother's stories the screen they deserved. Watching Nandi felt like coming home."</p>
+                    <div class="flex items-center gap-4">
+                        <img class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_2df62503ee_7f2ef6b77e81b7a0.png" alt="portrait headshot of an elderly South African woman smiling warmly, neutral studio background" />
+                        <div>
+                            <p class="font-semibold text-sm">Amahle Dlamini</p>
+                            <p class="text-xs text-muted">Viewer, Durban</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Review 2 -->
+                <div class="min-w-[300px] md:min-w-[380px] bg-sand p-8 rounded-3xl snap-center border border-border">
+                    <p class="text-lg italic mb-8 font-light">"The attention to language and ceremony is extraordinary. This is cinema that remembers who we are."</p>
+                    <div class="flex items-center gap-4">
+                        <img class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_eda393df96_308fa19fee928d58.png" alt="portrait headshot of a young South African man with short hair, thoughtful expression, neutral studi" />
+                        <div>
+                            <p class="font-semibold text-sm">Thabo Mokoena</p>
+                            <p class="text-xs text-muted">Film Critic, Johannesburg</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Review 3 -->
+                <div class="min-w-[300px] md:min-w-[380px] bg-sand p-8 rounded-3xl snap-center border border-border">
+                    <p class="text-lg italic mb-8 font-light">"Finally, a platform that treats our heritage with the reverence it deserves. Every frame is a lesson."</p>
+                    <div class="flex items-center gap-4">
+                        <img class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_0a2f8df9fe_2cd562b2f01d211f.png" alt="portrait headshot of a middle-aged South African woman academic, glasses, calm expression, neutral s" />
+                        <div>
+                            <p class="font-semibold text-sm">Dr. Nomsa Khumalo</p>
+                            <p class="text-xs text-muted">Cultural Historian, Cape Town</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 md:px-12 mt-8">
+                <a href="#" class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest link-underline">
+                    Read All Stories <i class="fas fa-arrow-right text-[10px]"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="py-32 px-6 bg-accent text-center">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="font-serif text-6xl md:text-8xl tracking-tighter mb-12 text-ink">OUR STORIES, OUR HERITAGE</h2>
+                <a href="#" class="inline-flex items-center gap-4 bg-ink text-white px-10 py-5 rounded-full font-medium hover:bg-white hover:text-ink transition-all group">
+                    START STREAMING
+                    <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-ink text-white pt-24 pb-12 px-6 md:px-12 border-t border-borderdark">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
+            <div class="col-span-1 md:col-span-2">
+                <a href="#" class="font-serif text-3xl tracking-tight text-white mb-8 inline-block">Cultured<span class="text-accent">.</span>Africa</a>
+                <p class="text-white/50 max-w-sm leading-relaxed">
+                    Celebrating the spirit of South African storytelling, one frame at a time. A tribute to our past, present, and future.
+                </p>
+            </div>
+            <div>
+                <h4 class="text-xs uppercase tracking-widest font-bold mb-8">Explore</h4>
+                <ul class="space-y-4 text-sm text-white/50">
+                    <li><a href="#" class="hover:text-white transition-colors link-underline">All Films</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors link-underline">Documentaries</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors link-underline">Behind the Scenes</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors link-underline">Filmmakers</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-xs uppercase tracking-widest font-bold mb-8">Company</h4>
+                <ul class="space-y-4 text-sm text-white/50">
+                    <li><a href="#" class="hover:text-white transition-colors link-underline">About Us</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors link-underline">Careers</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors link-underline">Press</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors link-underline">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-12 border-t border-borderdark gap-8">
+            <div class="flex gap-8 text-xs uppercase tracking-widest font-bold text-white/40">
+                <a href="#" class="hover:text-white transition-colors">Legal</a>
+                <a href="#" class="hover:text-white transition-colors">Terms</a>
+                <a href="#" class="hover:text-white transition-colors">Privacy</a>
+            </div>
+            <div class="flex gap-6">
+                <a href="#" class="text-white/40 hover:text-accent transition-colors"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="text-white/40 hover:text-accent transition-colors"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="text-white/40 hover:text-accent transition-colors"><i class="fab fa-facebook-f"></i></a>
+            </div>
+            <div class="flex items-center gap-4">
+                <input type="email" placeholder="Newsletter" class="bg-transparent border-b border-white/20 pb-2 text-sm focus:outline-none focus:border-accent w-48 transition-colors">
+                <button class="text-white/40 hover:text-white"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-borderdark flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest text-white/30">
+            <p>&copy; 2026 Cultured Africa. All rights reserved.</p>
+            <div class="flex gap-8">
+                <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                <span>Site by <a href="#" class="hover:text-white transition-colors">Veld Design</a></span>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

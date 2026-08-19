@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        window.FontAwesomeConfig = {
+          autoReplaceSvg: 'nest'
+        };
+      </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeritageStream — Admin Upload</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f5f0e8;
+        }
+        .display-font {
+            font-family: 'Playfair Display', serif;
+        }
+        .pattern-overlay {
+            background-image: url('https://www.transparenttextures.com/patterns/az-subtle.png');
+            opacity: 0.05;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #c9a84c;
+            ring: 2px;
+            ring-color: rgba(201, 168, 76, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Top Navigation -->
+    <nav id="header" class="bg-[#1a1a2e] px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg">
+        <div class="flex items-center gap-8">
+            <span class="display-font text-2xl font-bold text-[#c9a84c] tracking-tight">HeritageStream <span class="text-white/80 font-normal text-lg ml-1">Admin</span></span>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="#" class="text-white/60 hover:text-[#c9a84c] transition-colors text-sm font-medium">Dashboard</a>
+                <a href="#" class="text-[#c9a84c] transition-colors text-sm font-medium">Manage Films</a>
+                <a href="#" class="text-white/60 hover:text-[#c9a84c] transition-colors text-sm font-medium">Reports</a>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="#" class="text-white/80 hover:text-white transition-colors text-sm font-medium">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-12 relative">
+        <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+        <div class="flex flex-col items-center">
+            <!-- Upload Card -->
+            <div id="upload-card" class="w-full max-w-[700px] bg-white rounded-[24px] shadow-xl shadow-black/5 p-8 md:p-12 z-10">
+                <div class="flex items-center justify-between mb-8">
+                    <h1 class="display-font text-2xl md:text-3xl font-bold text-[#1a1a2e]">Upload New Film</h1>
+                    <div class="bg-[#f5f0e8] p-3 rounded-full">
+                        <i class="fa-solid fa-cloud-arrow-up text-[#c9a84c] text-xl"></i>
+                    </div>
+                </div>
+
+                <form class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold uppercase tracking-widest text-[#2d2d2d] mb-2">Film Title <span class="text-[#c9a84c]">*</span></label>
+                            <input type="text" placeholder="Enter film name" required
+                                class="w-full px-4 py-3 bg-[#f5f0e8]/50 border border-[#e8e0d5] rounded-xl focus:border-[#c9a84c] transition-all">
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold uppercase tracking-widest text-[#2d2d2d] mb-2">Description <span class="text-[#c9a84c]">*</span></label>
+                            <textarea rows="4" placeholder="Describe the film and its cultural significance..." required
+                                class="w-full px-4 py-3 bg-[#f5f0e8]/50 border border-[#e8e0d5] rounded-xl focus:border-[#c9a84c] transition-all resize-none"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-[#2d2d2d] mb-2">Culture Category <span class="text-[#c9a84c]">*</span></label>
+                            <select class="w-full px-4 py-3 bg-[#f5f0e8]/50 border border-[#e8e0d5] rounded-xl focus:border-[#c9a84c] transition-all appearance-none cursor-pointer">
+                                <option>Zulu</option>
+                                <option>Xhosa</option>
+                                <option>Venda</option>
+                                <option>Sotho</option>
+                                <option>Tsonga</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-[#2d2d2d] mb-2">Price (ZAR) <span class="text-[#c9a84c]">*</span></label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#8a7f73] font-bold">R</span>
+                                <input type="number" step="0.01" value="50.00" 
+                                    class="w-full pl-8 pr-4 py-3 bg-[#f5f0e8]/50 border border-[#e8e0d5] rounded-xl focus:border-[#c9a84c] transition-all">
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 flex items-center gap-3 py-2">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#c9a84c]"></div>
+                            </label>
+                            <span class="text-sm font-medium text-[#2d2d2d]">This film is free</span>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold uppercase tracking-widest text-[#2d2d2d] mb-2">Video URL <span class="text-[#c9a84c]">*</span></label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                                    <i class="fa-solid fa-play text-xs"></i>
+                                </span>
+                                <input type="url" placeholder="https://video.heritagestream.com/..." required
+                                    class="w-full pl-10 pr-4 py-3 bg-[#f5f0e8]/50 border border-[#e8e0d5] rounded-xl focus:border-[#c9a84c] transition-all">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-[#2d2d2d] mb-2">Thumbnail URL <span class="text-[#c9a84c]">*</span></label>
+                            <input type="url" placeholder="https://..." required
+                                class="w-full px-4 py-3 bg-[#f5f0e8]/50 border border-[#e8e0d5] rounded-xl focus:border-[#c9a84c] transition-all">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-widest text-[#2d2d2d] mb-2">Trailer URL (Optional)</label>
+                            <input type="url" placeholder="https://..." 
+                                class="w-full px-4 py-3 bg-[#f5f0e8]/50 border border-[#e8e0d5] rounded-xl focus:border-[#c9a84c] transition-all">
+                        </div>
+                    </div>
+
+                    <div class="pt-6">
+                        <button type="submit" 
+                            class="w-full bg-[#1a1a2e] hover:bg-[#252542] text-[#c9a84c] font-bold py-4 rounded-xl shadow-lg border border-[#c9a84c]/30 transform transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-upload"></i>
+                            Upload Film
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Recently Uploaded -->
+            <div class="w-full max-w-[900px] mt-16 z-10">
+                <div class="flex items-center justify-between mb-8">
+                    <h2 class="display-font text-xl font-bold text-[#1a1a2e]">Recently Uploaded</h2>
+                    <a href="#" class="text-[#c9a84c] text-sm font-bold hover:underline">View all</a>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Recent 1 -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-[#e8e0d5] flex gap-4 items-center">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_6db99a8bb6_4d0de1775423a83a.png" alt="african film thumbnail, cinematic drama" />
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-[#1a1a2e] truncate w-32">Shaka's Legacy</h4>
+                            <p class="text-[10px] text-[#8a7f73] uppercase tracking-tighter">Zulu · 2 hrs ago</p>
+                            <div class="mt-1 flex items-center gap-2">
+                                <span class="text-[10px] bg-[#f5f0e8] px-1.5 py-0.5 rounded font-bold text-[#2d6b6b]">R50</span>
+                                <i class="fa-solid fa-pen text-[10px] text-[#8a7f73] cursor-pointer hover:text-[#c9a84c]"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent 2 -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-[#e8e0d5] flex gap-4 items-center">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_2dc2873c27_30e569a06e680428.png" alt="african cultural documentary thumbnail" />
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-[#1a1a2e] truncate w-32">River Spirit</h4>
+                            <p class="text-[10px] text-[#8a7f73] uppercase tracking-tighter">Xhosa · 5 hrs ago</p>
+                            <div class="mt-1 flex items-center gap-2">
+                                <span class="text-[10px] bg-[#f5f0e8] px-1.5 py-0.5 rounded font-bold text-[#c9a84c]">FREE</span>
+                                <i class="fa-solid fa-pen text-[10px] text-[#8a7f73] cursor-pointer hover:text-[#c9a84c]"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent 3 -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-[#e8e0d5] flex gap-4 items-center">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                            <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_a422c01604_bb46b208965a4956.png" alt="african urban landscape cinematic" />
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-[#1a1a2e] truncate w-32">The Kraal</h4>
+                            <p class="text-[10px] text-[#8a7f73] uppercase tracking-tighter">Venda · 1 day ago</p>
+                            <div class="mt-1 flex items-center gap-2">
+                                <span class="text-[10px] bg-[#f5f0e8] px-1.5 py-0.5 rounded font-bold text-[#2d6b6b]">R50</span>
+                                <i class="fa-solid fa-pen text-[10px] text-[#8a7f73] cursor-pointer hover:text-[#c9a84c]"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-20 py-10 flex flex-col items-center">
+            <span class="text-[10px] uppercase tracking-[0.2em] text-[#8a7f73] font-bold">Cultured Africa Admin Portal</span>
+            <p class="text-[10px] text-[#8a7f73]/60 mt-2">© 2026 HeritageStream. All rights reserved.</p>
+        </footer>
+    </main>
+</body>
+</html>

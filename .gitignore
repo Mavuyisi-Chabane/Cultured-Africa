@@ -1,0 +1,18 @@
+# Corrupted/unreadable email attachment, not real project content
+CLAUDE.md.md
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Secrets
+.env
+.env.local
+
+# User-uploaded film files (local dev storage, not source content)
+webapp/public/uploads/*
+!webapp/public/uploads/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db

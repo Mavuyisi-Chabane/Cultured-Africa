@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Home' }) %>
+</head>
+<body class="min-h-screen">
+<%- include('partials/header') %>
+
+<main class="max-w-7xl mx-auto px-6 py-8 relative">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+    <div class="mb-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-1">Welcome back, <%= currentUser.fullName %></h1>
+        <p class="text-[#8a7f73] text-sm">Continue exploring the rich heritage of Cultured Africa.</p>
+    </div>
+
+    <div class="mb-10 overflow-x-auto">
+        <div class="flex items-center gap-3 min-w-max pb-2">
+            <a href="/?culture=All" class="px-6 py-2 rounded-full text-sm font-bold shadow-md transition-all <%= activeCulture === 'All' ? 'bg-[#c9a84c] text-white' : 'border border-[#e8e0d5] bg-white text-[#2d2d2d] hover:border-[#c9a84c]' %>">All</a>
+            <% cultures.forEach(culture => { %>
+                <a href="/?culture=<%= encodeURIComponent(culture) %>" class="px-6 py-2 rounded-full text-sm font-medium shadow-md transition-all <%= activeCulture === culture ? 'bg-[#c9a84c] text-white font-bold' : 'border border-[#e8e0d5] bg-white text-[#2d2d2d] hover:border-[#c9a84c]' %>"><%= culture %></a>
+            <% }) %>
+        </div>
+    </div>
+
+    <div id="film-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <% if (films.length === 0) { %>
+            <p class="text-[#8a7f73] col-span-full text-center py-10">No films found for this culture yet.</p>
+        <% } %>
+        <% films.forEach(film => { %>
+            <a href="/film/<%= film.id %>" class="bg-white rounded-[16px] shadow-sm border border-[#e8e0d5] overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div class="h-56 overflow-hidden relative">
+                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>" />
+                    <% if (film.price > 0) { %>
+                        <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-[#1a1a2e] uppercase tracking-widest">Premium</div>
+                    <% } %>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-[#1a1a2e] mb-1"><%= film.title %></h3>
+                    <p class="text-[#8a7f73] text-xs font-medium mb-4 italic"><%= film.culture %> Heritage · <%= film.genre %></p>
+
+                    <div class="flex items-center gap-1 mb-4 text-[#c9a84c]">
+                        <% const full = Math.floor(film.rating); const half = film.rating - full >= 0.5; %>
+                        <% for (let i = 0; i < 5; i++) { %>
+                            <% if (i < full) { %>
+                                <i class="fa-solid fa-star text-xs"></i>
+                            <% } else if (i === full && half) { %>
+                                <i class="fa-solid fa-star-half-stroke text-xs"></i>
+                            <% } else { %>
+                                <i class="fa-regular fa-star text-xs"></i>
+                            <% } %>
+                        <% } %>
+                        <span class="text-[#8a7f73] text-xs ml-1 font-normal">(<%= film.rating.toFixed(1) %>)</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-[#f5f0e8]">
+                        <span class="<%= film.price > 0 ? 'text-[#2d6b6b]' : 'text-[#c9a84c]' %> font-bold text-lg"><%= film.price > 0 ? 'R' + film.price.toFixed(0) : 'Free' %></span>
+                        <span class="bg-[#c9a84c] group-hover:bg-[#b8973d] text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#c9a84c]/20 transition-all"><%= film.price > 0 ? 'Buy R' + film.price.toFixed(0) : 'Watch' %></span>
+                    </div>
+                </div>
+            </a>
+        <% }) %>
+    </div>
+
+    <%- include('partials/footer') %>
+</main>
+</body>
+</html>

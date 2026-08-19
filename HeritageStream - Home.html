@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        window.FontAwesomeConfig = {
+          autoReplaceSvg: 'nest'
+        };
+      </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeritageStream — Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f5f0e8;
+        }
+        .display-font {
+            font-family: 'Playfair Display', serif;
+        }
+        .pattern-overlay {
+            background-image: url('https://www.transparenttextures.com/patterns/az-subtle.png');
+            opacity: 0.05;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Top Navigation -->
+    <nav id="header" class="bg-[#1a1a2e] px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg">
+        <div class="flex items-center gap-8">
+            <span class="display-font text-2xl font-bold text-[#c9a84c] tracking-tight">HeritageStream</span>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="#" class="text-white hover:text-[#c9a84c] transition-colors text-sm font-medium">Home</a>
+                <a href="#" class="text-white hover:text-[#c9a84c] transition-colors text-sm font-medium">My Library</a>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 mr-4">
+                <img src="https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg" class="w-8 h-8 rounded-full border border-[#c9a84c]" alt="Avatar">
+                <span class="text-white text-xs hidden sm:inline">Cultured Africa Member</span>
+            </div>
+            <a href="#" class="text-white hover:text-[#c9a84c] transition-colors text-sm font-medium">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8 relative">
+        <!-- Pattern background elements -->
+        <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+        <!-- Welcome Message -->
+        <div class="mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-1">Welcome back, Thabo Mokoena</h1>
+            <p class="text-[#8a7f73] text-sm">Continue exploring the rich heritage of Cultured Africa.</p>
+        </div>
+
+        <!-- Culture Filters -->
+        <div class="mb-10 overflow-x-auto">
+            <div class="flex items-center gap-3 min-w-max pb-2">
+                <button class="px-6 py-2 rounded-full bg-[#c9a84c] text-white text-sm font-bold shadow-md">All</button>
+                <button class="px-6 py-2 rounded-full border border-[#e8e0d5] bg-white text-[#2d2d2d] text-sm font-medium hover:border-[#c9a84c] transition-all">Zulu</button>
+                <button class="px-6 py-2 rounded-full border border-[#e8e0d5] bg-white text-[#2d2d2d] text-sm font-medium hover:border-[#c9a84c] transition-all">Xhosa</button>
+                <button class="px-6 py-2 rounded-full border border-[#e8e0d5] bg-white text-[#2d2d2d] text-sm font-medium hover:border-[#c9a84c] transition-all">Venda</button>
+                <button class="px-6 py-2 rounded-full border border-[#e8e0d5] bg-white text-[#2d2d2d] text-sm font-medium hover:border-[#c9a84c] transition-all">Sotho</button>
+                <button class="px-6 py-2 rounded-full border border-[#e8e0d5] bg-white text-[#2d2d2d] text-sm font-medium hover:border-[#c9a84c] transition-all">Tsonga</button>
+            </div>
+        </div>
+
+        <!-- Film Grid -->
+        <div id="film-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Card 1 -->
+            <div class="bg-white rounded-[16px] shadow-sm border border-[#e8e0d5] overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div class="h-56 overflow-hidden relative">
+                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_52e9c93fef_da0216cd05c3851f.png" alt="cinematic landscape of the Drakensberg mountains, South Africa, golden hour photography" />
+                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-[#1a1a2e] uppercase tracking-widest">Premium</div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-[#1a1a2e] mb-1">Echoes of the Highveld</h3>
+                    <p class="text-[#8a7f73] text-xs font-medium mb-4 italic">Zulu Heritage · Drama</p>
+                    
+                    <div class="flex items-center gap-1 mb-4 text-[#c9a84c]">
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <span class="text-[#8a7f73] text-xs ml-1 font-normal">(4.9)</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-[#f5f0e8]">
+                        <span class="text-[#2d6b6b] font-bold text-lg">R50</span>
+                        <button class="bg-[#c9a84c] hover:bg-[#b8973d] text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#c9a84c]/20 transition-all">Buy R50</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-white rounded-[16px] shadow-sm border border-[#e8e0d5] overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div class="h-56 overflow-hidden relative">
+                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_a24394bf40_de7dce071e6c3d07.png" alt="traditional Xhosa gathering, vibrant clothing, South African culture photography" />
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-[#1a1a2e] mb-1">Ubuntu: The Eternal Bond</h3>
+                    <p class="text-[#8a7f73] text-xs font-medium mb-4 italic">Xhosa Heritage · Family</p>
+                    
+                    <div class="flex items-center gap-1 mb-4 text-[#c9a84c]">
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star-half-stroke text-xs"></i>
+                        <span class="text-[#8a7f73] text-xs ml-1 font-normal">(4.7)</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-[#f5f0e8]">
+                        <span class="text-[#c9a84c] font-bold text-lg">Free</span>
+                        <button class="bg-[#c9a84c] hover:bg-[#b8973d] text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#c9a84c]/20 transition-all">Watch</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="bg-white rounded-[16px] shadow-sm border border-[#e8e0d5] overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div class="h-56 overflow-hidden relative">
+                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_c9913416c9_85321eb739a38c46.png" alt="ancient Venda sculpture, close up, mystical lighting, museum style photography" />
+                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-[#1a1a2e] uppercase tracking-widest">Documentary</div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-[#1a1a2e] mb-1">Threads of Venda</h3>
+                    <p class="text-[#8a7f73] text-xs font-medium mb-4 italic">Venda Heritage · Documentary</p>
+                    
+                    <div class="flex items-center gap-1 mb-4 text-[#c9a84c]">
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <span class="text-[#8a7f73] text-xs ml-1 font-normal">(5.0)</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-[#f5f0e8]">
+                        <span class="text-[#2d6b6b] font-bold text-lg">R50</span>
+                        <button class="bg-[#c9a84c] hover:bg-[#b8973d] text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#c9a84c]/20 transition-all">Buy R50</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="bg-white rounded-[16px] shadow-sm border border-[#e8e0d5] overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div class="h-56 overflow-hidden relative">
+                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_963875f76b_e13fc2fab352d735.png" alt="Basotho horseman in traditional blanket, Lesotho mountains background" />
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-[#1a1a2e] mb-1">Mountain Guardians</h3>
+                    <p class="text-[#8a7f73] text-xs font-medium mb-4 italic">Sotho Heritage · Action</p>
+                    
+                    <div class="flex items-center gap-1 mb-4 text-[#c9a84c]">
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-regular fa-star text-xs"></i>
+                        <span class="text-[#8a7f73] text-xs ml-1 font-normal">(4.2)</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-[#f5f0e8]">
+                        <span class="text-[#c9a84c] font-bold text-lg">Free</span>
+                        <button class="bg-[#c9a84c] hover:bg-[#b8973d] text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#c9a84c]/20 transition-all">Watch</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 5 -->
+            <div class="bg-white rounded-[16px] shadow-sm border border-[#e8e0d5] overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div class="h-56 overflow-hidden relative">
+                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_56449c7d4b_a4044c492b407804.png" alt="vibrant Tsonga dance, color splash, motion blur, cultural festival" />
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-[#1a1a2e] mb-1">The Rhythm of Tsonga</h3>
+                    <p class="text-[#8a7f73] text-xs font-medium mb-4 italic">Tsonga Heritage · Music</p>
+                    
+                    <div class="flex items-center gap-1 mb-4 text-[#c9a84c]">
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <span class="text-[#8a7f73] text-xs ml-1 font-normal">(4.8)</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-[#f5f0e8]">
+                        <span class="text-[#2d6b6b] font-bold text-lg">R50</span>
+                        <button class="bg-[#c9a84c] hover:bg-[#b8973d] text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#c9a84c]/20 transition-all">Buy R50</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 6 -->
+            <div class="bg-white rounded-[16px] shadow-sm border border-[#e8e0d5] overflow-hidden group hover:shadow-xl transition-all duration-300">
+                <div class="h-56 overflow-hidden relative">
+                    <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_7dc1ce2205_a1cbb076ce11651c.png" alt="urban Johannesburg skyline, sunset, cinematic photography" />
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-[#1a1a2e] mb-1">City of Gold</h3>
+                    <p class="text-[#8a7f73] text-xs font-medium mb-4 italic">Multi-Culture · Urban Drama</p>
+                    
+                    <div class="flex items-center gap-1 mb-4 text-[#c9a84c]">
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star text-xs"></i>
+                        <i class="fa-solid fa-star-half-stroke text-xs"></i>
+                        <span class="text-[#8a7f73] text-xs ml-1 font-normal">(4.6)</span>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-6 pt-4 border-t border-[#f5f0e8]">
+                        <span class="text-[#c9a84c] font-bold text-lg">Free</span>
+                        <button class="bg-[#c9a84c] hover:bg-[#b8973d] text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#c9a84c]/20 transition-all">Watch</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cultured Africa Branding Footer -->
+        <footer id="footer" class="mt-20 py-10 border-t border-[#e8e0d5] flex flex-col items-center">
+            <div class="flex items-center gap-4 mb-6 opacity-60">
+                <div class="h-px w-12 bg-[#8a7f73]"></div>
+                <span class="text-xs uppercase tracking-widest text-[#8a7f73] font-bold">Cultured Africa</span>
+                <div class="h-px w-12 bg-[#8a7f73]"></div>
+            </div>
+            <p class="text-xs text-[#8a7f73] text-center max-w-md leading-relaxed">
+                Preserving and celebrating the diverse heritages of Africa through cinematic storytelling. 
+                Premium streaming for the cultured viewer.
+            </p>
+            <div class="mt-8 flex gap-6 text-[#1a1a2e] opacity-40">
+                <i class="fa-brands fa-facebook-f hover:opacity-100 cursor-pointer"></i>
+                <i class="fa-brands fa-instagram hover:opacity-100 cursor-pointer"></i>
+                <i class="fa-brands fa-twitter hover:opacity-100 cursor-pointer"></i>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        window.FontAwesomeConfig = {
+          autoReplaceSvg: 'nest'
+        };
+      </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f5f0e8;
+        }
+        .display-font {
+            font-family: 'Playfair Display', serif;
+        }
+        .pattern-bg {
+            background-image: linear-gradient(rgba(245, 240, 232, 0.92), rgba(245, 240, 232, 0.92)), url('https://www.transparenttextures.com/patterns/az-subtle.png');
+        }
+    </style>
+</head>
+<body class="min-h-[800px] flex items-center justify-center p-4 pattern-bg relative overflow-hidden">
+    <!-- Decorative Heritage Element -->
+    <div class="absolute -top-24 -left-24 w-96 h-96 opacity-10 pointer-events-none">
+        <img class="w-full h-full object-contain" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_ca850ca978_d4ec892f98137ca1.png" alt="traditional South African Ndebele pattern graphic, geometric ethnic art, earth tones" />
+    </div>
+    <div class="absolute -bottom-24 -right-24 w-96 h-96 opacity-10 pointer-events-none">
+        <img class="w-full h-full object-contain" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_a0803f0285_0b097c705f62f8d3.png" alt="traditional South African pattern graphic, geometric ethnic art, gold and teal accents" />
+    </div>
+
+    <div id="registration-card" class="w-full max-w-[450px] bg-white rounded-[16px] shadow-xl p-8 md:p-10 z-10">
+        <div class="text-center mb-10">
+            <h1 class="display-font text-3xl font-bold text-[#c9a84c] mb-2">HeritageStream</h1>
+            <p class="text-[#8a7f73] text-sm">Join the home of Cultured Africa</p>
+        </div>
+
+        <form class="space-y-6">
+            <div id="field-fullname">
+                <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="name">Full Name</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                        <i class="fa-solid fa-user text-sm"></i>
+                    </span>
+                    <input type="text" id="name" placeholder="John Doe" 
+                        class="w-full pl-11 pr-4 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
+                </div>
+            </div>
+
+            <div id="field-email">
+                <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="email">Email Address</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                        <i class="fa-solid fa-envelope text-sm"></i>
+                    </span>
+                    <input type="email" id="email" placeholder="john@example.com" 
+                        class="w-full pl-11 pr-4 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
+                </div>
+            </div>
+
+            <div id="field-password">
+                <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="password">Password</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                        <i class="fa-solid fa-lock text-sm"></i>
+                    </span>
+                    <input type="password" id="password" placeholder="••••••••" 
+                        class="w-full pl-11 pr-4 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
+                </div>
+            </div>
+
+            <div id="field-confirm">
+                <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="confirm">Confirm Password</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                        <i class="fa-solid fa-shield-check text-sm"></i>
+                    </span>
+                    <input type="password" id="confirm" placeholder="••••••••" 
+                        class="w-full pl-11 pr-4 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
+                </div>
+            </div>
+
+            <button type="submit" 
+                class="w-full bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-4 rounded-xl shadow-lg shadow-[#c9a84c]/20 transform transition-all active:scale-[0.98]">
+                Create Account
+            </button>
+        </form>
+
+        <div class="mt-8 pt-8 border-t border-gray-50 text-center">
+            <p class="text-[#8a7f73] text-sm">
+                Already have an account? 
+                <a href="#" class="text-[#c9a84c] font-bold hover:underline ml-1">Login here</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Background Artwork -->
+    <div class="absolute inset-0 z-0 opacity-20 pointer-events-none mix-blend-multiply">
+        <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_5a943a1ed8_2798cfb2407b212d.png" alt="subtle cinematic heritage background, South African landscape at sunset, ethereal golden light, blur" />
+    </div>
+</body>
+</html>

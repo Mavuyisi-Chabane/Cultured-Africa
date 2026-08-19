@@ -1,0 +1,21 @@
+<nav id="header" class="bg-[#1a1a2e] px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg">
+    <div class="flex items-center gap-8">
+        <a href="/" class="display-font text-2xl font-bold text-[#c9a84c] tracking-tight">Cultured Africa</a>
+        <div class="hidden md:flex items-center gap-6">
+            <a href="/" class="text-white hover:text-[#c9a84c] transition-colors text-sm font-medium">Home</a>
+            <a href="/" class="text-white hover:text-[#c9a84c] transition-colors text-sm font-medium">My Library</a>
+        </div>
+    </div>
+    <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 mr-4">
+            <img src="<%= currentUser.avatar %>" class="w-8 h-8 rounded-full border border-[#c9a84c]" alt="Avatar">
+            <span class="text-white text-xs hidden sm:inline"><%= currentUser.fullName %></span>
+            <% if (currentUser.role === 'admin') { %>
+                <a href="/admin/dashboard" class="text-[10px] uppercase font-bold text-[#c9a84c] border border-[#c9a84c]/40 rounded px-2 py-0.5 ml-2 hover:bg-[#c9a84c]/10">Admin</a>
+            <% } %>
+        </div>
+        <form action="/logout" method="POST">
+            <button type="submit" class="text-white hover:text-[#c9a84c] transition-colors text-sm font-medium">Logout</button>
+        </form>
+    </div>
+</nav>

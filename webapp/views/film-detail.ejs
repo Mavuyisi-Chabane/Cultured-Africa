@@ -19,9 +19,37 @@
         <div class="h-72 md:h-96 relative bg-black">
             <% if (owned) { %>
                 <% if (film.videoUrl && film.videoUrl.startsWith('/uploads/')) { %>
-                    <video class="w-full h-full object-contain" controls poster="<%= film.thumbnailUrl %>" src="<%= film.videoUrl %>">
+                    <video id="filmVideo" class="w-full h-full object-contain" controls poster="<%= film.thumbnailUrl %>" src="<%= film.videoUrl %>">
                         Your browser does not support video playback.
                     </video>
+                    <script>
+                        (function () {
+                            var video = document.getElementById('filmVideo');
+                            var viewId = <%= viewId ? Number(viewId) : 'null' %>;
+                            var maxPct = 0;
+                            if (!video || !viewId) return;
+
+                            function sendProgress(pct) {
+                                var payload = JSON.stringify({ viewId: viewId, pct: pct });
+                                if (navigator.sendBeacon) {
+                                    navigator.sendBeacon('/film/<%= film.id %>/track-progress', new Blob([payload], { type: 'application/json' }));
+                                } else {
+                                    fetch('/film/<%= film.id %>/track-progress', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true });
+                                }
+                            }
+
+                            video.addEventListener('timeupdate', function () {
+                                if (!video.duration) return;
+                                var pct = Math.round((video.currentTime / video.duration) * 100);
+                                if (pct >= maxPct + 10) {
+                                    maxPct = pct;
+                                    sendProgress(maxPct);
+                                }
+                            });
+                            video.addEventListener('ended', function () { sendProgress(100); });
+                            window.addEventListener('pagehide', function () { sendProgress(maxPct); });
+                        })();
+                    </script>
                 <% } else { %>
                     <img class="w-full h-full object-cover" src="<%= film.videoUrl %>" alt="<%= film.title %> playback">
                     <div class="absolute inset-0 flex items-center justify-center">

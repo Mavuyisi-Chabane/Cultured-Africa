@@ -54,8 +54,12 @@
                     </div>
 
                     <div class="flex items-center justify-between mt-6 pt-4 border-t border-[#f5f0e8]">
-                        <span class="<%= film.price > 0 ? 'text-[#2d6b6b]' : 'text-[#c9a84c]' %> font-bold text-lg"><%= film.price > 0 ? 'R' + film.price.toFixed(0) : 'Free' %></span>
-                        <span class="bg-[#c9a84c] group-hover:bg-[#b8973d] text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#c9a84c]/20 transition-all"><%= film.price > 0 ? 'Buy R' + film.price.toFixed(0) : 'Watch' %></span>
+                        <span class="<%= film.price > 0 && !film.owned ? 'text-[#2d6b6b]' : 'text-[#c9a84c]' %> font-bold text-lg">
+                            <%= film.price === 0 ? 'Free' : (film.owned ? 'Owned' : 'R' + film.price.toFixed(0)) %>
+                        </span>
+                        <span class="bg-[#c9a84c] group-hover:bg-[#b8973d] text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#c9a84c]/20 transition-all">
+                            <%= film.owned ? 'Watch' : 'Buy R' + film.price.toFixed(0) %>
+                        </span>
                     </div>
                 </div>
             </a>

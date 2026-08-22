@@ -26,12 +26,20 @@
                         <span class="font-bold text-[#1a1a2e] text-sm"><%= r.user ? r.user.fullName : 'Unknown user' %></span>
                         <span class="text-[#8a7f73] text-xs ml-2">on <span class="font-medium"><%= r.film ? r.film.title : 'Deleted film' %></span></span>
                     </div>
-                    <div class="text-[#c9a84c] text-xs">
-                        <% for (let i = 0; i < 5; i++) { %><i class="fa-solid fa-star<%= i < r.rating ? '' : ' opacity-20' %>"></i><% } %>
+                    <div class="text-[#c9a84c] text-xs flex items-center">
+                        <% if (r.rating) { %>
+                            <% for (let i = 0; i < 5; i++) { %><i class="fa-solid fa-star<%= i < r.rating ? '' : ' opacity-20' %>"></i><% } %>
+                        <% } else { %>
+                            <span class="text-[#8a7f73] text-[10px] uppercase tracking-widest font-bold">No rating</span>
+                        <% } %>
                         <span class="text-[#8a7f73] ml-2"><%= r.createdAt.toLocaleString() %></span>
                     </div>
                 </div>
-                <p class="text-[#2d2d2d] text-sm mb-4"><%= r.comment %></p>
+                <% if (r.comment) { %>
+                    <p class="text-[#2d2d2d] text-sm mb-4"><%= r.comment %></p>
+                <% } else { %>
+                    <p class="text-[#8a7f73] text-sm italic mb-4">(No comment left)</p>
+                <% } %>
 
                 <% if (r.adminReply) { %>
                     <div class="mb-4 pl-4 border-l-2 border-[#c9a84c]/40">

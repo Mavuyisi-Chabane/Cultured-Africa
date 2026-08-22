@@ -2,6 +2,7 @@ const express = require('express');
 const { db, logActivity, notify } = require('../db');
 const { requireLogin } = require('../middleware/auth');
 const paystack = require('../config/paystack');
+const { containsProfanity } = require('../utils/profanityFilter');
 
 const router = express.Router();
 
@@ -62,13 +63,24 @@ router.get('/', (req, res) => {
     return res.render('landing');
   }
 
+  const userId = req.session.user.id;
   const culture = req.query.culture;
   const cultures = db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
   const rows = culture && culture !== 'All'
     ? db.prepare(`${CONTENT_SELECT} WHERE c.is_available = 1 AND cu.name = ? ORDER BY c.upload_date DESC`).all(culture)
     : db.prepare(`${CONTENT_SELECT} WHERE c.is_available = 1 ORDER BY c.upload_date DESC`).all();
 
-  res.render('home', { films: rows.map(mapContent), cultures, activeCulture: culture || 'All' });
+  const purchasedIds = new Set(
+    db.prepare('SELECT DISTINCT content_id FROM purchases WHERE user_id = ?').all(userId).map(r => r.content_id)
+  );
+
+  const films = rows.map(row => {
+    const film = mapContent(row);
+    film.owned = film.price === 0 || purchasedIds.has(film.id);
+    return film;
+  });
+
+  res.render('home', { films, cultures, activeCulture: culture || 'All' });
 });
 
 router.get('/library', requireLogin, (req, res) => {
@@ -171,16 +183,32 @@ router.post('/film/:id/review', requireLogin, (req, res) => {
   const film = getContent(req.params.id);
   if (!film) return res.status(404).send('Film not found.');
 
-  const rating = Number(req.body.rating);
-  const comment = (req.body.comment || '').trim();
+  const { filmReviews, owned } = getFilmDetailContext(film, req.session.user.id);
 
-  if (!rating || rating < 1 || rating > 5 || !comment) {
-    const { filmReviews, owned } = getFilmDetailContext(film, req.session.user.id);
-    return res.render('film-detail', { film, owned, filmReviews, viewId: null, error: 'Please provide a rating (1-5) and a comment.' });
+  if (!owned) {
+    return res.render('film-detail', { film, owned, filmReviews, viewId: null, error: 'You can only review films you own. Buy this film to leave a review.' });
+  }
+
+  const ratingRaw = (req.body.rating || '').trim();
+  const comment = (req.body.comment || '').trim();
+  const rating = ratingRaw ? Number(ratingRaw) : null;
+
+  if (rating !== null && (!Number.isInteger(rating) || rating < 1 || rating > 5)) {
+    return res.render('film-detail', { film, owned, filmReviews, viewId: null, error: 'Rating must be between 1 and 5.' });
+  }
+  if (rating === null && !comment) {
+    return res.render('film-detail', { film, owned, filmReviews, viewId: null, error: 'Please provide a rating, a comment, or both.' });
+  }
+  if (comment && containsProfanity(comment)) {
+    logActivity('Comment blocked (inappropriate language)', film.title);
+    return res.render('film-detail', {
+      film, owned, filmReviews, viewId: null,
+      error: 'Your comment was not published because it contains inappropriate language. Please rephrase it and try again.'
+    });
   }
 
   db.prepare('INSERT INTO feedback (content_id, user_id, rating, comment) VALUES (?, ?, ?, ?)')
-    .run(film.id, req.session.user.id, rating, comment);
+    .run(film.id, req.session.user.id, rating, comment || null);
   logActivity('Review submitted', film.title);
 
   res.redirect(`/film/${film.id}`);

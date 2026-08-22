@@ -44,74 +44,32 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 z-10 relative">
-        <div class="lg:col-span-4 space-y-6">
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Films</p>
-                    <h4 class="text-2xl font-bold text-[#1a1a2e]"><%= stats.totalFilms %></h4>
-                </div>
-                <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Users</p>
-                    <h4 class="text-2xl font-bold text-[#1a1a2e]"><%= stats.totalUsers %></h4>
-                </div>
-                <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Revenue</p>
-                    <h4 class="text-2xl font-bold text-[#1a1a2e]">R<%= stats.totalRevenue.toFixed(0) %></h4>
-                </div>
-                <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Reviews</p>
-                    <h4 class="text-2xl font-bold text-[#1a1a2e]"><%= stats.totalReviews %></h4>
-                </div>
-            </div>
-
-            <div class="bg-[#1a1a2e] p-6 rounded-2xl text-white relative overflow-hidden">
-                <div class="relative z-10">
-                    <h4 class="display-font text-lg font-bold text-[#c9a84c] mb-2">Cultured Africa</h4>
-                    <p class="text-white/70 text-xs leading-relaxed">Preserving our stories, one film at a time. Keep building the legacy.</p>
-                </div>
-                <div class="absolute -right-4 -bottom-4 opacity-10">
-                     <i class="fa-solid fa-om text-8xl"></i>
-                </div>
-            </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 z-10 relative">
+        <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Films</p>
+            <h4 class="text-2xl font-bold text-[#1a1a2e]"><%= stats.totalFilms %></h4>
         </div>
+        <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Users</p>
+            <h4 class="text-2xl font-bold text-[#1a1a2e]"><%= stats.totalUsers %></h4>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Revenue</p>
+            <h4 class="text-2xl font-bold text-[#1a1a2e]">R<%= stats.totalRevenue.toFixed(0) %></h4>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Reviews</p>
+            <h4 class="text-2xl font-bold text-[#1a1a2e]"><%= stats.totalReviews %></h4>
+        </div>
+    </div>
 
-        <div class="lg:col-span-8">
-            <div class="bg-white rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] overflow-hidden">
-                <div class="px-8 py-6 border-b border-[#f5f0e8] flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-[#1a1a2e]">Recent Activity</h3>
-                    <i class="fa-solid fa-clock-rotate-left text-[#8a7f73]"></i>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="bg-[#f5f0e8]/30">
-                                <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Activity</th>
-                                <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Entity</th>
-                                <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Timestamp</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-[#f5f0e8]">
-                            <% if (recentActivity.length === 0) { %>
-                                <tr><td colspan="3" class="px-8 py-5 text-sm text-[#8a7f73]">No activity yet.</td></tr>
-                            <% } %>
-                            <% recentActivity.forEach(a => { %>
-                                <tr class="hover:bg-[#f5f0e8]/20 transition-colors">
-                                    <td class="px-8 py-5">
-                                        <span class="text-sm font-medium text-[#2d2d2d]"><%= a.type %></span>
-                                    </td>
-                                    <td class="px-8 py-5">
-                                        <span class="text-sm font-bold text-[#1a1a2e]"><%= a.entity %></span>
-                                    </td>
-                                    <td class="px-8 py-5">
-                                        <span class="text-xs text-[#8a7f73]"><%= a.timestamp.toLocaleString() %></span>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="bg-[#1a1a2e] p-6 rounded-2xl text-white relative overflow-hidden mb-8 z-10">
+        <div class="relative z-10">
+            <h4 class="display-font text-lg font-bold text-[#c9a84c] mb-2">Cultured Africa</h4>
+            <p class="text-white/70 text-xs leading-relaxed">Preserving our stories, one film at a time. Keep building the legacy.</p>
+        </div>
+        <div class="absolute -right-4 -bottom-4 opacity-10">
+             <i class="fa-solid fa-om text-8xl"></i>
         </div>
     </div>
 

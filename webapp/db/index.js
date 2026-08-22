@@ -17,6 +17,29 @@ if (!usersColumns.includes('session_version')) {
   db.exec('ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 1');
 }
 
+// Migration: relax feedback.rating and feedback.comment from NOT NULL to nullable
+// (a review can now be a rating only, a comment only, or both). SQLite can't drop a
+// NOT NULL constraint via ALTER TABLE, so recreate the table and copy the data over.
+const feedbackRatingCol = db.prepare('PRAGMA table_info(feedback)').all().find(c => c.name === 'rating');
+if (feedbackRatingCol && feedbackRatingCol.notnull) {
+  db.exec(`
+    CREATE TABLE feedback_new (
+      feedback_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id           INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+      content_id        INTEGER NOT NULL REFERENCES content(content_id) ON DELETE CASCADE,
+      rating            INTEGER CHECK (rating IS NULL OR rating BETWEEN 1 AND 5),
+      comment           TEXT,
+      admin_reply       TEXT,
+      submitted_date    TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    INSERT INTO feedback_new (feedback_id, user_id, content_id, rating, comment, admin_reply, submitted_date)
+      SELECT feedback_id, user_id, content_id, rating, comment, admin_reply, submitted_date FROM feedback;
+    DROP TABLE feedback;
+    ALTER TABLE feedback_new RENAME TO feedback;
+    CREATE INDEX IF NOT EXISTS idx_feedback_content ON feedback(content_id);
+  `);
+}
+
 seed(db);
 
 function logActivity(type, entity) {

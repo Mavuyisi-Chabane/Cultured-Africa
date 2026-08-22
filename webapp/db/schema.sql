@@ -55,12 +55,14 @@ CREATE TABLE IF NOT EXISTS watch_history (
   watch_date        TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- rating and comment are both optional (but not both empty — enforced in the route):
+-- a viewer can leave a star rating only, a text comment only, or both together.
 CREATE TABLE IF NOT EXISTS feedback (
   feedback_id       INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id           INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   content_id        INTEGER NOT NULL REFERENCES content(content_id) ON DELETE CASCADE,
-  rating            INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-  comment           TEXT NOT NULL,
+  rating            INTEGER CHECK (rating IS NULL OR rating BETWEEN 1 AND 5),
+  comment           TEXT,
   admin_reply       TEXT,
   submitted_date    TEXT NOT NULL DEFAULT (datetime('now'))
 );

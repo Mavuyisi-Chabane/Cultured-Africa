@@ -58,11 +58,16 @@ router.get('/dashboard', (req, res) => {
     totalRevenue,
     totalReviews: db.prepare('SELECT COUNT(*) AS n FROM feedback').get().n
   };
-  const recentActivity = db.prepare('SELECT type, entity, created_at FROM activity_log ORDER BY created_at DESC, id DESC LIMIT 8')
+
+  res.render('admin-dashboard', { stats });
+});
+
+router.get('/activity', (req, res) => {
+  const recentActivity = db.prepare('SELECT type, entity, created_at FROM activity_log ORDER BY created_at DESC, id DESC LIMIT 200')
     .all()
     .map(a => ({ type: a.type, entity: a.entity, timestamp: new Date(a.created_at) }));
 
-  res.render('admin-dashboard', { stats, recentActivity });
+  res.render('admin-activity', { recentActivity });
 });
 
 router.get('/films', (req, res) => {
@@ -95,7 +100,7 @@ router.get('/films/:id/edit', (req, res) => {
   const film = getContent(req.params.id);
   if (!film) return res.status(404).send('Film not found.');
   const cultures = db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
-  res.render('admin-upload', { editing: film, cultures, error: null });
+  res.render('admin-upload', { editing: film, cultures, error: null, success: false });
 });
 
 router.post('/films/:id/edit', handleUploads, (req, res) => {
@@ -109,7 +114,7 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
 
   if (!title || !description) {
     const cultures = db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
-    return res.render('admin-upload', { editing: { ...film, ...req.body }, cultures, error: 'Please fill in all required fields.' });
+    return res.render('admin-upload', { editing: { ...film, ...req.body }, cultures, error: 'Please fill in all required fields.', success: false });
   }
 
   let videoUrl = film.videoUrl;
@@ -140,7 +145,7 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
 
 router.get('/upload', (req, res) => {
   const cultures = db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
-  res.render('admin-upload', { editing: null, cultures, error: null });
+  res.render('admin-upload', { editing: null, cultures, error: null, success: req.query.success === '1' });
 });
 
 router.post('/upload', handleUploads, (req, res) => {
@@ -154,7 +159,7 @@ router.post('/upload', handleUploads, (req, res) => {
     if (thumbnailFile) deleteUploadedFile(`/uploads/${thumbnailFile.filename}`);
     if (trailerFile) deleteUploadedFile(`/uploads/${trailerFile.filename}`);
     const cultures = db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
-    return res.render('admin-upload', { editing: req.body, cultures, error: 'Please fill in all required fields, including a video file and a thumbnail image.' });
+    return res.render('admin-upload', { editing: req.body, cultures, error: 'Please fill in all required fields, including a video file and a thumbnail image.', success: false });
   }
 
   db.prepare(`
@@ -167,7 +172,7 @@ router.post('/upload', handleUploads, (req, res) => {
   );
   logActivity('Film uploaded', title);
 
-  res.redirect('/admin/upload');
+  res.redirect('/admin/upload?success=1');
 });
 
 router.get('/feedback', (req, res) => {

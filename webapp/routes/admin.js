@@ -273,7 +273,7 @@ router.get('/reports', (req, res) => {
   }).sort((a, b) => b.views - a.views);
 
   const viewTotals = db.prepare(`
-    SELECT COUNT(*) AS views, COALESCE(SUM(completed), 0) AS completedCount
+    SELECT COUNT(*) AS views
     FROM watch_history WHERE watch_date >= ? AND watch_date < ?
   `).get(weekStartSql, weekEndSql);
 
@@ -307,7 +307,6 @@ router.get('/reports', (req, res) => {
   const contentReport = {
     weekLabel,
     totalViews: viewTotals.views,
-    avgCompletion: viewTotals.views ? Math.round((viewTotals.completedCount / viewTotals.views) * 100) : 0,
     avgRating: reviewTotals.avg ? Math.round(reviewTotals.avg * 10) / 10 : null,
     totalReviews: reviewTotals.n,
     byFilm: perFilmPerformance,

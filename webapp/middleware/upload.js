@@ -23,10 +23,11 @@ const fileFilter = (req, file, cb) => {
   cb(null, false);
 };
 
+// No fileSize limit — multer streams straight to disk via diskStorage, so this
+// doesn't risk buffering large uploads in memory.
 const upload = multer({
   storage,
-  fileFilter,
-  limits: { fileSize: 500 * 1024 * 1024 }
+  fileFilter
 });
 
 module.exports = upload.fields([

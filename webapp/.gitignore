@@ -4,3 +4,4 @@ public/uploads/*
 !public/uploads/.gitkeep
 db/*.sqlite
 db/*.sqlite-journal
+db/dev-inbox/

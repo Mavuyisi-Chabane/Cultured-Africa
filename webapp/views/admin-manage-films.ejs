@@ -29,12 +29,13 @@
                         <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Culture</th>
                         <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Price</th>
                         <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Rating</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Status</th>
                         <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#f5f0e8]">
                     <% if (films.length === 0) { %>
-                        <tr><td colspan="5" class="px-8 py-6 text-sm text-[#8a7f73]">No films uploaded yet.</td></tr>
+                        <tr><td colspan="6" class="px-8 py-6 text-sm text-[#8a7f73]">No films uploaded yet.</td></tr>
                     <% } %>
                     <% films.forEach(film => { %>
                         <tr class="hover:bg-[#f5f0e8]/20 transition-colors">
@@ -52,10 +53,20 @@
                             </td>
                             <td class="px-8 py-5"><span class="text-sm text-[#8a7f73]"><i class="fa-solid fa-star text-[#c9a84c] text-xs mr-1"></i><%= film.rating.toFixed(1) %></span></td>
                             <td class="px-8 py-5">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded font-bold <%= film.isAvailable ? 'bg-[#e8f5f5] text-[#2d6b6b]' : 'bg-gray-100 text-[#8a7f73]' %>">
+                                    <%= film.isAvailable ? 'ACTIVE' : 'ARCHIVED' %>
+                                </span>
+                            </td>
+                            <td class="px-8 py-5">
                                 <div class="flex items-center gap-3">
                                     <a href="/admin/films/<%= film.id %>/edit" class="text-[#8a7f73] hover:text-[#c9a84c]" title="Edit"><i class="fa-solid fa-pen text-sm"></i></a>
-                                    <form action="/admin/films/<%= film.id %>/delete" method="POST" onsubmit="return confirm('Remove &quot;<%= film.title %>&quot; from the catalogue?');">
-                                        <button type="submit" class="text-[#8a7f73] hover:text-red-500" title="Delete"><i class="fa-solid fa-trash text-sm"></i></button>
+                                    <form action="/admin/films/<%= film.id %>/toggle-availability" method="POST">
+                                        <button type="submit" class="text-[#8a7f73] hover:text-[#c9a84c]" title="<%= film.isAvailable ? 'Archive (hide from browsing)' : 'Restore to active library' %>">
+                                            <i class="fa-solid <%= film.isAvailable ? 'fa-box-archive' : 'fa-rotate-left' %> text-sm"></i>
+                                        </button>
+                                    </form>
+                                    <form action="/admin/films/<%= film.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete &quot;<%= film.title %>&quot;? This cannot be undone.');">
+                                        <button type="submit" class="text-[#8a7f73] hover:text-red-500" title="Delete permanently"><i class="fa-solid fa-trash text-sm"></i></button>
                                     </form>
                                 </div>
                             </td>

@@ -1,11 +1,20 @@
 const bcrypt = require('bcryptjs');
 const { startOfWeek, toSqlDateTime } = require('../utils/dates');
 
+const CULTURES = [
+  { name: 'Zulu', description: 'Stories rooted in Zulu tradition, courtship, and kingship.', region: 'KwaZulu-Natal' },
+  { name: 'Xhosa', description: 'Stories of Xhosa family life, ceremony, and community.', region: 'Eastern Cape' },
+  { name: 'Venda', description: 'Stories of Venda craft, myth, and ancestral heritage.', region: 'Limpopo' },
+  { name: 'Sotho', description: 'Stories of Basotho mountain life and tradition.', region: 'Free State / Lesotho border' },
+  { name: 'Tsonga', description: 'Stories of Tsonga music, dance, and festival culture.', region: 'Limpopo / Mpumalanga' },
+  { name: 'Multi-Culture', description: 'Stories that weave together multiple South African cultures.', region: 'National' }
+];
+
 const FILMS = [
   {
     title: 'Echoes of the Highveld',
     culture: 'Zulu',
-    genre: 'Drama',
+    contentType: 'Drama',
     price: 50,
     thumbnailUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_52e9c93fef_da0216cd05c3851f.png',
     videoUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_52e9c93fef_da0216cd05c3851f.png',
@@ -14,7 +23,7 @@ const FILMS = [
   {
     title: 'Ubuntu: The Eternal Bond',
     culture: 'Xhosa',
-    genre: 'Family',
+    contentType: 'Family',
     price: 0,
     thumbnailUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_a24394bf40_de7dce071e6c3d07.png',
     videoUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_a24394bf40_de7dce071e6c3d07.png',
@@ -23,7 +32,7 @@ const FILMS = [
   {
     title: 'Threads of Venda',
     culture: 'Venda',
-    genre: 'Documentary',
+    contentType: 'Documentary',
     price: 50,
     thumbnailUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_c9913416c9_85321eb739a38c46.png',
     videoUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_c9913416c9_85321eb739a38c46.png',
@@ -32,7 +41,7 @@ const FILMS = [
   {
     title: 'Mountain Guardians',
     culture: 'Sotho',
-    genre: 'Action',
+    contentType: 'Action',
     price: 0,
     thumbnailUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_963875f76b_e13fc2fab352d735.png',
     videoUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_963875f76b_e13fc2fab352d735.png',
@@ -41,7 +50,7 @@ const FILMS = [
   {
     title: 'The Rhythm of Tsonga',
     culture: 'Tsonga',
-    genre: 'Music',
+    contentType: 'Music',
     price: 50,
     thumbnailUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_56449c7d4b_a4044c492b407804.png',
     videoUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_56449c7d4b_a4044c492b407804.png',
@@ -50,7 +59,7 @@ const FILMS = [
   {
     title: 'City of Gold',
     culture: 'Multi-Culture',
-    genre: 'Urban Drama',
+    contentType: 'Urban Drama',
     price: 0,
     thumbnailUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_7dc1ce2205_a1cbb076ce11651c.png',
     videoUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_7dc1ce2205_a1cbb076ce11651c.png',
@@ -83,35 +92,45 @@ function pick(arr) {
 }
 
 function seed(db) {
-  const filmCount = db.prepare('SELECT COUNT(*) AS n FROM films').get().n;
-  if (filmCount > 0) return;
+  const contentCount = db.prepare('SELECT COUNT(*) AS n FROM content').get().n;
+  if (contentCount > 0) return;
 
   const insertUser = db.prepare(`
-    INSERT INTO users (full_name, email, password_hash, role, avatar, created_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO users (full_name, email, password_hash, is_verified, role, avatar, registration_date)
+    VALUES (?, ?, ?, 1, ?, ?, ?)
   `);
-  const insertFilm = db.prepare(`
-    INSERT INTO films (title, culture, genre, price, rating, video_url, thumbnail_url, trailer_url, description, uploaded_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  const insertCulture = db.prepare(`
+    INSERT INTO cultures (name, description, region, banner_image_url) VALUES (?, ?, ?, ?)
+  `);
+  const insertContent = db.prepare(`
+    INSERT INTO content (culture_id, uploaded_by, title, description, content_type, price, file_url, thumbnail_url, trailer_url, upload_date)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', ?)
   `);
   const insertPurchase = db.prepare(`
-    INSERT INTO purchases (user_id, film_id, price, paystack_reference, purchased_at)
+    INSERT INTO purchases (user_id, content_id, amount_paid, payment_status, transaction_ref, purchase_date)
+    VALUES (?, ?, ?, 'completed', ?, ?)
+  `);
+  const insertFeedback = db.prepare(`
+    INSERT INTO feedback (content_id, user_id, rating, comment, submitted_date)
     VALUES (?, ?, ?, ?, ?)
   `);
-  const insertReview = db.prepare(`
-    INSERT INTO reviews (film_id, user_id, rating, comment, created_at)
+  const insertWatch = db.prepare(`
+    INSERT INTO watch_history (content_id, user_id, progress_seconds, completed, watch_date)
     VALUES (?, ?, ?, ?, ?)
-  `);
-  const insertView = db.prepare(`
-    INSERT INTO film_views (film_id, user_id, completion_pct, viewed_at)
-    VALUES (?, ?, ?, ?)
   `);
   const insertActivity = db.prepare(`
-    INSERT INTO activity_log (type, entity, created_at)
-    VALUES (?, ?, ?)
+    INSERT INTO activity_log (type, entity, created_at) VALUES (?, ?, ?)
+  `);
+  const insertNotification = db.prepare(`
+    INSERT INTO notifications (user_id, type, message, is_read, sent_date) VALUES (?, ?, ?, ?, ?)
   `);
 
   const now = new Date();
+
+  const cultureIds = {};
+  CULTURES.forEach(c => {
+    cultureIds[c.name] = insertCulture.run(c.name, c.description, c.region, '').lastInsertRowid;
+  });
 
   const adminId = insertUser.run(
     'Lesedi Molefe', 'admin@culturedafrica.co.za', bcrypt.hashSync('admin123', 10), 'admin',
@@ -126,7 +145,7 @@ function seed(db) {
   );
 
   const memberId = insertUser.run(
-    'Thabo Mokoena', 'member@culturedafrica.co.za', bcrypt.hashSync('member123', 10), 'member',
+    'Thabo Mokoena', 'member@culturedafrica.co.za', bcrypt.hashSync('member123', 10), 'customer',
     'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg',
     toSqlDateTime(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 45))
   ).lastInsertRowid;
@@ -134,18 +153,18 @@ function seed(db) {
   const viewerIds = [memberId];
   DEMO_VIEWERS.forEach((v, i) => {
     const id = insertUser.run(
-      v.fullName, v.email, bcrypt.hashSync('demo1234', 10), 'member',
+      v.fullName, v.email, bcrypt.hashSync('demo1234', 10), 'customer',
       `https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-${(i % 4) + 1}.jpg`,
       toSqlDateTime(new Date(now.getTime() - 1000 * 60 * 60 * 24 * (40 - i * 5)))
     ).lastInsertRowid;
     viewerIds.push(id);
   });
 
-  const filmIds = FILMS.map((f, i) => {
+  const contentIds = FILMS.map((f, i) => {
     const uploadedAt = toSqlDateTime(new Date(now.getTime() - 1000 * 60 * 60 * (24 * (28 - i * 3) + 2)));
-    const id = insertFilm.run(
-      f.title, f.culture, f.genre, f.price, 0,
-      f.videoUrl, f.thumbnailUrl, '', f.description, uploadedAt
+    const id = insertContent.run(
+      cultureIds[f.culture], adminId, f.title, f.description, f.contentType, f.price,
+      f.videoUrl, f.thumbnailUrl, uploadedAt
     ).lastInsertRowid;
     insertActivity.run('Film uploaded', f.title, uploadedAt);
     return id;
@@ -153,21 +172,23 @@ function seed(db) {
 
   insertActivity.run('New user registered', 'Thabo Mokoena', toSqlDateTime(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 45)));
 
-  // Four weeks of synthetic purchases, views and reviews so reports have real data to show immediately.
+  // Four weeks of synthetic purchases, watch history and feedback so reports have real data immediately.
   const week0Start = startOfWeek(now);
   for (let weekAgo = 3; weekAgo >= 0; weekAgo--) {
     const weekStart = new Date(week0Start.getTime() - weekAgo * 7 * 24 * 60 * 60 * 1000);
 
     FILMS.forEach((f, filmIdx) => {
-      const filmId = filmIds[filmIdx];
+      const contentId = contentIds[filmIdx];
       const isFree = f.price === 0;
 
       const viewCount = isFree ? randInt(15, 40) : randInt(4, 18);
       for (let i = 0; i < viewCount; i++) {
-        const viewedAt = new Date(weekStart.getTime() + randInt(0, 6 * 24 * 60 * 60 * 1000) + randInt(0, 86400000));
-        if (viewedAt > now) continue;
-        const completion = isFree ? randInt(55, 100) : randInt(35, 100);
-        insertView.run(filmId, pick(viewerIds), completion, toSqlDateTime(viewedAt));
+        const watchedAt = new Date(weekStart.getTime() + randInt(0, 6 * 24 * 60 * 60 * 1000) + randInt(0, 86400000));
+        if (watchedAt > now) continue;
+        const completedChance = isFree ? 0.65 : 0.55;
+        const completed = Math.random() < completedChance;
+        const progressSeconds = completed ? randInt(600, 1200) : randInt(30, 600);
+        insertWatch.run(contentId, pick(viewerIds), progressSeconds, completed ? 1 : 0, toSqlDateTime(watchedAt));
       }
 
       if (!isFree) {
@@ -176,30 +197,24 @@ function seed(db) {
           const purchasedAt = new Date(weekStart.getTime() + randInt(0, 6 * 24 * 60 * 60 * 1000) + randInt(0, 86400000));
           if (purchasedAt > now) continue;
           const buyerId = pick(viewerIds);
-          const ref = `SEED-${filmId}-${weekAgo}-${i}`;
-          insertPurchase.run(buyerId, filmId, f.price, ref, toSqlDateTime(purchasedAt));
+          const ref = `SEED-${contentId}-${weekAgo}-${i}`;
+          insertPurchase.run(buyerId, contentId, f.price, ref, toSqlDateTime(purchasedAt));
           insertActivity.run('Purchase made', f.title, toSqlDateTime(purchasedAt));
+          insertNotification.run(buyerId, 'purchase_confirmation', `Your purchase of "${f.title}" was successful.`, 1, toSqlDateTime(purchasedAt));
         }
       }
 
       if (Math.random() < 0.6) {
         const reviewCount = randInt(1, 2);
         for (let i = 0; i < reviewCount; i++) {
-          const createdAt = new Date(weekStart.getTime() + randInt(0, 6 * 24 * 60 * 60 * 1000) + randInt(0, 86400000));
-          if (createdAt > now) continue;
-          insertReview.run(filmId, pick(viewerIds), randInt(3, 5), pick(REVIEW_COMMENTS), toSqlDateTime(createdAt));
-          insertActivity.run('Review submitted', f.title, toSqlDateTime(createdAt));
+          const submittedAt = new Date(weekStart.getTime() + randInt(0, 6 * 24 * 60 * 60 * 1000) + randInt(0, 86400000));
+          if (submittedAt > now) continue;
+          insertFeedback.run(contentId, pick(viewerIds), randInt(3, 5), pick(REVIEW_COMMENTS), toSqlDateTime(submittedAt));
+          insertActivity.run('Review submitted', f.title, toSqlDateTime(submittedAt));
         }
       }
     });
   }
-
-  // Recompute each film's displayed rating from its seeded reviews.
-  const updateRating = db.prepare('UPDATE films SET rating = ? WHERE id = ?');
-  filmIds.forEach(filmId => {
-    const row = db.prepare('SELECT AVG(rating) AS avg FROM reviews WHERE film_id = ?').get(filmId);
-    updateRating.run(row.avg ? Math.round(row.avg * 10) / 10 : 0, filmId);
-  });
 }
 
 module.exports = { seed };

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Email Verification' }) %>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 py-10 pattern-bg relative overflow-x-hidden">
+    <div class="absolute -top-24 -left-24 w-96 h-96 opacity-10 pointer-events-none">
+        <img class="w-full h-full object-contain" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_ca850ca978_d4ec892f98137ca1.png" alt="">
+    </div>
+    <div class="absolute -bottom-24 -right-24 w-96 h-96 opacity-10 pointer-events-none">
+        <img class="w-full h-full object-contain" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_a0803f0285_0b097c705f62f8d3.png" alt="">
+    </div>
+
+    <%
+        const copy = {
+            success: {
+                icon: 'fa-circle-check', color: 'text-[#2d6b6b]', bg: 'bg-[#e8f5f5]',
+                title: 'Email Verified!',
+                message: 'Your account is now active. You can log in whenever you\'re ready.'
+            },
+            expired: {
+                icon: 'fa-clock', color: 'text-red-500', bg: 'bg-red-50',
+                title: 'Verification Code Expired',
+                message: 'Verification codes are valid for only 15 minutes, and this one has passed that window. Request a new one below.'
+            },
+            'already-verified': {
+                icon: 'fa-circle-check', color: 'text-[#2d6b6b]', bg: 'bg-[#e8f5f5]',
+                title: 'Already Verified',
+                message: 'This account is already verified — you can log in now.'
+            },
+            'resend-not-found': {
+                icon: 'fa-triangle-exclamation', color: 'text-red-500', bg: 'bg-red-50',
+                title: 'Account Not Found',
+                message: 'We couldn\'t find an account with that email address.'
+            },
+            'send-failed': {
+                icon: 'fa-triangle-exclamation', color: 'text-red-500', bg: 'bg-red-50',
+                title: 'Couldn\'t Send Email',
+                message: 'Something went wrong sending that email. Please try again shortly.'
+            }
+        }[status];
+
+        const showResendForm = ['expired', 'resend-not-found', 'send-failed'].includes(status);
+    %>
+
+    <div class="w-full max-w-[450px] bg-white rounded-[16px] shadow-xl p-8 md:p-10 z-10 text-center">
+        <div class="w-16 h-16 rounded-full <%= copy.bg %> flex items-center justify-center <%= copy.color %> mx-auto mb-6">
+            <i class="fa-solid <%= copy.icon %> text-2xl"></i>
+        </div>
+
+        <h1 class="display-font text-2xl font-bold text-[#1a1a2e] mb-3"><%= copy.title %></h1>
+        <p class="text-[#8a7f73] text-sm leading-relaxed mb-8"><%= copy.message %></p>
+
+        <% if (status === 'success' || status === 'already-verified') { %>
+            <a href="/login" class="inline-block bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-[#c9a84c]/20 transition-all">
+                Continue to Login
+            </a>
+        <% } %>
+
+        <% if (showResendForm) { %>
+            <form action="/resend-verification" method="POST" class="<%= status === 'resend-not-found' ? '' : 'mt-2' %>">
+                <% if (email) { %>
+                    <input type="hidden" name="email" value="<%= email %>">
+                    <button type="submit" class="w-full bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-[#c9a84c]/20 transition-all">
+                        Resend Verification Code
+                    </button>
+                <% } else { %>
+                    <div class="relative mb-4 text-left">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                            <i class="fa-solid fa-envelope text-sm"></i>
+                        </span>
+                        <input type="email" name="email" placeholder="Enter your email address" required
+                            class="w-full pl-11 pr-4 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
+                    </div>
+                    <button type="submit" class="w-full bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-[#c9a84c]/20 transition-all">
+                        Resend Verification Code
+                    </button>
+                <% } %>
+            </form>
+        <% } %>
+
+        <div class="mt-8 pt-6 border-t border-gray-50">
+            <p class="text-[#8a7f73] text-sm">
+                <a href="/register" class="text-[#c9a84c] font-bold hover:underline">Create an account</a>
+                &nbsp;·&nbsp;
+                <a href="/login" class="text-[#c9a84c] font-bold hover:underline">Log in</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

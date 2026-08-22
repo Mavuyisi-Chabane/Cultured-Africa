@@ -3,7 +3,7 @@
 <head>
 <%- include('partials/head', { title: 'Cultured Africa — Login' }) %>
 </head>
-<body class="min-h-[800px] flex items-center justify-center p-4 pattern-bg relative overflow-hidden">
+<body class="min-h-screen flex items-center justify-center p-4 py-10 pattern-bg relative overflow-x-hidden">
     <div class="absolute -top-24 -left-24 w-96 h-96 opacity-10 pointer-events-none">
         <img class="w-full h-full object-contain" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_ca850ca978_d4ec892f98137ca1.png" alt="">
     </div>
@@ -21,6 +21,15 @@
             <div class="mb-6 px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm font-medium"><%= error %></div>
         <% } %>
 
+        <% if (showResend) { %>
+            <form action="/resend-verification" method="POST" class="mb-6">
+                <input type="hidden" name="email" value="<%= resendEmail %>">
+                <button type="submit" class="w-full bg-[#1a1a2e] hover:bg-[#252542] text-[#c9a84c] font-bold py-3 rounded-xl transition-all border border-[#c9a84c]/30">
+                    Resend Verification Code
+                </button>
+            </form>
+        <% } %>
+
         <form class="space-y-6" method="POST" action="/login">
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="email">Email Address</label>
@@ -34,13 +43,19 @@
             </div>
 
             <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="password">Password</label>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d]" for="password">Password</label>
+                    <a href="/forgot-password" class="text-xs font-medium text-[#c9a84c] hover:underline">Forgot Password?</a>
+                </div>
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
                         <i class="fa-solid fa-lock text-sm"></i>
                     </span>
                     <input type="password" id="password" name="password" placeholder="••••••••" required
-                        class="w-full pl-11 pr-4 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
+                        class="w-full pl-11 pr-11 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
+                    <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#c9a84c] transition-colors" data-toggle-password="password" aria-label="Show password">
+                        <i class="fa-solid fa-eye text-sm"></i>
+                    </button>
                 </div>
             </div>
 
@@ -64,5 +79,7 @@
     <div class="absolute inset-0 z-0 opacity-20 pointer-events-none mix-blend-multiply">
         <img class="w-full h-full object-cover" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_5a943a1ed8_2798cfb2407b212d.png" alt="">
     </div>
+
+    <%- include('partials/password-toggle') %>
 </body>
 </html>

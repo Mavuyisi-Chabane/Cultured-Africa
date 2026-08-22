@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Verify Your Email' }) %>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 py-10 pattern-bg relative overflow-x-hidden">
+    <div class="absolute -top-24 -left-24 w-96 h-96 opacity-10 pointer-events-none">
+        <img class="w-full h-full object-contain" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_ca850ca978_d4ec892f98137ca1.png" alt="">
+    </div>
+    <div class="absolute -bottom-24 -right-24 w-96 h-96 opacity-10 pointer-events-none">
+        <img class="w-full h-full object-contain" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_a0803f0285_0b097c705f62f8d3.png" alt="">
+    </div>
+
+    <div class="w-full max-w-[450px] bg-white rounded-[16px] shadow-xl p-8 md:p-10 z-10">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 rounded-full bg-[#f5f0e8] flex items-center justify-center text-[#c9a84c] mx-auto mb-6">
+                <i class="fa-solid fa-envelope-open-text text-2xl"></i>
+            </div>
+            <h1 class="display-font text-2xl font-bold text-[#1a1a2e] mb-3">
+                <%= resent ? 'New Code Sent' : 'Verify Your Email' %>
+            </h1>
+            <p class="text-[#8a7f73] text-sm leading-relaxed">
+                <% if (email) { %>
+                    We've sent a 6-digit verification code to <span class="font-bold text-[#2d2d2d]"><%= email %></span>.
+                <% } else { %>
+                    Enter your email and the 6-digit verification code we sent you.
+                <% } %>
+                It expires in <span class="font-bold text-[#2d2d2d]">15 minutes</span>.
+            </p>
+        </div>
+
+        <% if (error) { %>
+            <div class="mb-6 px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm font-medium"><%= error %></div>
+        <% } %>
+
+        <form id="verify-email-form" class="space-y-6" method="POST" action="/verify-email">
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="email">Email Address</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                        <i class="fa-solid fa-envelope text-sm"></i>
+                    </span>
+                    <input type="email" id="email" name="email" placeholder="john@example.com" value="<%= email %>" required
+                        class="w-full pl-11 pr-4 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="code">Verification Code</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                        <i class="fa-solid fa-key text-sm"></i>
+                    </span>
+                    <input type="text" id="code" name="code" placeholder="123456" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required
+                        class="w-full pl-11 pr-4 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50 tracking-[0.3em] font-bold text-center">
+                </div>
+            </div>
+
+            <button id="verify-email-submit" type="submit"
+                class="w-full bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-4 rounded-xl shadow-lg shadow-[#c9a84c]/20 transform transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70">
+                <span id="verify-email-submit-label">Verify Email</span>
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-gray-50 text-center">
+            <p class="text-[#8a7f73] text-xs mb-3">Didn't get a code, or it expired?</p>
+            <form action="/resend-verification" method="POST">
+                <input type="hidden" name="email" value="<%= email %>">
+                <button type="submit" class="text-[#c9a84c] font-bold text-sm hover:underline">Resend verification code</button>
+            </form>
+        </div>
+
+        <div class="mt-6 text-center">
+            <a href="/login" class="text-[#8a7f73] text-sm hover:underline">Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var form = document.getElementById('verify-email-form');
+            var submitBtn = document.getElementById('verify-email-submit');
+            var label = document.getElementById('verify-email-submit-label');
+            if (!form || !submitBtn || !label) return;
+
+            form.addEventListener('submit', function () {
+                submitBtn.disabled = true;
+                label.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+            });
+        })();
+    </script>
+</body>
+</html>

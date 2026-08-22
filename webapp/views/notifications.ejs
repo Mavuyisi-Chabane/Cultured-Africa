@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Notifications' }) %>
+</head>
+<body class="min-h-screen">
+<%- include('partials/header') %>
+
+<main class="max-w-3xl mx-auto px-6 py-10 relative">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+    <div class="flex items-center justify-between mb-8 z-10 relative">
+        <h1 class="text-2xl md:text-3xl font-bold text-[#1a1a2e]">Notifications</h1>
+        <% if (notifications.some(n => !n.isRead)) { %>
+            <form action="/notifications/mark-all-read" method="POST">
+                <button type="submit" class="text-[#c9a84c] text-sm font-bold hover:underline">Mark all as read</button>
+            </form>
+        <% } %>
+    </div>
+
+    <div class="space-y-3 z-10 relative">
+        <% if (notifications.length === 0) { %>
+            <p class="text-[#8a7f73] text-sm">No notifications yet.</p>
+        <% } %>
+        <% notifications.forEach(n => { %>
+            <div class="bg-white rounded-2xl border border-[#e8e0d5] p-5 flex items-start gap-4 <%= n.isRead ? '' : 'border-l-4 border-l-[#c9a84c]' %>">
+                <div class="w-9 h-9 rounded-full bg-[#f5f0e8] flex items-center justify-center text-[#c9a84c] flex-shrink-0">
+                    <% if (n.type === 'purchase_confirmation') { %>
+                        <i class="fa-solid fa-receipt text-sm"></i>
+                    <% } else if (n.type === 'admin_reply') { %>
+                        <i class="fa-solid fa-reply text-sm"></i>
+                    <% } else { %>
+                        <i class="fa-solid fa-circle-info text-sm"></i>
+                    <% } %>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm text-[#2d2d2d]"><%= n.message %></p>
+                    <p class="text-[10px] text-[#8a7f73] mt-1 uppercase tracking-widest"><%= n.sentAt.toLocaleString() %></p>
+                </div>
+                <% if (!n.isRead) { %>
+                    <span class="w-2 h-2 rounded-full bg-[#c9a84c] mt-1.5 flex-shrink-0"></span>
+                <% } %>
+            </div>
+        <% }) %>
+    </div>
+
+    <%- include('partials/footer') %>
+</main>
+</body>
+</html>

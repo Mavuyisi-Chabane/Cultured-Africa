@@ -39,9 +39,8 @@
 
                     <div>
                         <label class="block text-xs font-bold uppercase tracking-widest text-[#2d2d2d] mb-2">Culture Category <span class="text-[#c9a84c]">*</span></label>
-                        <% const cultureOptions = ['Zulu', 'Xhosa', 'Venda', 'Sotho', 'Tsonga', 'Multi-Culture']; %>
                         <select name="culture" class="w-full px-4 py-3 bg-[#f5f0e8]/50 border border-[#e8e0d5] rounded-xl focus:border-[#c9a84c] transition-all appearance-none cursor-pointer">
-                            <% cultureOptions.forEach(c => { %>
+                            <% cultures.forEach(c => { %>
                                 <option value="<%= c %>" <%= editing && editing.culture === c ? 'selected' : '' %>><%= c %></option>
                             <% }) %>
                         </select>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — User Analytics' }) %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body class="min-h-screen">
+<% const active = 'analytics' %>
+<%- include('partials/admin-header', { active }) %>
+
+<main class="max-w-7xl mx-auto px-6 py-10 relative">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+    <div class="mb-10 z-10 relative">
+        <h1 class="display-font text-3xl font-bold text-[#f7efe6]">User Analytics Report</h1>
+        <p class="text-[#a99a8b] text-sm mt-1">Audience makeup and content preferences, to help tailor the catalogue to what viewers actually watch.</p>
+    </div>
+
+    <%- include('partials/admin-report-tabs', { active }) %>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 z-10 relative">
+        <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
+            <i class="fa-solid fa-users text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= userStats.totalUsers %></p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Total Users</p>
+        </div>
+        <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
+            <i class="fa-solid fa-user-check text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= userStats.verifiedUsers %></p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Verified Accounts</p>
+        </div>
+        <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
+            <i class="fa-solid fa-user-group text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= userStats.totalCustomers %></p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Customers</p>
+        </div>
+        <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
+            <i class="fa-solid fa-user-plus text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= userStats.newUsersThisWeek %></p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">New This Week</p>
+        </div>
+    </div>
+
+    <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8 md:p-10 mb-10 z-10 relative">
+        <h2 class="text-lg font-bold text-[#f7efe6] mb-6">New Registrations (Last 4 Weeks)</h2>
+        <div class="h-56">
+            <canvas id="registrationChart"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8 md:p-10 mb-10 z-10 relative">
+        <h2 class="text-lg font-bold text-[#f7efe6] mb-2">Content Preference by Culture</h2>
+        <p class="text-[#a99a8b] text-sm mb-6">Where to focus future commissions — cultures with strong views/revenue but few films are under-served.</p>
+        <div class="h-64 mb-8">
+            <canvas id="cultureChart"></canvas>
+        </div>
+        <div class="overflow-x-auto rounded-2xl border border-[#38281f]">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-[#271c17]">
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Culture</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Films</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Views</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Revenue</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Avg Rating</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#38281f]">
+                    <% byCulture.forEach(c => { %>
+                        <tr class="hover:bg-[#271c17]/30 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><%= c.name %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= c.filmCount %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= c.views %></td>
+                            <td class="px-6 py-4 text-sm font-bold text-[#9db183]">R<%= c.revenue.toFixed(0) %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= c.avgRating !== null ? c.avgRating.toFixed(1) : '—' %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 z-10 relative">
+        <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8">
+            <h2 class="text-lg font-bold text-[#f7efe6] mb-6">Views by Genre</h2>
+            <div class="h-56">
+                <canvas id="genreChart"></canvas>
+            </div>
+        </div>
+        <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8">
+            <h2 class="text-lg font-bold text-[#f7efe6] mb-6">Most Active Viewers</h2>
+            <% if (mostActiveViewers.length === 0) { %>
+                <p class="text-[#a99a8b] text-sm">No viewing activity yet.</p>
+            <% } %>
+            <div class="space-y-3">
+                <% mostActiveViewers.forEach((v, i) => { %>
+                    <div class="flex items-center justify-between px-4 py-3 bg-[#271c17]/50 rounded-xl">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 h-6 rounded-full bg-[#fb6b10] text-[#f4ece3] text-[11px] font-bold flex items-center justify-center"><%= i + 1 %></span>
+                            <span class="text-sm font-bold text-[#f7efe6]"><%= v.full_name %></span>
+                        </div>
+                        <span class="text-xs text-[#a99a8b]"><%= v.sessions %> views · <%= v.filmsWatched %> films</span>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-20 py-10 flex flex-col items-center">
+        <span class="text-[10px] uppercase tracking-[0.2em] text-[#a99a8b] font-bold">Cultured Africa Admin Portal</span>
+        <p class="text-[10px] text-[#a99a8b]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
+    </footer>
+</main>
+
+<script>
+    var brandGold = '#fcaa13';
+    var brandNavy = '#b62319';
+    var brandTeal = '#9db183';
+    var gridColor = 'rgba(169, 154, 139, 0.15)';
+
+    Chart.defaults.font.family = "'EB Garamond', serif";
+    Chart.defaults.color = '#a99a8b';
+
+    new Chart(document.getElementById('registrationChart'), {
+        type: 'line',
+        data: {
+            labels: <%- JSON.stringify(registrationTrend.map(t => t.label)) %>,
+            datasets: [{
+                label: 'New Users',
+                data: <%- JSON.stringify(registrationTrend.map(t => t.count)) %>,
+                borderColor: brandGold,
+                backgroundColor: 'rgba(222, 138, 42, 0.12)',
+                fill: true,
+                tension: 0.35,
+                pointBackgroundColor: brandGold,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } }
+        }
+    });
+
+    new Chart(document.getElementById('cultureChart'), {
+        type: 'bar',
+        data: {
+            labels: <%- JSON.stringify(byCulture.map(c => c.name)) %>,
+            datasets: [{
+                label: 'Views',
+                data: <%- JSON.stringify(byCulture.map(c => c.views)) %>,
+                backgroundColor: brandTeal,
+                borderRadius: 6,
+                maxBarThickness: 56
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } }
+        }
+    });
+
+    new Chart(document.getElementById('genreChart'), {
+        type: 'bar',
+        data: {
+            labels: <%- JSON.stringify(byGenre.map(g => g.name)) %>,
+            datasets: [{
+                label: 'Views',
+                data: <%- JSON.stringify(byGenre.map(g => g.views)) %>,
+                backgroundColor: brandNavy,
+                borderRadius: 6,
+                maxBarThickness: 40
+            }]
+        },
+        options: {
+            indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, grid: { color: gridColor } }, y: { grid: { display: false } } }
+        }
+    });
+</script>
+</body>
+</html>

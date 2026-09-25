@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Engagement & Behaviour' }) %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body class="min-h-screen">
+<% const active = 'engagement' %>
+<%- include('partials/admin-header', { active }) %>
+
+<main class="max-w-7xl mx-auto px-6 py-10 relative">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+    <div class="mb-10 z-10 relative">
+        <h1 class="display-font text-3xl font-bold text-[#f7efe6]">Engagement &amp; Behaviour Report</h1>
+        <p class="text-[#a99a8b] text-sm mt-1">How viewers actually use the platform — all-time, across every film.</p>
+    </div>
+
+    <%- include('partials/admin-report-tabs', { active }) %>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 z-10 relative">
+        <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
+            <i class="fa-solid fa-play text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= totalSessions %></p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Total Sessions</p>
+        </div>
+        <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
+            <i class="fa-solid fa-rotate text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= repeatViewRate %>%</p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Repeat View Rate</p>
+        </div>
+        <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
+            <i class="fa-solid fa-clock text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= peakHour.views ? (peakHour.hour + ':00') : '—' %></p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Peak Hour (UTC)</p>
+        </div>
+        <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
+            <i class="fa-solid fa-calendar-day text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= peakDay.views ? peakDay.day : '—' %></p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Peak Day</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 z-10 relative">
+        <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8">
+            <h2 class="text-lg font-bold text-[#f7efe6] mb-6">Views by Hour of Day</h2>
+            <div class="h-56">
+                <canvas id="hourChart"></canvas>
+            </div>
+        </div>
+        <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8">
+            <h2 class="text-lg font-bold text-[#f7efe6] mb-6">Views by Day of Week</h2>
+            <div class="h-56">
+                <canvas id="dayChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8 md:p-10 mb-10 z-10 relative">
+        <h2 class="text-lg font-bold text-[#f7efe6] mb-2">Engagement Depth by Film</h2>
+        <p class="text-[#a99a8b] text-sm mb-6">
+            "Drop-off risk" is based on completion rate (the platform tracks the furthest point reached per session, not a full frame-by-frame retention curve).
+        </p>
+        <div class="overflow-x-auto rounded-2xl border border-[#38281f]">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-[#271c17]">
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Film</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Sessions</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Avg Watch Time</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Completion Rate</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Repeat Rate</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Drop-off Risk</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#38281f]">
+                    <% engagementByFilm.forEach(f => { %>
+                        <% const mins = Math.floor(f.avgWatchSeconds / 60); const secs = f.avgWatchSeconds % 60; %>
+                        <tr class="hover:bg-[#271c17]/30 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><%= f.title %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.sessions %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.sessions ? mins + 'm ' + secs + 's' : '—' %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.sessions ? f.completionRate + '%' : '—' %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.sessions ? f.repeatRate + '%' : '—' %></td>
+                            <td class="px-6 py-4">
+                                <span class="text-[10px] px-2 py-1 rounded font-bold uppercase tracking-widest
+                                    <%= f.dropOffRisk === 'Low' ? 'bg-[#271c17] text-[#9db183]' : f.dropOffRisk === 'Medium' ? 'bg-[#fcaa13]/15 text-[#fcaa13]' : f.dropOffRisk === 'High' ? 'bg-[#b62319]/15 text-[#ef420f]' : 'bg-[#271c17] text-[#a99a8b]' %>">
+                                    <%= f.dropOffRisk %>
+                                </span>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="bg-[#271c17]/60 rounded-2xl p-6 mb-10 z-10 relative">
+        <h3 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-lightbulb text-[#fcaa13]"></i> Key Insights
+        </h3>
+        <ul class="space-y-3 text-sm text-[#f7efe6]">
+            <% if (insights.mostRewatched) { %>
+                <li><span class="font-bold">Most rewatched:</span> <%= insights.mostRewatched.title %> (<%= insights.mostRewatched.repeatRate %>% repeat rate)</li>
+            <% } %>
+            <% if (insights.highestDropOff) { %>
+                <li><span class="font-bold">Highest drop-off risk:</span> <%= insights.highestDropOff.title %> (<%= insights.highestDropOff.completionRate %>% completion) — consider reviewing pacing or trimming runtime.</li>
+            <% } %>
+            <% if (!insights.mostRewatched && !insights.highestDropOff) { %>
+                <li>Not enough viewing activity yet to surface insights.</li>
+            <% } %>
+        </ul>
+    </div>
+
+    <footer class="mt-20 py-10 flex flex-col items-center">
+        <span class="text-[10px] uppercase tracking-[0.2em] text-[#a99a8b] font-bold">Cultured Africa Admin Portal</span>
+        <p class="text-[10px] text-[#a99a8b]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
+    </footer>
+</main>
+
+<script>
+    var brandGold = '#fcaa13';
+    var brandTeal = '#9db183';
+    var gridColor = 'rgba(169, 154, 139, 0.15)';
+
+    Chart.defaults.font.family = "'EB Garamond', serif";
+    Chart.defaults.color = '#a99a8b';
+
+    new Chart(document.getElementById('hourChart'), {
+        type: 'bar',
+        data: {
+            labels: <%- JSON.stringify(viewsByHour.map(h => h.hour + ':00')) %>,
+            datasets: [{
+                label: 'Views',
+                data: <%- JSON.stringify(viewsByHour.map(h => h.views)) %>,
+                backgroundColor: brandGold,
+                borderRadius: 4,
+                maxBarThickness: 24
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } } }
+        }
+    });
+
+    new Chart(document.getElementById('dayChart'), {
+        type: 'bar',
+        data: {
+            labels: <%- JSON.stringify(viewsByDay.map(d => d.day.slice(0, 3))) %>,
+            datasets: [{
+                label: 'Views',
+                data: <%- JSON.stringify(viewsByDay.map(d => d.views)) %>,
+                backgroundColor: brandTeal,
+                borderRadius: 6,
+                maxBarThickness: 48
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } }
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,8 +1,11 @@
 {
   "name": "cultured-africa",
   "version": "1.0.0",
-  "description": "Cultured Africa streaming platform (in-memory data store, no DB yet)",
+  "description": "Cultured Africa streaming platform (SQLite via node:sqlite)",
   "main": "server.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js"
@@ -14,6 +17,9 @@
     "express": "^4.19.2",
     "express-session": "^1.18.0",
     "multer": "^2.2.0",
-    "nodemailer": "^9.0.5"
+    "nodemailer": "^9.0.5",
+    "pdf-lib": "^1.17.1",
+    "pdfkit": "^0.20.1",
+    "puppeteer-core": "^25.8.0"
   }
 }

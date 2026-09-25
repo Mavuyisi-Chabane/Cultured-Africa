@@ -1,27 +1,29 @@
-<nav id="header" class="bg-[#1a1a2e] px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg">
+<%
+  const headerInitials = currentUser.fullName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+%>
+<nav id="header" class="bg-[#0f0a08] px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg">
     <div class="flex items-center gap-8">
-        <a href="/" class="display-font text-2xl font-bold text-[#c9a84c] tracking-tight">Cultured Africa</a>
+        <a href="/" class="display-font text-2xl font-bold text-[#fcaa13] tracking-tight">Cultured Africa</a>
         <div class="hidden md:flex items-center gap-6">
-            <a href="/" class="text-white hover:text-[#c9a84c] transition-colors text-sm font-medium">Home</a>
-            <a href="/library" class="text-white hover:text-[#c9a84c] transition-colors text-sm font-medium">My Library</a>
+            <a href="/" class="text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium">Home</a>
+            <a href="/library" class="text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium">My Library</a>
         </div>
     </div>
     <div class="flex items-center gap-4">
-        <a href="/notifications" class="relative text-white hover:text-[#c9a84c] transition-colors" title="Notifications">
+        <a href="/notifications" class="relative text-[#f4ece3] hover:text-[#fcaa13] transition-colors" title="Notifications">
             <i class="fa-solid fa-bell"></i>
             <% if (unreadNotifications > 0) { %>
-                <span class="absolute -top-2 -right-2 bg-[#c9a84c] text-[#1a1a2e] text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center"><%= unreadNotifications > 9 ? '9+' : unreadNotifications %></span>
+                <span class="absolute -top-2 -right-2 bg-[#fb6b10] text-[#f7efe6] text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center"><%= unreadNotifications > 9 ? '9+' : unreadNotifications %></span>
             <% } %>
         </a>
-        <div class="flex items-center gap-2 mr-4">
-            <img src="<%= currentUser.avatar %>" class="w-8 h-8 rounded-full border border-[#c9a84c]" alt="Avatar">
-            <span class="text-white text-xs hidden sm:inline"><%= currentUser.fullName %></span>
-            <% if (currentUser.role === 'admin') { %>
-                <a href="/admin/dashboard" class="text-[10px] uppercase font-bold text-[#c9a84c] border border-[#c9a84c]/40 rounded px-2 py-0.5 ml-2 hover:bg-[#c9a84c]/10">Admin</a>
-            <% } %>
-        </div>
+        <a href="/account" class="flex items-center gap-2 mr-4 hover:opacity-80 transition-opacity" title="Manage Account">
+            <div class="w-8 h-8 rounded-full border border-[#fcaa13] bg-[#1e1613]/5 flex items-center justify-center text-[#fcaa13] text-xs font-bold">
+                <%= headerInitials %>
+            </div>
+            <span class="text-[#f4ece3] text-xs hidden sm:inline"><%= currentUser.fullName %></span>
+        </a>
         <form action="/logout" method="POST">
-            <button type="submit" class="text-white hover:text-[#c9a84c] transition-colors text-sm font-medium">Logout</button>
+            <button type="submit" class="text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium">Logout</button>
         </form>
     </div>
 </nav>

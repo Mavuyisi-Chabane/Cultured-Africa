@@ -11,62 +11,62 @@
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="mb-10 z-10 relative">
-        <h1 class="display-font text-3xl font-bold text-[#1a1a2e]">Administrator Dashboard</h1>
-        <p class="text-[#8a7f73] text-sm mt-1">Welcome back, <%= currentUser.fullName %>. Here's what's happening on Cultured Africa today.</p>
+        <h1 class="display-font text-3xl font-bold text-[#f7efe6]">Administrator Dashboard</h1>
+        <p class="text-[#a99a8b] text-sm mt-1">Welcome back, <%= currentAdmin.name %>. Here's what's happening on Cultured Africa today.</p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 z-10 relative">
-        <div class="bg-white p-8 rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] hover:shadow-2xl transition-all group">
-            <div class="w-14 h-14 bg-[#f5f0e8] rounded-2xl flex items-center justify-center text-[#c9a84c] mb-6 group-hover:scale-110 transition-transform">
+        <div class="bg-[#1e1613] p-8 rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] hover:shadow-2xl transition-all group">
+            <div class="w-14 h-14 bg-[#271c17] rounded-2xl flex items-center justify-center text-[#fcaa13] mb-6 group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-film text-2xl"></i>
             </div>
-            <h3 class="text-xl font-bold text-[#1a1a2e] mb-3">Manage Films</h3>
-            <p class="text-[#8a7f73] text-sm leading-relaxed mb-8">Upload new films, edit metadata, and manage your content catalogue.</p>
-            <a href="/admin/films" class="w-full block text-center bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#c9a84c]/20">Go to Films</a>
+            <h3 class="text-xl font-bold text-[#f7efe6] mb-3">Manage Films</h3>
+            <p class="text-[#a99a8b] text-sm leading-relaxed mb-8">Upload new films, edit metadata, and manage your content catalogue.</p>
+            <a href="/admin/films" class="w-full block text-center bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#fb6b10]/20">Go to Films</a>
         </div>
 
-        <div class="bg-white p-8 rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] hover:shadow-2xl transition-all group">
-            <div class="w-14 h-14 bg-[#f5f0e8] rounded-2xl flex items-center justify-center text-[#c9a84c] mb-6 group-hover:scale-110 transition-transform">
+        <div class="bg-[#1e1613] p-8 rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] hover:shadow-2xl transition-all group">
+            <div class="w-14 h-14 bg-[#271c17] rounded-2xl flex items-center justify-center text-[#fcaa13] mb-6 group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-comments text-2xl"></i>
             </div>
-            <h3 class="text-xl font-bold text-[#1a1a2e] mb-3">Customer Feedback</h3>
-            <p class="text-[#8a7f73] text-sm leading-relaxed mb-8">View and respond to user reviews, ratings, and cultural suggestions.</p>
-            <a href="/admin/feedback" class="w-full block text-center bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#c9a84c]/20">View Feedback</a>
+            <h3 class="text-xl font-bold text-[#f7efe6] mb-3">Customer Feedback</h3>
+            <p class="text-[#a99a8b] text-sm leading-relaxed mb-8">View and respond to user reviews, ratings, and cultural suggestions.</p>
+            <a href="/admin/feedback" class="w-full block text-center bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#fb6b10]/20">View Feedback</a>
         </div>
 
-        <div class="bg-white p-8 rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] hover:shadow-2xl transition-all group">
-            <div class="w-14 h-14 bg-[#f5f0e8] rounded-2xl flex items-center justify-center text-[#c9a84c] mb-6 group-hover:scale-110 transition-transform">
+        <div class="bg-[#1e1613] p-8 rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] hover:shadow-2xl transition-all group">
+            <div class="w-14 h-14 bg-[#271c17] rounded-2xl flex items-center justify-center text-[#fcaa13] mb-6 group-hover:scale-110 transition-transform">
                 <i class="fa-solid fa-chart-line text-2xl"></i>
             </div>
-            <h3 class="text-xl font-bold text-[#1a1a2e] mb-3">Generate Reports</h3>
-            <p class="text-[#8a7f73] text-sm leading-relaxed mb-8">Access sales reports, content performance analytics, and user insights.</p>
-            <a href="/admin/reports" class="w-full block text-center bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#c9a84c]/20">View Reports</a>
+            <h3 class="text-xl font-bold text-[#f7efe6] mb-3">Generate Reports</h3>
+            <p class="text-[#a99a8b] text-sm leading-relaxed mb-8">Access sales reports, content performance analytics, and user insights.</p>
+            <a href="/admin/reports" class="w-full block text-center bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-[#fb6b10]/20">View Reports</a>
         </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 z-10 relative">
-        <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Films</p>
-            <h4 class="text-2xl font-bold text-[#1a1a2e]"><%= stats.totalFilms %></h4>
+        <div class="bg-[#1e1613] p-6 rounded-2xl border-l-4 border-[#fcaa13] shadow-sm">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1">Total Films</p>
+            <h4 class="text-2xl font-bold text-[#f7efe6]"><%= stats.totalFilms %></h4>
         </div>
-        <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Users</p>
-            <h4 class="text-2xl font-bold text-[#1a1a2e]"><%= stats.totalUsers %></h4>
+        <div class="bg-[#1e1613] p-6 rounded-2xl border-l-4 border-[#fcaa13] shadow-sm">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1">Total Users</p>
+            <h4 class="text-2xl font-bold text-[#f7efe6]"><%= stats.totalUsers %></h4>
         </div>
-        <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Revenue</p>
-            <h4 class="text-2xl font-bold text-[#1a1a2e]">R<%= stats.totalRevenue.toFixed(0) %></h4>
+        <div class="bg-[#1e1613] p-6 rounded-2xl border-l-4 border-[#fcaa13] shadow-sm">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1">Total Revenue</p>
+            <h4 class="text-2xl font-bold text-[#f7efe6]">R<%= stats.totalRevenue.toFixed(0) %></h4>
         </div>
-        <div class="bg-white p-6 rounded-2xl border-l-4 border-[#c9a84c] shadow-sm">
-            <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mb-1">Total Reviews</p>
-            <h4 class="text-2xl font-bold text-[#1a1a2e]"><%= stats.totalReviews %></h4>
+        <div class="bg-[#1e1613] p-6 rounded-2xl border-l-4 border-[#fcaa13] shadow-sm">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1">Total Reviews</p>
+            <h4 class="text-2xl font-bold text-[#f7efe6]"><%= stats.totalReviews %></h4>
         </div>
     </div>
 
-    <div class="bg-[#1a1a2e] p-6 rounded-2xl text-white relative overflow-hidden mb-8 z-10">
+    <div class="bg-[#0f0a08] p-6 rounded-2xl text-[#f4ece3] relative overflow-hidden mb-8 z-10">
         <div class="relative z-10">
-            <h4 class="display-font text-lg font-bold text-[#c9a84c] mb-2">Cultured Africa</h4>
-            <p class="text-white/70 text-xs leading-relaxed">Preserving our stories, one film at a time. Keep building the legacy.</p>
+            <h4 class="display-font text-lg font-bold text-[#fcaa13] mb-2">Cultured Africa</h4>
+            <p class="text-[#f4ece3]/70 text-xs leading-relaxed">Preserving our stories, one film at a time. Keep building the legacy.</p>
         </div>
         <div class="absolute -right-4 -bottom-4 opacity-10">
              <i class="fa-solid fa-om text-8xl"></i>
@@ -75,11 +75,11 @@
 
     <footer class="mt-20 py-10 flex flex-col items-center">
         <div class="flex items-center gap-3 opacity-40 mb-4">
-            <div class="h-px w-8 bg-[#8a7f73]"></div>
-            <span class="text-[10px] uppercase tracking-[0.2em] text-[#8a7f73] font-bold">Cultured Africa Command Centre</span>
-            <div class="h-px w-8 bg-[#8a7f73]"></div>
+            <div class="h-px w-8 bg-[#a99a8b]"></div>
+            <span class="text-[10px] uppercase tracking-[0.2em] text-[#a99a8b] font-bold">Cultured Africa Command Centre</span>
+            <div class="h-px w-8 bg-[#a99a8b]"></div>
         </div>
-        <p class="text-[10px] text-[#8a7f73]/60">© 2026 Cultured Africa Admin Portal. Session active for <%= currentUser.fullName %>.</p>
+        <p class="text-[10px] text-[#a99a8b]/60">© 2026 Cultured Africa Admin Portal. Session active for <%= currentAdmin.name %>.</p>
     </footer>
 </main>
 </body>

@@ -39,6 +39,17 @@ router.post('/login', (req, res) => {
     return res.render('login', { error: 'Incorrect email or password.', showResend: false, resendEmail: '' });
   }
 
+  // Admin identity now lives entirely in the `admins` table (see db/schema.sql) —
+  // a role = 'admin' users row at this point is either a pre-migration legacy row or
+  // a bookkeeping-only shadow row (db/index.js's ensureShadowUserForAdmin), neither
+  // of which should ever be usable as a customer login.
+  if (user.role === 'admin') {
+    return res.render('login', {
+      error: 'This account uses the Admin Portal. Please log in at /admin/login.',
+      showResend: false, resendEmail: ''
+    });
+  }
+
   if (!user.is_verified) {
     return res.render('login', {
       error: 'Please verify your email before logging in. Check your inbox for the verification code, or request a new one below.',
@@ -51,7 +62,7 @@ router.post('/login', (req, res) => {
     id: user.user_id, fullName: user.full_name, email: user.email, role: user.role,
     avatar: user.avatar, sessionVersion: user.session_version
   };
-  res.redirect(user.role === 'admin' ? '/admin/dashboard' : '/');
+  res.redirect('/');
 });
 
 router.get('/register', (req, res) => {

@@ -1,0 +1,17 @@
+<%
+  const reportTabs = [
+    { href: '/admin/reports', label: 'Revenue & Content', key: 'reports' },
+    { href: '/admin/analytics', label: 'User Analytics', key: 'analytics' },
+    { href: '/admin/engagement', label: 'Engagement & Behaviour', key: 'engagement' }
+  ];
+%>
+<div class="pdf-hide flex flex-wrap items-center justify-between gap-3 mb-10 z-10 relative">
+    <div class="flex flex-wrap items-center gap-2">
+        <% reportTabs.forEach(t => { %>
+            <a href="<%= t.href %>" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all <%= active === t.key ? 'bg-[#0f0a08] text-[#fcaa13]' : 'border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]' %>"><%= t.label %></a>
+        <% }) %>
+    </div>
+    <a href="/admin/reports/pdf" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all bg-[#fb6b10] text-[#f4ece3] hover:bg-[#ef420f] flex items-center gap-2">
+        <i class="fa-solid fa-file-pdf"></i> Download PDF
+    </a>
+</div>

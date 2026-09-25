@@ -10,21 +10,21 @@
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="flex items-center justify-between mb-8 z-10 relative">
-        <h1 class="text-2xl md:text-3xl font-bold text-[#1a1a2e]">Notifications</h1>
+        <h1 class="text-2xl md:text-3xl font-bold text-[#f7efe6]">Notifications</h1>
         <% if (notifications.some(n => !n.isRead)) { %>
             <form action="/notifications/mark-all-read" method="POST">
-                <button type="submit" class="text-[#c9a84c] text-sm font-bold hover:underline">Mark all as read</button>
+                <button type="submit" class="text-[#fcaa13] text-sm font-bold hover:underline">Mark all as read</button>
             </form>
         <% } %>
     </div>
 
     <div class="space-y-3 z-10 relative">
         <% if (notifications.length === 0) { %>
-            <p class="text-[#8a7f73] text-sm">No notifications yet.</p>
+            <p class="text-[#a99a8b] text-sm">No notifications yet.</p>
         <% } %>
         <% notifications.forEach(n => { %>
-            <div class="bg-white rounded-2xl border border-[#e8e0d5] p-5 flex items-start gap-4 <%= n.isRead ? '' : 'border-l-4 border-l-[#c9a84c]' %>">
-                <div class="w-9 h-9 rounded-full bg-[#f5f0e8] flex items-center justify-center text-[#c9a84c] flex-shrink-0">
+            <div class="bg-[#1e1613] rounded-2xl border border-[#38281f] p-5 flex items-start gap-4 <%= n.isRead ? '' : 'border-l-4 border-l-[#fcaa13]' %>">
+                <div class="w-9 h-9 rounded-full bg-[#271c17] flex items-center justify-center text-[#fcaa13] flex-shrink-0">
                     <% if (n.type === 'purchase_confirmation') { %>
                         <i class="fa-solid fa-receipt text-sm"></i>
                     <% } else if (n.type === 'admin_reply') { %>
@@ -34,11 +34,11 @@
                     <% } %>
                 </div>
                 <div class="flex-1">
-                    <p class="text-sm text-[#2d2d2d]"><%= n.message %></p>
-                    <p class="text-[10px] text-[#8a7f73] mt-1 uppercase tracking-widest"><%= n.sentAt.toLocaleString() %></p>
+                    <p class="text-sm text-[#f7efe6]"><%= n.message %></p>
+                    <p class="text-[10px] text-[#a99a8b] mt-1 uppercase tracking-widest"><%= n.sentAt.toLocaleString() %></p>
                 </div>
                 <% if (!n.isRead) { %>
-                    <span class="w-2 h-2 rounded-full bg-[#c9a84c] mt-1.5 flex-shrink-0"></span>
+                    <span class="w-2 h-2 rounded-full bg-[#fb6b10] mt-1.5 flex-shrink-0"></span>
                 <% } %>
             </div>
         <% }) %>

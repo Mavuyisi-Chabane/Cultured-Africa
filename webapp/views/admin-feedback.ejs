@@ -2,65 +2,423 @@
 <html lang="en">
 <head>
 <%- include('partials/head', { title: 'Cultured Africa — Feedback' }) %>
+<style>
+    /* The modals below combine the native `hidden` attribute with a `flex` display
+       class. Both have equal CSS specificity, and Tailwind's stylesheet loads after
+       the browser's UA stylesheet, so `.flex` would otherwise win and the modal would
+       stay visible even once `hidden` is set back to true. This restores `hidden`'s
+       precedence for this page. */
+    [hidden] { display: none !important; }
+</style>
 </head>
 <body class="min-h-screen">
 <% const active = 'feedback' %>
 <%- include('partials/admin-header', { active }) %>
 
-<main class="max-w-5xl mx-auto px-6 py-10 relative">
+<%
+  const qs = (overrides) => {
+    const merged = { film: filters.film, rating: filters.rating, status: filters.status, flagged: filters.flagged ? '1' : '', ...overrides };
+    const parts = Object.entries(merged).filter(([, v]) => v !== '' && v !== null && v !== undefined);
+    return parts.length ? '?' + parts.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&') : '';
+  };
+  const currentUrl = '/admin/feedback' + qs({ page: pagination.page });
+%>
+
+<main class="max-w-7xl mx-auto px-6 py-10 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
-    <div class="mb-10 z-10 relative">
-        <h1 class="display-font text-3xl font-bold text-[#1a1a2e]">Customer Feedback</h1>
-        <p class="text-[#8a7f73] text-sm mt-1">Reviews and ratings submitted across your film catalogue.</p>
+    <div class="mb-6 z-10 relative">
+        <h1 class="display-font text-3xl font-bold text-[#f7efe6]">Manage Feedback</h1>
+        <p class="text-[#a99a8b] text-sm mt-1">Reviews and ratings submitted across your film catalogue.</p>
     </div>
 
-    <div class="space-y-6 z-10 relative">
+    <!-- Status tabs: the clearest way to find removed comments again (Restore lives here). -->
+    <div class="flex flex-wrap items-center gap-2 mb-6 z-10 relative">
+        <a href="/admin/feedback<%= qs({ status: '', page: 1 }) %>"
+            class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all <%= filters.status === '' ? 'bg-[#0f0a08] text-[#fcaa13]' : 'border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]' %>">
+            All (<%= statusCounts.all %>)
+        </a>
+        <a href="/admin/feedback<%= qs({ status: 'published', page: 1 }) %>"
+            class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all <%= filters.status === 'published' ? 'bg-[#0f0a08] text-[#fcaa13]' : 'border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]' %>">
+            Published (<%= statusCounts.published %>)
+        </a>
+        <a href="/admin/feedback<%= qs({ status: 'removed', page: 1 }) %>"
+            class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all <%= filters.status === 'removed' ? 'bg-[#0f0a08] text-[#fcaa13]' : 'border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]' %>">
+            <i class="fa-solid fa-trash-can-arrow-up mr-1"></i> Removed (<%= statusCounts.removed %>)
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <form method="GET" action="/admin/feedback" class="z-10 relative bg-[#1e1613] rounded-2xl border border-[#38281f] p-5 mb-6 flex flex-wrap items-end gap-4">
+        <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Film</label>
+            <select name="film" class="px-3 py-2 bg-[#271c17]/50 border border-[#38281f] rounded-lg text-sm focus:border-[#fcaa13] transition-all min-w-[160px]">
+                <option value="">All films</option>
+                <% films.forEach(f => { %>
+                    <option value="<%= f.id %>" <%= String(filters.film) === String(f.id) ? 'selected' : '' %>><%= f.title %></option>
+                <% }) %>
+            </select>
+        </div>
+        <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Rating</label>
+            <select name="rating" class="px-3 py-2 bg-[#271c17]/50 border border-[#38281f] rounded-lg text-sm focus:border-[#fcaa13] transition-all">
+                <option value="">Any rating</option>
+                <% [5, 4, 3, 2, 1].forEach(n => { %>
+                    <option value="<%= n %>" <%= String(filters.rating) === String(n) ? 'selected' : '' %>><%= n %> star<%= n > 1 ? 's' : '' %></option>
+                <% }) %>
+            </select>
+        </div>
+        <div>
+            <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Status</label>
+            <select name="status" class="px-3 py-2 bg-[#271c17]/50 border border-[#38281f] rounded-lg text-sm focus:border-[#fcaa13] transition-all">
+                <option value="">All statuses</option>
+                <option value="published" <%= filters.status === 'published' ? 'selected' : '' %>>Published</option>
+                <option value="removed" <%= filters.status === 'removed' ? 'selected' : '' %>>Removed</option>
+            </select>
+        </div>
+        <label class="flex items-center gap-2 pb-2 cursor-pointer select-none">
+            <input type="checkbox" name="flagged" value="1" <%= filters.flagged ? 'checked' : '' %> class="w-4 h-4 accent-[#fcaa13]">
+            <span class="text-sm font-medium text-[#f7efe6]">Auto-flagged only</span>
+        </label>
+        <div class="flex items-center gap-2">
+            <button type="submit" class="bg-[#0f0a08] hover:bg-[#0a0605] text-[#fcaa13] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#fcaa13]/30">
+                Apply Filters
+            </button>
+            <% if (filters.film || filters.rating || filters.status || filters.flagged) { %>
+                <a href="/admin/feedback" class="text-[#a99a8b] hover:text-[#fcaa13] text-sm font-medium px-3">Clear</a>
+            <% } %>
+        </div>
+    </form>
+
+    <!-- Bulk action bar -->
+    <div class="z-10 relative flex items-center justify-between mb-4">
+        <label class="flex items-center gap-2 text-sm text-[#a99a8b] cursor-pointer select-none">
+            <input type="checkbox" id="select-all" class="w-4 h-4 accent-[#fcaa13]">
+            Select all on this page
+        </label>
+        <button type="button" id="bulk-delete-trigger" disabled
+            class="bg-[#b62319]/15 text-[#b62319] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#b62319]/30 flex items-center gap-2 cursor-not-allowed"
+            data-enabled-class="bg-[#b62319] hover:bg-[#ef420f] text-[#f4ece3] border-[#b62319] cursor-pointer"
+            data-disabled-class="bg-[#b62319]/15 text-[#b62319] border-[#b62319]/30 cursor-not-allowed">
+            <i class="fa-solid fa-trash"></i> <span id="bulk-delete-label">Delete Selected</span>
+        </button>
+    </div>
+
+    <div class="space-y-4 z-10 relative">
         <% if (feedback.length === 0) { %>
-            <p class="text-[#8a7f73] text-sm">No feedback submitted yet.</p>
+            <div class="bg-[#1e1613] rounded-2xl border border-[#38281f] p-8 text-center">
+                <p class="text-[#a99a8b] text-sm">No feedback matches the selected filters.</p>
+            </div>
         <% } %>
         <% feedback.forEach(r => { %>
-            <div class="bg-white rounded-2xl border border-[#e8e0d5] p-6 shadow-sm">
-                <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
-                    <div>
-                        <span class="font-bold text-[#1a1a2e] text-sm"><%= r.user ? r.user.fullName : 'Unknown user' %></span>
-                        <span class="text-[#8a7f73] text-xs ml-2">on <span class="font-medium"><%= r.film ? r.film.title : 'Deleted film' %></span></span>
-                    </div>
-                    <div class="text-[#c9a84c] text-xs flex items-center">
-                        <% if (r.rating) { %>
-                            <% for (let i = 0; i < 5; i++) { %><i class="fa-solid fa-star<%= i < r.rating ? '' : ' opacity-20' %>"></i><% } %>
+            <div class="bg-[#1e1613] rounded-2xl border border-[#38281f] p-6 shadow-sm <%= r.status === 'removed' ? 'opacity-60' : '' %>">
+                <div class="flex items-start gap-4">
+                    <input type="checkbox" name="ids" value="<%= r.id %>" form="bulk-delete-form"
+                        class="row-checkbox mt-1.5 w-4 h-4 accent-[#fcaa13] flex-shrink-0" <%= r.status === 'removed' ? 'disabled' : '' %>>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="font-bold text-[#f7efe6] text-sm"><%= r.user ? r.user.fullName : 'Unknown user' %></span>
+                                <span class="text-[#a99a8b] text-xs">on <span class="font-medium"><%= r.film ? r.film.title : 'Deleted film' %></span></span>
+                                <% if (r.status === 'removed') { %>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#271c17] text-[#a99a8b] uppercase tracking-wider">Removed</span>
+                                <% } %>
+                                <% if (r.flagged) { %>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#b62319]/15 text-[#ef420f] uppercase tracking-wider">
+                                        <i class="fa-solid fa-flag"></i> Auto-flagged
+                                    </span>
+                                <% } %>
+                            </div>
+                            <div class="text-[#fcaa13] text-xs flex items-center">
+                                <% if (r.rating) { %>
+                                    <% for (let i = 0; i < 5; i++) { %><i class="fa-solid fa-star<%= i < r.rating ? '' : ' opacity-20' %>"></i><% } %>
+                                <% } else { %>
+                                    <span class="text-[#a99a8b] text-[10px] uppercase tracking-widest font-bold">No rating</span>
+                                <% } %>
+                                <span class="text-[#a99a8b] ml-2"><%= r.createdAt.toLocaleString() %></span>
+                            </div>
+                        </div>
+                        <% if (r.comment) { %>
+                            <p class="text-[#f7efe6] text-sm mb-3 line-clamp-2"><%= r.comment %></p>
                         <% } else { %>
-                            <span class="text-[#8a7f73] text-[10px] uppercase tracking-widest font-bold">No rating</span>
+                            <p class="text-[#a99a8b] text-sm italic mb-3">(No comment left)</p>
                         <% } %>
-                        <span class="text-[#8a7f73] ml-2"><%= r.createdAt.toLocaleString() %></span>
+
+                        <% if (r.adminReply) { %>
+                            <div class="mb-3 pl-4 border-l-2 border-[#fcaa13]/40">
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-[#fcaa13] mb-1">Your reply</p>
+                                <p class="text-[#a99a8b] text-sm"><%= r.adminReply %></p>
+                            </div>
+                        <% } %>
+
+                        <div class="flex items-center justify-between flex-wrap gap-3">
+                            <% if (r.status === 'published') { %>
+                                <form action="/admin/feedback/<%= r.id %>/reply" method="POST" class="flex gap-3 flex-1 min-w-[240px]">
+                                    <input type="hidden" name="returnTo" value="<%= currentUrl %>">
+                                    <input type="text" name="reply" placeholder="<%= r.adminReply ? 'Update your reply...' : 'Write a reply...' %>" value=""
+                                        class="flex-1 px-4 py-2.5 bg-[#271c17]/50 border border-[#38281f] rounded-xl text-sm focus:border-[#fcaa13] transition-all">
+                                    <button type="submit" class="bg-[#0f0a08] hover:bg-[#0a0605] text-[#fcaa13] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#fcaa13]/30">Reply</button>
+                                </form>
+                            <% } else { %>
+                                <p class="flex-1 min-w-[240px] text-xs text-[#a99a8b] italic">Replies are disabled while this comment is removed. Restore it to reply.</p>
+                            <% } %>
+
+                            <div class="flex items-center gap-3">
+                                <button type="button" class="view-detail-btn text-[#a99a8b] hover:text-[#fcaa13] text-sm font-medium"
+                                    data-user="<%= r.user ? r.user.fullName : 'Unknown user' %>"
+                                    data-film="<%= r.film ? r.film.title : 'Deleted film' %>"
+                                    data-rating="<%= r.rating || '' %>"
+                                    data-comment="<%= (r.comment || '(No comment left)').replace(/"/g, '&quot;') %>"
+                                    data-date="<%= r.createdAt.toLocaleString() %>"
+                                    data-status="<%= r.status %>"
+                                    data-removed-by="<%= r.removedBy || '' %>"
+                                    data-removed-at="<%= r.removedAt ? r.removedAt.toLocaleString() : '' %>"
+                                    data-removal-reason="<%= r.removalReason || '' %>"
+                                    title="View detail">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+
+                                <% if (r.status === 'published') { %>
+                                    <button type="button" class="delete-trigger-btn text-[#a99a8b] hover:text-[#ef420f] text-sm font-medium"
+                                        data-action="/admin/feedback/<%= r.id %>/delete" title="Delete (soft)">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                <% } else { %>
+                                    <form action="/admin/feedback/<%= r.id %>/restore" method="POST"
+                                        onsubmit="return confirm('Restore this comment so it is published again?');">
+                                        <input type="hidden" name="returnTo" value="<%= currentUrl %>">
+                                        <button type="submit"
+                                            class="flex items-center gap-1.5 bg-[#271c17] hover:bg-[#38281f] text-[#9db183] font-bold px-3 py-1.5 rounded-lg text-xs transition-all"
+                                            title="Restore this comment so it's published again">
+                                            <i class="fa-solid fa-rotate-left"></i> Restore
+                                        </button>
+                                    </form>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <% if (r.status === 'removed' && (r.removedBy || r.removalReason)) { %>
+                            <p class="text-[10px] text-[#a99a8b] mt-3">
+                                Removed<% if (r.removalReason) { %> for <span class="font-medium"><%= r.removalReason %></span><% } %><% if (r.removedAt) { %> on <%= r.removedAt.toLocaleString() %><% } %>
+                            </p>
+                        <% } %>
                     </div>
                 </div>
-                <% if (r.comment) { %>
-                    <p class="text-[#2d2d2d] text-sm mb-4"><%= r.comment %></p>
-                <% } else { %>
-                    <p class="text-[#8a7f73] text-sm italic mb-4">(No comment left)</p>
-                <% } %>
-
-                <% if (r.adminReply) { %>
-                    <div class="mb-4 pl-4 border-l-2 border-[#c9a84c]/40">
-                        <p class="text-[10px] font-bold uppercase tracking-widest text-[#c9a84c] mb-1">Your reply</p>
-                        <p class="text-[#8a7f73] text-sm"><%= r.adminReply %></p>
-                    </div>
-                <% } %>
-
-                <form action="/admin/feedback/<%= r.id %>/reply" method="POST" class="flex gap-3">
-                    <input type="text" name="reply" placeholder="<%= r.adminReply ? 'Update your reply...' : 'Write a reply...' %>" value=""
-                        class="flex-1 px-4 py-2.5 bg-[#f5f0e8]/50 border border-[#e8e0d5] rounded-xl text-sm focus:border-[#c9a84c] transition-all">
-                    <button type="submit" class="bg-[#1a1a2e] hover:bg-[#252542] text-[#c9a84c] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#c9a84c]/30">Reply</button>
-                </form>
             </div>
         <% }) %>
     </div>
 
+    <!-- Pagination -->
+    <% if (pagination.totalPages > 1) { %>
+        <div class="z-10 relative flex items-center justify-between mt-6">
+            <p class="text-xs text-[#a99a8b]"><%= pagination.total %> comment<%= pagination.total === 1 ? '' : 's' %> total &middot; page <%= pagination.page %> of <%= pagination.totalPages %></p>
+            <div class="flex items-center gap-2">
+                <a href="/admin/feedback<%= qs({ page: Math.max(1, pagination.page - 1) }) %>"
+                    class="px-4 py-2 rounded-lg text-sm font-medium border border-[#38281f] <%= pagination.page === 1 ? 'text-[#a99a8b]/40 pointer-events-none' : 'text-[#f7efe6] hover:border-[#fcaa13]' %>">
+                    Previous
+                </a>
+                <a href="/admin/feedback<%= qs({ page: Math.min(pagination.totalPages, pagination.page + 1) }) %>"
+                    class="px-4 py-2 rounded-lg text-sm font-medium border border-[#38281f] <%= pagination.page === pagination.totalPages ? 'text-[#a99a8b]/40 pointer-events-none' : 'text-[#f7efe6] hover:border-[#fcaa13]' %>">
+                    Next
+                </a>
+            </div>
+        </div>
+    <% } %>
+
     <footer class="mt-20 py-10 flex flex-col items-center">
-        <span class="text-[10px] uppercase tracking-[0.2em] text-[#8a7f73] font-bold">Cultured Africa Admin Portal</span>
-        <p class="text-[10px] text-[#8a7f73]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
+        <span class="text-[10px] uppercase tracking-[0.2em] text-[#a99a8b] font-bold">Cultured Africa Admin Portal</span>
+        <p class="text-[10px] text-[#a99a8b]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
     </footer>
 </main>
+
+<!-- Bulk delete form: row checkboxes above use form="bulk-delete-form" to belong to this
+     form without being nested inside it, so the modal below can live separately in the DOM. -->
+<form id="bulk-delete-form" method="POST" action="/admin/feedback/bulk-delete">
+    <input type="hidden" name="returnTo" value="<%= currentUrl %>">
+
+    <div id="bulk-delete-modal" hidden class="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] px-4">
+        <div class="bg-[#1e1613] rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <h3 class="display-font text-xl font-bold text-[#f7efe6] mb-2">Confirm bulk removal</h3>
+            <p class="text-sm text-[#a99a8b] mb-4">
+                You are about to remove <span id="bulk-delete-count" class="font-bold text-[#f7efe6]">0</span> comment(s).
+                This is a high-impact action — re-enter your password to confirm.
+            </p>
+            <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Password</label>
+            <input type="password" name="password" required autocomplete="current-password"
+                class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all mb-6">
+            <div class="flex items-center justify-end gap-3">
+                <button type="button" id="bulk-delete-cancel" class="text-[#a99a8b] hover:text-[#f7efe6] text-sm font-medium px-4 py-2.5">Cancel</button>
+                <button type="submit" class="bg-[#b62319] hover:bg-[#ef420f] text-[#f4ece3] font-bold px-5 py-2.5 rounded-xl text-sm transition-all">Delete Selected</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Single delete modal -->
+<div id="delete-modal" hidden class="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] px-4">
+    <div class="bg-[#1e1613] rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="display-font text-xl font-bold text-[#f7efe6] mb-2">Remove this comment?</h3>
+        <p class="text-sm text-[#a99a8b] mb-4">It will be hidden from the film page and excluded from the film's average rating. This can be undone later from the Removed tab.</p>
+        <form id="delete-form" method="POST">
+            <input type="hidden" name="returnTo" value="<%= currentUrl %>">
+            <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Reason (optional)</label>
+            <select name="reason" class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all mb-6">
+                <option value="">No reason given</option>
+                <option value="Spam">Spam</option>
+                <option value="Offensive">Offensive</option>
+                <option value="Off-topic">Off-topic</option>
+                <option value="Other">Other</option>
+            </select>
+            <div class="flex items-center justify-end gap-3">
+                <button type="button" id="delete-cancel" class="text-[#a99a8b] hover:text-[#f7efe6] text-sm font-medium px-4 py-2.5">Cancel</button>
+                <button type="submit" class="bg-[#b62319] hover:bg-[#ef420f] text-[#f4ece3] font-bold px-5 py-2.5 rounded-xl text-sm transition-all">Delete Comment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- View detail modal -->
+<div id="view-modal" hidden class="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] px-4">
+    <div class="bg-[#1e1613] rounded-2xl shadow-2xl max-w-lg w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="display-font text-xl font-bold text-[#f7efe6]">Feedback detail</h3>
+            <button type="button" id="view-close" class="text-[#a99a8b] hover:text-[#f7efe6]"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <dl class="space-y-3 text-sm">
+            <div class="flex justify-between gap-4"><dt class="text-[#a99a8b] font-bold uppercase text-[10px] tracking-widest pt-0.5">Customer</dt><dd id="view-user" class="text-[#f7efe6] text-right"></dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-[#a99a8b] font-bold uppercase text-[10px] tracking-widest pt-0.5">Film</dt><dd id="view-film" class="text-[#f7efe6] text-right"></dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-[#a99a8b] font-bold uppercase text-[10px] tracking-widest pt-0.5">Rating</dt><dd id="view-rating" class="text-[#f7efe6] text-right"></dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-[#a99a8b] font-bold uppercase text-[10px] tracking-widest pt-0.5">Date</dt><dd id="view-date" class="text-[#f7efe6] text-right"></dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-[#a99a8b] font-bold uppercase text-[10px] tracking-widest pt-0.5">Status</dt><dd id="view-status" class="text-[#f7efe6] text-right"></dd></div>
+            <div id="view-removal-row" hidden class="flex justify-between gap-4"><dt class="text-[#a99a8b] font-bold uppercase text-[10px] tracking-widest pt-0.5">Removed</dt><dd id="view-removal" class="text-[#f7efe6] text-right"></dd></div>
+            <div class="pt-2 border-t border-[#38281f]">
+                <dt class="text-[#a99a8b] font-bold uppercase text-[10px] tracking-widest mb-1.5">Comment</dt>
+                <dd id="view-comment" class="text-[#f7efe6] leading-relaxed"></dd>
+            </div>
+        </dl>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" hidden class="fixed bottom-6 right-6 z-[200] px-5 py-4 rounded-xl shadow-2xl text-sm font-medium flex items-center gap-2 max-w-sm"></div>
+
+<script>
+(function () {
+    // -- Select-all + bulk delete enable/disable --
+    const selectAll = document.getElementById('select-all');
+    const rowCheckboxes = () => Array.from(document.querySelectorAll('.row-checkbox'));
+    const bulkTrigger = document.getElementById('bulk-delete-trigger');
+    const bulkLabel = document.getElementById('bulk-delete-label');
+
+    const bulkEnabledClasses = bulkTrigger.dataset.enabledClass.split(' ');
+    const bulkDisabledClasses = bulkTrigger.dataset.disabledClass.split(' ');
+
+    function refreshBulkButton() {
+        const checked = rowCheckboxes().filter(cb => cb.checked).length;
+        bulkTrigger.disabled = checked === 0;
+        bulkLabel.textContent = checked > 0 ? `Delete Selected (${checked})` : 'Delete Selected';
+        if (checked > 0) {
+            bulkTrigger.classList.remove(...bulkDisabledClasses);
+            bulkTrigger.classList.add(...bulkEnabledClasses);
+        } else {
+            bulkTrigger.classList.remove(...bulkEnabledClasses);
+            bulkTrigger.classList.add(...bulkDisabledClasses);
+        }
+    }
+
+    rowCheckboxes().forEach(cb => cb.addEventListener('change', refreshBulkButton));
+
+    selectAll.addEventListener('change', function () {
+        rowCheckboxes().forEach(cb => { if (!cb.disabled) cb.checked = selectAll.checked; });
+        refreshBulkButton();
+    });
+
+    // -- Bulk delete modal --
+    const bulkModal = document.getElementById('bulk-delete-modal');
+    const bulkCount = document.getElementById('bulk-delete-count');
+
+    bulkTrigger.addEventListener('click', function () {
+        if (bulkTrigger.disabled) return;
+        bulkCount.textContent = rowCheckboxes().filter(cb => cb.checked).length;
+        bulkModal.hidden = false;
+    });
+    document.getElementById('bulk-delete-cancel').addEventListener('click', () => { bulkModal.hidden = true; });
+
+    // -- Single delete modal --
+    const deleteModal = document.getElementById('delete-modal');
+    const deleteForm = document.getElementById('delete-form');
+
+    document.querySelectorAll('.delete-trigger-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            deleteForm.setAttribute('action', btn.dataset.action);
+            deleteModal.hidden = false;
+        });
+    });
+    document.getElementById('delete-cancel').addEventListener('click', () => { deleteModal.hidden = true; });
+
+    // -- View detail modal --
+    const viewModal = document.getElementById('view-modal');
+    const viewRemovalRow = document.getElementById('view-removal-row');
+
+    document.querySelectorAll('.view-detail-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.getElementById('view-user').textContent = btn.dataset.user;
+            document.getElementById('view-film').textContent = btn.dataset.film;
+            document.getElementById('view-rating').textContent = btn.dataset.rating ? `${btn.dataset.rating} / 5` : 'No rating';
+            document.getElementById('view-date').textContent = btn.dataset.date;
+            document.getElementById('view-status').textContent = btn.dataset.status === 'removed' ? 'Removed' : 'Published';
+            document.getElementById('view-comment').textContent = btn.dataset.comment;
+
+            if (btn.dataset.status === 'removed') {
+                const bits = [];
+                if (btn.dataset.removalReason) bits.push(btn.dataset.removalReason);
+                if (btn.dataset.removedAt) bits.push('on ' + btn.dataset.removedAt);
+                document.getElementById('view-removal').textContent = bits.length ? bits.join(' ') : 'Yes';
+                viewRemovalRow.hidden = false;
+            } else {
+                viewRemovalRow.hidden = true;
+            }
+
+            viewModal.hidden = false;
+        });
+    });
+    document.getElementById('view-close').addEventListener('click', () => { viewModal.hidden = true; });
+
+    // Click outside any modal's card, or Escape, closes it.
+    [bulkModal, deleteModal, viewModal].forEach(modal => {
+        modal.addEventListener('click', function (e) { if (e.target === modal) modal.hidden = true; });
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { bulkModal.hidden = true; deleteModal.hidden = true; viewModal.hidden = true; }
+    });
+
+    // -- Toast --
+    const toastData = <%- JSON.stringify({ toast: toast, count: toastCount }) %>;
+    const TOAST_MESSAGES = {
+        'removed': { text: 'Comment removed.', kind: 'success' },
+        'restored': { text: 'Comment restored.', kind: 'success' },
+        'bulk-removed': { text: `Removed ${toastData.count || 0} comment(s).`, kind: 'success' },
+        'bulk-empty': { text: 'Select at least one comment to delete.', kind: 'error' },
+        'bulk-auth-failed': { text: 'Incorrect password. No comments were deleted.', kind: 'error' }
+    };
+    if (toastData.toast && TOAST_MESSAGES[toastData.toast]) {
+        const info = TOAST_MESSAGES[toastData.toast];
+        const toastEl = document.getElementById('toast');
+        toastEl.textContent = info.text;
+        const toastKindClasses = info.kind === 'success'
+            ? ['bg-[#0f0a08]', 'text-[#fcaa13]', 'border', 'border-[#fcaa13]/30']
+            : ['bg-[#b62319]', 'text-[#f4ece3]'];
+        toastEl.classList.add(...toastKindClasses);
+        toastEl.hidden = false;
+        setTimeout(() => { toastEl.hidden = true; }, 4000);
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete('toast');
+        url.searchParams.delete('count');
+        window.history.replaceState({}, '', url.toString());
+    }
+})();
+</script>
 </body>
 </html>

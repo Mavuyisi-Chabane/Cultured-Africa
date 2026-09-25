@@ -1,14 +1,15 @@
 const express = require('express');
 const { db, logActivity, notify } = require('../db');
-const { requireLogin } = require('../middleware/auth');
+const { requireLogin, redirectAdminAway } = require('../middleware/auth');
 const paystack = require('../config/paystack');
 const { containsProfanity } = require('../utils/profanityFilter');
+const { startOfWeek, toSqlDateTime } = require('../utils/dates');
 
 const router = express.Router();
 
 const CONTENT_SELECT = `
   SELECT c.*, cu.name AS culture_name,
-    (SELECT AVG(rating) FROM feedback WHERE content_id = c.content_id) AS avg_rating
+    (SELECT AVG(rating) FROM feedback WHERE content_id = c.content_id AND status = 'published') AS avg_rating
   FROM content c
   JOIN cultures cu ON cu.culture_id = c.culture_id
 `;
@@ -43,7 +44,7 @@ function getFilmDetailContext(film, userId) {
     SELECT f.*, u.full_name AS user_full_name
     FROM feedback f
     JOIN users u ON u.user_id = f.user_id
-    WHERE f.content_id = ?
+    WHERE f.content_id = ? AND f.status = 'published'
     ORDER BY f.submitted_date DESC
   `).all(film.id).map(r => ({
     id: r.feedback_id,
@@ -58,7 +59,7 @@ function getFilmDetailContext(film, userId) {
   return { filmReviews, owned };
 }
 
-router.get('/', (req, res) => {
+router.get('/', redirectAdminAway, (req, res) => {
   if (!req.session.user) {
     return res.render('landing');
   }
@@ -83,7 +84,7 @@ router.get('/', (req, res) => {
   res.render('home', { films, cultures, activeCulture: culture || 'All' });
 });
 
-router.get('/library', requireLogin, (req, res) => {
+router.get('/library', redirectAdminAway, requireLogin, (req, res) => {
   const userId = req.session.user.id;
   const rows = db.prepare(`
     ${CONTENT_SELECT}
@@ -107,34 +108,122 @@ router.get('/library', requireLogin, (req, res) => {
   res.render('library', { films });
 });
 
-router.get('/film/:id', requireLogin, (req, res) => {
+router.get('/recap', redirectAdminAway, requireLogin, (req, res) => {
+  const userId = req.session.user.id;
+  const period = ['week', 'month', 'all'].includes(req.query.period) ? req.query.period : 'all';
+
+  const now = new Date();
+  let periodStart = null;
+  let periodLabel = 'All Time';
+  if (period === 'week') {
+    periodStart = startOfWeek(now);
+    periodLabel = 'This Week';
+  } else if (period === 'month') {
+    periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    periodLabel = 'This Month';
+  }
+  const periodStartSql = periodStart ? toSqlDateTime(periodStart) : '2000-01-01 00:00:00';
+
+  // Sourced from watch_progress (furthest position ever reached per film), not the
+  // watch_history session log — summing session log directly would double-count
+  // any film rewatched across multiple visits.
+  const watchTotals = db.prepare(`
+    SELECT COALESCE(SUM(position_seconds), 0) AS totalSeconds, COUNT(*) AS filmsWatched
+    FROM watch_progress WHERE user_id = ? AND updated_at >= ?
+  `).get(userId, periodStartSql);
+
+  const spendTotals = db.prepare(`
+    SELECT COALESCE(SUM(amount_paid), 0) AS totalSpent, COUNT(*) AS purchaseCount
+    FROM purchases WHERE user_id = ? AND payment_status = 'completed' AND purchase_date >= ?
+  `).get(userId, periodStartSql);
+
+  const mostWatched = db.prepare(`
+    SELECT c.content_id, c.title, c.thumbnail_url, cu.name AS culture, wp.position_seconds AS totalSeconds,
+      (SELECT COUNT(*) FROM watch_history wh WHERE wh.user_id = wp.user_id AND wh.content_id = wp.content_id) AS sessions
+    FROM watch_progress wp
+    JOIN content c ON c.content_id = wp.content_id
+    JOIN cultures cu ON cu.culture_id = c.culture_id
+    WHERE wp.user_id = ? AND wp.updated_at >= ?
+    ORDER BY totalSeconds DESC
+    LIMIT 5
+  `).all(userId, periodStartSql);
+
+  const purchaseHistory = db.prepare(`
+    SELECT c.title, p.amount_paid, p.purchase_date
+    FROM purchases p
+    JOIN content c ON c.content_id = p.content_id
+    WHERE p.user_id = ? AND p.payment_status = 'completed' AND p.purchase_date >= ?
+    ORDER BY p.purchase_date DESC
+  `).all(userId, periodStartSql).map(r => ({ title: r.title, amountPaid: r.amount_paid, purchasedAt: new Date(r.purchase_date) }));
+
+  res.render('recap', {
+    period, periodLabel,
+    totalMinutes: Math.round(watchTotals.totalSeconds / 60),
+    filmsWatched: watchTotals.filmsWatched,
+    totalSpent: spendTotals.totalSpent,
+    purchaseCount: spendTotals.purchaseCount,
+    mostWatched: mostWatched.map(f => ({
+      id: f.content_id, title: f.title, thumbnailUrl: f.thumbnail_url, culture: f.culture,
+      minutes: Math.round(f.totalSeconds / 60), sessions: f.sessions
+    })),
+    purchaseHistory
+  });
+});
+
+router.get('/film/:id', redirectAdminAway, requireLogin, (req, res) => {
   const film = getContent(req.params.id);
   if (!film) return res.status(404).send('Film not found.');
 
   const { filmReviews, owned } = getFilmDetailContext(film, req.session.user.id);
 
   let viewId = null;
+  let resumeSeconds = 0;
+  let resumeCompleted = false;
   if (owned) {
     viewId = db.prepare('INSERT INTO watch_history (content_id, user_id, progress_seconds, completed) VALUES (?, ?, 0, 0)')
       .run(film.id, req.session.user.id).lastInsertRowid;
+
+    const progress = db.prepare('SELECT position_seconds, completed FROM watch_progress WHERE user_id = ? AND content_id = ?')
+      .get(req.session.user.id, film.id);
+    if (progress) {
+      resumeSeconds = progress.position_seconds;
+      resumeCompleted = Boolean(progress.completed);
+    }
   }
 
-  res.render('film-detail', { film, owned, filmReviews, viewId, error: null });
+  res.render('film-detail', { film, owned, filmReviews, viewId, resumeSeconds, resumeCompleted, error: null });
 });
 
-router.post('/film/:id/track-progress', requireLogin, (req, res) => {
+router.post('/film/:id/track-progress', redirectAdminAway, requireLogin, (req, res) => {
   const { viewId, progressSeconds, completed } = req.body;
   if (viewId && typeof progressSeconds === 'number' && Number.isFinite(progressSeconds)) {
+    const seconds = Math.max(0, Math.round(progressSeconds));
+    const isCompleted = completed ? 1 : 0;
+    const userId = req.session.user.id;
+    const contentId = Number(req.params.id);
+
     db.prepare(`
       UPDATE watch_history
       SET progress_seconds = MAX(progress_seconds, ?), completed = MAX(completed, ?)
       WHERE history_id = ? AND user_id = ? AND content_id = ?
-    `).run(Math.max(0, Math.round(progressSeconds)), completed ? 1 : 0, Number(viewId), req.session.user.id, Number(req.params.id));
+    `).run(seconds, isCompleted, Number(viewId), userId, contentId);
+
+    // Furthest-ever position for this user+film, independent of the session log above —
+    // this is what lets playback resume where it left off, and keeps "minutes watched"
+    // from double-counting when the same stretch is rewatched across sessions.
+    db.prepare(`
+      INSERT INTO watch_progress (user_id, content_id, position_seconds, completed, updated_at)
+      VALUES (?, ?, ?, ?, datetime('now'))
+      ON CONFLICT(user_id, content_id) DO UPDATE SET
+        position_seconds = MAX(position_seconds, excluded.position_seconds),
+        completed = MAX(completed, excluded.completed),
+        updated_at = datetime('now')
+    `).run(userId, contentId, seconds, isCompleted);
   }
   res.status(204).end();
 });
 
-router.post('/film/:id/buy', requireLogin, async (req, res) => {
+router.post('/film/:id/buy', redirectAdminAway, requireLogin, async (req, res) => {
   const film = getContent(req.params.id);
   if (!film) return res.status(404).send('Film not found.');
 
@@ -147,13 +236,13 @@ router.post('/film/:id/buy', requireLogin, async (req, res) => {
 
   if (!paystack.isConfigured) {
     return res.render('film-detail', {
-      film, owned, filmReviews, viewId: null,
+      film, owned, filmReviews, viewId: null, resumeSeconds: 0, resumeCompleted: false,
       error: 'Payments are not configured yet. Add PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY to webapp/.env (see .env.example).'
     });
   }
 
   if (!reference) {
-    return res.render('film-detail', { film, owned, filmReviews, viewId: null, error: 'No payment reference received. Please try again.' });
+    return res.render('film-detail', { film, owned, filmReviews, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'No payment reference received. Please try again.' });
   }
 
   try {
@@ -163,7 +252,7 @@ router.post('/film/:id/buy', requireLogin, async (req, res) => {
     const paymentOk = result && result.status && tx && tx.status === 'success' && tx.amount === expectedAmount;
 
     if (!paymentOk) {
-      return res.render('film-detail', { film, owned, filmReviews, viewId: null, error: 'Payment could not be verified. You have not been charged for this film — please try again.' });
+      return res.render('film-detail', { film, owned, filmReviews, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'Payment could not be verified. You have not been charged for this film — please try again.' });
     }
 
     db.prepare(`
@@ -175,18 +264,18 @@ router.post('/film/:id/buy', requireLogin, async (req, res) => {
 
     res.redirect(`/film/${film.id}`);
   } catch (err) {
-    res.render('film-detail', { film, owned, filmReviews, viewId: null, error: 'Could not reach Paystack to verify payment. Please try again.' });
+    res.render('film-detail', { film, owned, filmReviews, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'Could not reach Paystack to verify payment. Please try again.' });
   }
 });
 
-router.post('/film/:id/review', requireLogin, (req, res) => {
+router.post('/film/:id/review', redirectAdminAway, requireLogin, (req, res) => {
   const film = getContent(req.params.id);
   if (!film) return res.status(404).send('Film not found.');
 
   const { filmReviews, owned } = getFilmDetailContext(film, req.session.user.id);
 
   if (!owned) {
-    return res.render('film-detail', { film, owned, filmReviews, viewId: null, error: 'You can only review films you own. Buy this film to leave a review.' });
+    return res.render('film-detail', { film, owned, filmReviews, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'You can only review films you own. Buy this film to leave a review.' });
   }
 
   const ratingRaw = (req.body.rating || '').trim();
@@ -194,15 +283,15 @@ router.post('/film/:id/review', requireLogin, (req, res) => {
   const rating = ratingRaw ? Number(ratingRaw) : null;
 
   if (rating !== null && (!Number.isInteger(rating) || rating < 1 || rating > 5)) {
-    return res.render('film-detail', { film, owned, filmReviews, viewId: null, error: 'Rating must be between 1 and 5.' });
+    return res.render('film-detail', { film, owned, filmReviews, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'Rating must be between 1 and 5.' });
   }
   if (rating === null && !comment) {
-    return res.render('film-detail', { film, owned, filmReviews, viewId: null, error: 'Please provide a rating, a comment, or both.' });
+    return res.render('film-detail', { film, owned, filmReviews, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'Please provide a rating, a comment, or both.' });
   }
   if (comment && containsProfanity(comment)) {
     logActivity('Comment blocked (inappropriate language)', film.title);
     return res.render('film-detail', {
-      film, owned, filmReviews, viewId: null,
+      film, owned, filmReviews, viewId: null, resumeSeconds: 0, resumeCompleted: false,
       error: 'Your comment was not published because it contains inappropriate language. Please rephrase it and try again.'
     });
   }

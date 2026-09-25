@@ -12,47 +12,49 @@
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="mb-10 z-10 relative">
-        <h1 class="display-font text-3xl font-bold text-[#1a1a2e]">Reports</h1>
-        <p class="text-[#8a7f73] text-sm mt-1">Revenue and content performance, computed live from the database.</p>
+        <h1 class="display-font text-3xl font-bold text-[#f7efe6]">Reports</h1>
+        <p class="text-[#a99a8b] text-sm mt-1">Revenue and content performance, computed live from the database.</p>
     </div>
 
+    <%- include('partials/admin-report-tabs', { active }) %>
+
     <!-- ============ Weekly Revenue Report ============ -->
-    <section class="bg-white rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] p-8 md:p-10 mb-10 z-10 relative">
+    <section class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8 md:p-10 mb-10 z-10 relative">
         <div class="mb-8">
-            <h2 class="display-font text-2xl font-bold text-[#1a1a2e]">Weekly Revenue Report</h2>
-            <p class="text-[#8a7f73] text-sm mt-1"><%= revenueReport.weekLabel %></p>
+            <h2 class="display-font text-2xl font-bold text-[#f7efe6]">Weekly Revenue Report</h2>
+            <p class="text-[#a99a8b] text-sm mt-1"><%= revenueReport.weekLabel %></p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-            <div class="bg-[#f5f0e8]/50 rounded-2xl p-6 text-center">
-                <i class="fa-solid fa-sack-dollar text-[#c9a84c] text-xl mb-2"></i>
-                <p class="text-2xl font-bold text-[#1a1a2e]">R<%= revenueReport.totalRevenue.toFixed(0) %></p>
-                <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mt-1">Total Revenue</p>
+            <div class="bg-[#271c17]/50 rounded-2xl p-6 text-center">
+                <i class="fa-solid fa-sack-dollar text-[#fcaa13] text-xl mb-2"></i>
+                <p class="text-2xl font-bold text-[#f7efe6]">R<%= revenueReport.totalRevenue.toFixed(0) %></p>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Total Revenue</p>
             </div>
-            <div class="bg-[#f5f0e8]/50 rounded-2xl p-6 text-center">
-                <i class="fa-solid fa-chart-column text-[#c9a84c] text-xl mb-2"></i>
-                <p class="text-2xl font-bold text-[#1a1a2e]"><%= revenueReport.totalUnitsSold %></p>
-                <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mt-1">Total Units Sold</p>
+            <div class="bg-[#271c17]/50 rounded-2xl p-6 text-center">
+                <i class="fa-solid fa-chart-column text-[#fcaa13] text-xl mb-2"></i>
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= revenueReport.totalUnitsSold %></p>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Total Units Sold</p>
             </div>
-            <div class="bg-[#f5f0e8]/50 rounded-2xl p-6 text-center">
-                <i class="fa-solid fa-film text-[#c9a84c] text-xl mb-2"></i>
-                <p class="text-2xl font-bold text-[#1a1a2e]"><%= revenueReport.activeFilms %></p>
-                <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mt-1">Active Films</p>
+            <div class="bg-[#271c17]/50 rounded-2xl p-6 text-center">
+                <i class="fa-solid fa-film text-[#fcaa13] text-xl mb-2"></i>
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= revenueReport.activeFilms %></p>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Active Films</p>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
             <div class="lg:col-span-2">
-                <h3 class="text-sm font-bold text-[#1a1a2e] uppercase tracking-widest mb-4">Revenue by Film</h3>
+                <h3 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4">Revenue by Film</h3>
                 <div class="h-64">
                     <canvas id="revenueByFilmChart"></canvas>
                 </div>
             </div>
-            <div class="bg-[#f5f0e8]/60 rounded-2xl p-6">
-                <h3 class="text-sm font-bold text-[#1a1a2e] uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-lightbulb text-[#c9a84c]"></i> Key Insights
+            <div class="bg-[#271c17]/60 rounded-2xl p-6">
+                <h3 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-lightbulb text-[#fcaa13]"></i> Key Insights
                 </h3>
-                <ul class="space-y-4 text-sm text-[#2d2d2d]">
+                <ul class="space-y-4 text-sm text-[#f7efe6]">
                     <% if (revenueReport.insights.topPerformer) { %>
                         <li><span class="font-bold">Top performer:</span> <%= revenueReport.insights.topPerformer.title %> — R<%= revenueReport.insights.topPerformer.revenue.toFixed(0) %> this week</li>
                     <% } else { %>
@@ -66,26 +68,26 @@
             </div>
         </div>
 
-        <h3 class="text-sm font-bold text-[#1a1a2e] uppercase tracking-widest mb-4">Detailed Breakdown</h3>
-        <div class="overflow-x-auto rounded-2xl border border-[#e8e0d5]">
+        <h3 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4">Detailed Breakdown</h3>
+        <div class="overflow-x-auto rounded-2xl border border-[#38281f]">
             <table class="w-full text-left">
                 <thead>
-                    <tr class="bg-[#f5f0e8]">
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Film</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Culture</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Price</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Units Sold</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Revenue</th>
+                    <tr class="bg-[#271c17]">
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Film</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Culture</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Price</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Units Sold</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Revenue</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#f5f0e8]">
+                <tbody class="divide-y divide-[#38281f]">
                     <% revenueReport.byFilm.forEach(f => { %>
-                        <tr class="hover:bg-[#f5f0e8]/30 transition-colors">
-                            <td class="px-6 py-4 text-sm font-bold text-[#1a1a2e]"><%= f.title %></td>
-                            <td class="px-6 py-4 text-sm text-[#2d2d2d]"><%= f.culture %></td>
-                            <td class="px-6 py-4 text-sm text-[#8a7f73]"><%= f.price > 0 ? 'R' + f.price.toFixed(0) : 'Free' %></td>
-                            <td class="px-6 py-4 text-sm text-[#8a7f73]"><%= f.price > 0 ? f.units : 'N/A' %></td>
-                            <td class="px-6 py-4 text-sm font-bold text-[#2d6b6b]">R<%= f.revenue.toFixed(0) %></td>
+                        <tr class="hover:bg-[#271c17]/30 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><%= f.title %></td>
+                            <td class="px-6 py-4 text-sm text-[#f7efe6]"><%= f.culture %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.price > 0 ? 'R' + f.price.toFixed(0) : 'Free' %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.price > 0 ? f.units : 'N/A' %></td>
+                            <td class="px-6 py-4 text-sm font-bold text-[#9db183]">R<%= f.revenue.toFixed(0) %></td>
                         </tr>
                     <% }) %>
                 </tbody>
@@ -94,67 +96,72 @@
     </section>
 
     <!-- ============ Content Performance Report ============ -->
-    <section class="bg-white rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] p-8 md:p-10 mb-10 z-10 relative">
+    <section class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8 md:p-10 mb-10 z-10 relative">
         <div class="flex items-start justify-between flex-wrap gap-2 mb-8">
             <div>
-                <h2 class="display-font text-2xl font-bold text-[#1a1a2e]">Content Performance Report</h2>
-                <p class="text-[#8a7f73] text-sm mt-1">Views, Engagement &amp; Completion Rates · <%= contentReport.weekLabel %></p>
+                <h2 class="display-font text-2xl font-bold text-[#f7efe6]">Content Performance Report</h2>
+                <p class="text-[#a99a8b] text-sm mt-1">Views, Engagement &amp; Completion Rates · <%= contentReport.weekLabel %></p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-            <div class="bg-[#f5f0e8]/50 rounded-2xl p-6 text-center">
-                <i class="fa-solid fa-eye text-[#c9a84c] text-xl mb-2"></i>
-                <p class="text-2xl font-bold text-[#1a1a2e]"><%= contentReport.totalViews %></p>
-                <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mt-1">Total Views</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+            <div class="bg-[#271c17]/50 rounded-2xl p-6 text-center">
+                <i class="fa-solid fa-eye text-[#fcaa13] text-xl mb-2"></i>
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= contentReport.totalViews %></p>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Total Views</p>
             </div>
-            <div class="bg-[#f5f0e8]/50 rounded-2xl p-6 text-center">
-                <i class="fa-solid fa-star text-[#c9a84c] text-xl mb-2"></i>
-                <p class="text-2xl font-bold text-[#1a1a2e]"><%= contentReport.avgRating !== null ? contentReport.avgRating.toFixed(1) : '—' %></p>
-                <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mt-1">Average Rating</p>
+            <div class="bg-[#271c17]/50 rounded-2xl p-6 text-center">
+                <i class="fa-solid fa-gauge-high text-[#fcaa13] text-xl mb-2"></i>
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= contentReport.avgCompletion %>%</p>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Avg. Completion</p>
             </div>
-            <div class="bg-[#f5f0e8]/50 rounded-2xl p-6 text-center">
-                <i class="fa-solid fa-comments text-[#c9a84c] text-xl mb-2"></i>
-                <p class="text-2xl font-bold text-[#1a1a2e]"><%= contentReport.totalReviews %></p>
-                <p class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73] mt-1">Total Reviews</p>
+            <div class="bg-[#271c17]/50 rounded-2xl p-6 text-center">
+                <i class="fa-solid fa-star text-[#fcaa13] text-xl mb-2"></i>
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= contentReport.avgRating !== null ? contentReport.avgRating.toFixed(1) : '—' %></p>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Average Rating</p>
+            </div>
+            <div class="bg-[#271c17]/50 rounded-2xl p-6 text-center">
+                <i class="fa-solid fa-comments text-[#fcaa13] text-xl mb-2"></i>
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= contentReport.totalReviews %></p>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Total Reviews</p>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
             <div>
-                <h3 class="text-sm font-bold text-[#1a1a2e] uppercase tracking-widest mb-4">Views per Film</h3>
+                <h3 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4">Views per Film</h3>
                 <div class="h-64">
                     <canvas id="viewsPerFilmChart"></canvas>
                 </div>
             </div>
             <div>
-                <h3 class="text-sm font-bold text-[#1a1a2e] uppercase tracking-widest mb-4">Completion Rate (%)</h3>
+                <h3 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4">Completion Rate (%)</h3>
                 <div class="h-64">
                     <canvas id="completionRateChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <h3 class="text-sm font-bold text-[#1a1a2e] uppercase tracking-widest mb-4">Detailed Film Performance</h3>
-        <div class="overflow-x-auto rounded-2xl border border-[#e8e0d5] mb-10">
+        <h3 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4">Detailed Film Performance</h3>
+        <div class="overflow-x-auto rounded-2xl border border-[#38281f] mb-10">
             <table class="w-full text-left">
                 <thead>
-                    <tr class="bg-[#f5f0e8]">
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Film</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Culture</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Views</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Completion Rate</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Avg Rating</th>
+                    <tr class="bg-[#271c17]">
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Film</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Culture</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Views</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Completion Rate</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Avg Rating</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#f5f0e8]">
+                <tbody class="divide-y divide-[#38281f]">
                     <% contentReport.byFilm.forEach(f => { %>
-                        <tr class="hover:bg-[#f5f0e8]/30 transition-colors">
-                            <td class="px-6 py-4 text-sm font-bold text-[#1a1a2e]"><%= f.title %></td>
-                            <td class="px-6 py-4 text-sm text-[#2d2d2d]"><%= f.culture %></td>
-                            <td class="px-6 py-4 text-sm text-[#8a7f73]"><%= f.views %></td>
-                            <td class="px-6 py-4 text-sm text-[#8a7f73]"><%= f.completionRate %>%</td>
-                            <td class="px-6 py-4 text-sm text-[#8a7f73]"><%= f.avgRating !== null ? f.avgRating.toFixed(1) + '/5 (' + f.reviewCount + ')' : '—' %></td>
+                        <tr class="hover:bg-[#271c17]/30 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><%= f.title %></td>
+                            <td class="px-6 py-4 text-sm text-[#f7efe6]"><%= f.culture %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.views %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.completionRate %>%</td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.avgRating !== null ? f.avgRating.toFixed(1) + '/5 (' + f.reviewCount + ')' : '—' %></td>
                         </tr>
                     <% }) %>
                 </tbody>
@@ -163,16 +170,16 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2">
-                <h3 class="text-sm font-bold text-[#1a1a2e] uppercase tracking-widest mb-4">4-Week View Trend</h3>
+                <h3 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4">4-Week View Trend</h3>
                 <div class="h-56">
                     <canvas id="trendChart"></canvas>
                 </div>
             </div>
-            <div class="bg-[#f5f0e8]/60 rounded-2xl p-6">
-                <h3 class="text-sm font-bold text-[#1a1a2e] uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-lightbulb text-[#c9a84c]"></i> Key Insights
+            <div class="bg-[#271c17]/60 rounded-2xl p-6">
+                <h3 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-lightbulb text-[#fcaa13]"></i> Key Insights
                 </h3>
-                <ul class="space-y-4 text-sm text-[#2d2d2d]">
+                <ul class="space-y-4 text-sm text-[#f7efe6]">
                     <% if (contentReport.insights.mostViewed) { %>
                         <li><span class="font-bold">Most viewed:</span> <%= contentReport.insights.mostViewed.title %> (<%= contentReport.insights.mostViewed.views %> views)</li>
                     <% } %>
@@ -194,19 +201,19 @@
     </section>
 
     <footer class="mt-20 py-10 flex flex-col items-center">
-        <span class="text-[10px] uppercase tracking-[0.2em] text-[#8a7f73] font-bold">Cultured Africa Admin Portal</span>
-        <p class="text-[10px] text-[#8a7f73]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
+        <span class="text-[10px] uppercase tracking-[0.2em] text-[#a99a8b] font-bold">Cultured Africa Admin Portal</span>
+        <p class="text-[10px] text-[#a99a8b]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
     </footer>
 </main>
 
 <script>
-    var brandGold = '#c9a84c';
-    var brandNavy = '#1a1a2e';
-    var brandTeal = '#2d6b6b';
-    var gridColor = 'rgba(138, 127, 115, 0.15)';
+    var brandGold = '#fcaa13';
+    var brandNavy = '#b62319';
+    var brandTeal = '#9db183';
+    var gridColor = 'rgba(169, 154, 139, 0.15)';
 
-    Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
-    Chart.defaults.color = '#8a7f73';
+    Chart.defaults.font.family = "'EB Garamond', serif";
+    Chart.defaults.color = '#a99a8b';
 
     new Chart(document.getElementById('revenueByFilmChart'), {
         type: 'bar',
@@ -273,7 +280,7 @@
                 label: 'Views',
                 data: <%- JSON.stringify(contentReport.trend.map(t => t.views)) %>,
                 borderColor: brandTeal,
-                backgroundColor: 'rgba(45, 107, 107, 0.12)',
+                backgroundColor: 'rgba(157, 177, 131, 0.12)',
                 fill: true,
                 tension: 0.35,
                 pointBackgroundColor: brandTeal,

@@ -63,4 +63,35 @@ async function sendPasswordResetEmail(user, rawToken) {
   });
 }
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail };
+async function sendAdminInviteEmail(invite, code) {
+  const loginUrl = `${config.APP_BASE_URL}/admin/login`;
+
+  await deliver({
+    from: config.MAIL_FROM,
+    to: invite.email,
+    subject: 'You’ve been invited to Cultured Africa Admin Portal',
+    text: `Hi ${invite.name},\n\nYou've been invited to join the Cultured Africa Admin Portal. Go to ${loginUrl}, enter your email, and use this verification code to get started: ${code}\n\nThis code expires in 15 minutes. After verifying, you'll set your own password.\n\nIf you weren't expecting this invite, you can ignore this email.`,
+    html: `<p>Hi ${invite.name},</p>
+<p>You've been invited to join the <strong>Cultured Africa Admin Portal</strong>.</p>
+<p>Go to <a href="${loginUrl}">${loginUrl}</a>, enter your email, and use this verification code:</p>
+<p style="font-size:32px;font-weight:bold;letter-spacing:0.3em;color:#1a1a2e;background:#f5f0e8;padding:16px 24px;border-radius:8px;display:inline-block;">${code}</p>
+<p>This code expires in <strong>15 minutes</strong>. After verifying, you'll set your own password.</p>
+<p>If you weren't expecting this invite, you can safely ignore this email.</p>`
+  });
+}
+
+async function sendEmailChangeVerification(target, code) {
+  await deliver({
+    from: config.MAIL_FROM,
+    to: target.email,
+    subject: 'Confirm your new Cultured Africa email address',
+    text: `Hi ${target.full_name},\n\nWe received a request to change the email address on your Cultured Africa account to this one. Your verification code is: ${code}\n\nEnter it on the Manage Account page to confirm the change. This code expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email — your account email will not change.`,
+    html: `<p>Hi ${target.full_name},</p>
+<p>We received a request to change the email address on your <strong>Cultured Africa</strong> account to this one. Your verification code is:</p>
+<p style="font-size:32px;font-weight:bold;letter-spacing:0.3em;color:#1a1a2e;background:#f5f0e8;padding:16px 24px;border-radius:8px;display:inline-block;">${code}</p>
+<p>Enter it on the Manage Account page to confirm the change. This code expires in <strong>15 minutes</strong>.</p>
+<p>If you didn't request this, you can safely ignore this email — your account email will not change.</p>`
+  });
+}
+
+module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendAdminInviteEmail, sendEmailChangeVerification };

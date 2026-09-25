@@ -11,108 +11,108 @@
         <img class="w-full h-full object-contain" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_a0803f0285_0b097c705f62f8d3.png" alt="">
     </div>
 
-    <div id="registration-card" class="w-full max-w-[450px] bg-white rounded-[16px] shadow-xl p-8 md:p-10 z-10">
+    <div id="registration-card" class="w-full max-w-[450px] bg-[#1e1613] rounded-[16px] shadow-xl p-8 md:p-10 z-10">
         <div class="text-center mb-10">
-            <h1 class="display-font text-3xl font-bold text-[#c9a84c] mb-2">Cultured Africa</h1>
-            <p class="text-[#8a7f73] text-sm">Join the home of Cultured Africa</p>
+            <h1 class="display-font text-3xl font-bold text-[#fcaa13] mb-2">Cultured Africa</h1>
+            <p class="text-[#a99a8b] text-sm">Join the home of Cultured Africa</p>
         </div>
 
         <% if (error) { %>
-            <div class="mb-6 px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm font-medium"><%= error %></div>
+            <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ef420f] text-sm font-medium"><%= error %></div>
         <% } %>
 
         <form class="space-y-6" method="POST" action="/register">
             <div id="field-fullname">
-                <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="fullName">Full Name</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="fullName">Full Name</label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#a99a8b]">
                         <i class="fa-solid fa-user text-sm"></i>
                     </span>
                     <input type="text" id="fullName" name="fullName" placeholder="John Doe" value="<%= values.fullName || '' %>" required
-                        class="w-full pl-11 pr-4 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
+                        class="w-full pl-11 pr-4 py-3 border border-[#38281f] rounded-xl focus:ring-2 focus:ring-[#fcaa13] focus:border-transparent outline-none transition-all text-[#f4ece3] bg-[#271c17]/50">
                 </div>
             </div>
 
             <div id="field-email">
-                <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="email">Email Address</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="email">Email Address</label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#a99a8b]">
                         <i class="fa-solid fa-envelope text-sm"></i>
                     </span>
                     <input type="email" id="email" name="email" placeholder="john@example.com" value="<%= values.email || '' %>" required
-                        class="w-full pl-11 pr-4 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
+                        class="w-full pl-11 pr-4 py-3 border border-[#38281f] rounded-xl focus:ring-2 focus:ring-[#fcaa13] focus:border-transparent outline-none transition-all text-[#f4ece3] bg-[#271c17]/50">
                 </div>
             </div>
 
             <div id="field-password">
-                <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="password">Password</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="password">Password</label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#a99a8b]">
                         <i class="fa-solid fa-lock text-sm"></i>
                     </span>
                     <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="new-password"
-                        class="w-full pl-11 pr-11 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
-                    <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#c9a84c] transition-colors" data-toggle-password="password" aria-label="Show password">
+                        class="w-full pl-11 pr-11 py-3 border border-[#38281f] rounded-xl focus:ring-2 focus:ring-[#fcaa13] focus:border-transparent outline-none transition-all text-[#f4ece3] bg-[#271c17]/50">
+                    <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-[#a99a8b] hover:text-[#fcaa13] transition-colors" data-toggle-password="password" aria-label="Show password">
                         <i class="fa-solid fa-eye text-sm"></i>
                     </button>
                 </div>
 
                 <div class="mt-3 space-y-1.5">
-                    <p data-req="length" class="flex items-center gap-2 text-xs text-red-500 transition-colors">
+                    <p data-req="length" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
                         <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least 8 characters
                     </p>
-                    <p data-req="upper" class="flex items-center gap-2 text-xs text-red-500 transition-colors">
+                    <p data-req="upper" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
                         <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one uppercase letter (A-Z)
                     </p>
-                    <p data-req="lower" class="flex items-center gap-2 text-xs text-red-500 transition-colors">
+                    <p data-req="lower" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
                         <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one lowercase letter (a-z)
                     </p>
-                    <p data-req="number" class="flex items-center gap-2 text-xs text-red-500 transition-colors">
+                    <p data-req="number" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
                         <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one number (0-9)
                     </p>
-                    <p data-req="special" class="flex items-center gap-2 text-xs text-red-500 transition-colors">
+                    <p data-req="special" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
                         <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one special character (e.g. ! @ # $ %)
                     </p>
                 </div>
 
                 <div class="mt-3">
                     <div class="flex items-center justify-between mb-1">
-                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Password Strength</span>
-                        <span id="password-strength-label" class="text-[10px] font-bold uppercase tracking-widest text-red-500">Weak</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Password Strength</span>
+                        <span id="password-strength-label" class="text-[10px] font-bold uppercase tracking-widest text-[#ef420f]">Weak</span>
                     </div>
-                    <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div id="password-strength-bar" class="h-full bg-red-500 transition-all duration-300 ease-out" style="width: 0%"></div>
+                    <div class="w-full h-1.5 bg-[#271c17] rounded-full overflow-hidden">
+                        <div id="password-strength-bar" class="h-full bg-[#b62319] transition-all duration-300 ease-out" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
 
             <div id="field-confirm">
-                <label class="block text-xs font-bold uppercase tracking-wider text-[#2d2d2d] mb-2" for="confirm">Confirm Password</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="confirm">Confirm Password</label>
                 <div class="relative">
-                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#a99a8b]">
                         <i class="fa-solid fa-shield-check text-sm"></i>
                     </span>
                     <input type="password" id="confirm" name="confirm" placeholder="••••••••" required autocomplete="new-password"
-                        class="w-full pl-11 pr-11 py-3 border border-gray-100 rounded-xl focus:ring-2 focus:ring-[#c9a84c] focus:border-transparent outline-none transition-all text-gray-700 bg-gray-50/50">
-                    <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#c9a84c] transition-colors" data-toggle-password="confirm" aria-label="Show password">
+                        class="w-full pl-11 pr-11 py-3 border border-[#38281f] rounded-xl focus:ring-2 focus:ring-[#fcaa13] focus:border-transparent outline-none transition-all text-[#f4ece3] bg-[#271c17]/50">
+                    <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-[#a99a8b] hover:text-[#fcaa13] transition-colors" data-toggle-password="confirm" aria-label="Show password">
                         <i class="fa-solid fa-eye text-sm"></i>
                     </button>
                 </div>
-                <p id="confirm-password-error" class="mt-2 text-xs text-red-500 hidden">
+                <p id="confirm-password-error" class="mt-2 text-xs text-[#ef420f] hidden">
                     <i class="fa-solid fa-circle-exclamation"></i> Passwords do not match.
                 </p>
             </div>
 
             <button type="submit"
-                class="w-full bg-[#c9a84c] hover:bg-[#b8973d] text-white font-bold py-4 rounded-xl shadow-lg shadow-[#c9a84c]/20 transform transition-all active:scale-[0.98]">
+                class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
                 Create Account
             </button>
         </form>
 
-        <div class="mt-8 pt-8 border-t border-gray-50 text-center">
-            <p class="text-[#8a7f73] text-sm">
+        <div class="mt-8 pt-8 border-t border-[#38281f] text-center">
+            <p class="text-[#a99a8b] text-sm">
                 Already have an account?
-                <a href="/login" class="text-[#c9a84c] font-bold hover:underline ml-1">Login here</a>
+                <a href="/login" class="text-[#fcaa13] font-bold hover:underline ml-1">Login here</a>
             </p>
         </div>
     </div>

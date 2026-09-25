@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Admin Portal' }) %>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 py-10 bg-[#0f0a08] relative overflow-x-hidden">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none opacity-10"></div>
+
+    <div class="w-full max-w-[440px] bg-[#1e1613] rounded-[16px] shadow-2xl p-8 md:p-10 z-10">
+        <div class="text-center mb-8">
+            <div class="w-14 h-14 rounded-full bg-[#0f0a08] flex items-center justify-center text-[#fcaa13] mx-auto mb-5">
+                <i class="fa-solid fa-user-shield text-xl"></i>
+            </div>
+            <h1 class="display-font text-2xl font-bold text-[#f7efe6] mb-1">Admin Portal</h1>
+            <p class="text-[#a99a8b] text-sm">Cultured Africa administration</p>
+        </div>
+
+        <% if (error) { %>
+            <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ef420f] text-sm font-medium"><%= error %></div>
+        <% } %>
+
+        <% if (step === 'email') { %>
+            <form class="space-y-6" method="POST" action="/admin/login/continue">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="email">Email Address</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#a99a8b]">
+                            <i class="fa-solid fa-envelope text-sm"></i>
+                        </span>
+                        <input type="email" id="email" name="email" placeholder="you@culturedafrica.co.za" value="<%= email %>" required autofocus
+                            class="w-full pl-11 pr-4 py-3 border border-[#38281f] rounded-xl focus:ring-2 focus:ring-[#fcaa13] focus:border-transparent outline-none transition-all text-[#f4ece3] bg-[#271c17]/50">
+                    </div>
+                </div>
+                <button type="submit"
+                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
+                    Continue
+                </button>
+            </form>
+        <% } %>
+
+        <% if (step === 'password') { %>
+            <form class="space-y-6" method="POST" action="/admin/login/password">
+                <input type="hidden" name="email" value="<%= email %>">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2">Email Address</label>
+                    <div class="w-full px-4 py-3 border border-[#38281f] rounded-xl bg-[#271c17] text-[#a99a8b] text-sm flex items-center justify-between">
+                        <span><%= email %></span>
+                        <a href="/admin/login?reset=1" class="text-[#fcaa13] text-xs font-bold hover:underline">Change</a>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="password">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#a99a8b]">
+                            <i class="fa-solid fa-lock text-sm"></i>
+                        </span>
+                        <input type="password" id="password" name="password" placeholder="••••••••" required autofocus autocomplete="current-password"
+                            class="w-full pl-11 pr-11 py-3 border border-[#38281f] rounded-xl focus:ring-2 focus:ring-[#fcaa13] focus:border-transparent outline-none transition-all text-[#f4ece3] bg-[#271c17]/50">
+                        <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-[#a99a8b] hover:text-[#fcaa13] transition-colors" data-toggle-password="password" aria-label="Show password">
+                            <i class="fa-solid fa-eye text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit"
+                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
+                    Log In
+                </button>
+            </form>
+        <% } %>
+
+        <% if (step === 'code') { %>
+            <div class="text-center mb-6">
+                <p class="text-[#a99a8b] text-sm leading-relaxed">
+                    Welcome, <span class="font-bold text-[#f7efe6]"><%= name %></span>. We've sent a 6-digit verification code to
+                    <span class="font-bold text-[#f7efe6]"><%= email %></span>. It expires in <span class="font-bold text-[#f7efe6]">15 minutes</span>.
+                </p>
+                <% if (attemptsLeft !== null) { %>
+                    <p class="text-[#ef420f] text-xs font-bold mt-2"><%= attemptsLeft %> attempt<%= attemptsLeft === 1 ? '' : 's' %> remaining.</p>
+                <% } %>
+            </div>
+            <form class="space-y-6" method="POST" action="/admin/login/verify-code">
+                <input type="hidden" name="email" value="<%= email %>">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="code">Verification Code</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#a99a8b]">
+                            <i class="fa-solid fa-key text-sm"></i>
+                        </span>
+                        <input type="text" id="code" name="code" placeholder="123456" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required autofocus
+                            class="w-full pl-11 pr-4 py-3 border border-[#38281f] rounded-xl focus:ring-2 focus:ring-[#fcaa13] focus:border-transparent outline-none transition-all text-[#f4ece3] bg-[#271c17]/50 tracking-[0.3em] font-bold text-center">
+                    </div>
+                </div>
+                <button type="submit"
+                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
+                    Verify Code
+                </button>
+            </form>
+            <div class="mt-6 text-center">
+                <a href="/admin/login?reset=1" class="text-[#a99a8b] text-sm hover:underline">Not you? Start over</a>
+            </div>
+        <% } %>
+
+        <% if (step === 'setPassword') { %>
+            <div class="text-center mb-6">
+                <p class="text-[#a99a8b] text-sm">Email verified. Set a password for <span class="font-bold text-[#f7efe6]"><%= email %></span> to finish setting up your admin account.</p>
+            </div>
+            <form class="space-y-6" method="POST" action="/admin/login/set-password">
+                <div id="field-password">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="password">New Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#a99a8b]">
+                            <i class="fa-solid fa-lock text-sm"></i>
+                        </span>
+                        <input type="password" id="password" name="password" placeholder="••••••••" required autofocus autocomplete="new-password"
+                            class="w-full pl-11 pr-11 py-3 border border-[#38281f] rounded-xl focus:ring-2 focus:ring-[#fcaa13] focus:border-transparent outline-none transition-all text-[#f4ece3] bg-[#271c17]/50">
+                        <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-[#a99a8b] hover:text-[#fcaa13] transition-colors" data-toggle-password="password" aria-label="Show password">
+                            <i class="fa-solid fa-eye text-sm"></i>
+                        </button>
+                    </div>
+
+                    <div class="mt-3 space-y-1.5">
+                        <p data-req="length" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
+                            <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least 8 characters
+                        </p>
+                        <p data-req="upper" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
+                            <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one uppercase letter (A-Z)
+                        </p>
+                        <p data-req="lower" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
+                            <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one lowercase letter (a-z)
+                        </p>
+                        <p data-req="number" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
+                            <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one number (0-9)
+                        </p>
+                        <p data-req="special" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
+                            <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one special character (e.g. ! @ # $ %)
+                        </p>
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Password Strength</span>
+                            <span id="password-strength-label" class="text-[10px] font-bold uppercase tracking-widest text-[#ef420f]">Weak</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-[#271c17] rounded-full overflow-hidden">
+                            <div id="password-strength-bar" class="h-full bg-[#b62319] transition-all duration-300 ease-out" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="field-confirm">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="confirm">Confirm Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#a99a8b]">
+                            <i class="fa-solid fa-shield-check text-sm"></i>
+                        </span>
+                        <input type="password" id="confirm" name="confirm" placeholder="••••••••" required autocomplete="new-password"
+                            class="w-full pl-11 pr-11 py-3 border border-[#38281f] rounded-xl focus:ring-2 focus:ring-[#fcaa13] focus:border-transparent outline-none transition-all text-[#f4ece3] bg-[#271c17]/50">
+                        <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-[#a99a8b] hover:text-[#fcaa13] transition-colors" data-toggle-password="confirm" aria-label="Show password">
+                            <i class="fa-solid fa-eye text-sm"></i>
+                        </button>
+                    </div>
+                    <p id="confirm-password-error" class="mt-2 text-xs text-[#ef420f] hidden">
+                        <i class="fa-solid fa-circle-exclamation"></i> Passwords do not match.
+                    </p>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
+                    Set Password &amp; Finish
+                </button>
+            </form>
+        <% } %>
+
+        <div class="mt-8 pt-6 border-t border-[#38281f] text-center">
+            <a href="/login" class="text-[#a99a8b] text-sm hover:underline">Not an admin? Go to the regular login</a>
+        </div>
+    </div>
+
+    <%- include('partials/password-requirements') %>
+    <%- include('partials/password-toggle') %>
+</body>
+</html>

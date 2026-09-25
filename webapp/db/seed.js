@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { startOfWeek, toSqlDateTime } = require('../utils/dates');
 
 const CULTURES = [
@@ -124,6 +125,10 @@ function seed(db) {
   const insertNotification = db.prepare(`
     INSERT INTO notifications (user_id, type, message, is_read, sent_date) VALUES (?, ?, ?, ?, ?)
   `);
+  const insertAdmin = db.prepare(`
+    INSERT INTO admins (admin_id, name, email, password_hash, role, status, invited_by, verified_at, created_at)
+    VALUES (?, ?, ?, ?, ?, 'active', NULL, ?, ?)
+  `);
 
   const now = new Date();
 
@@ -132,15 +137,22 @@ function seed(db) {
     cultureIds[c.name] = insertCulture.run(c.name, c.description, c.region, '').lastInsertRowid;
   });
 
-  const adminId = insertUser.run(
-    'Lesedi Molefe', 'admin@culturedafrica.co.za', bcrypt.hashSync('admin123', 10), 'admin',
-    'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
-    toSqlDateTime(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 60))
-  ).lastInsertRowid;
+  // Admin identity lives in `admins`, not `users` (see db/index.js). content.uploaded_by
+  // is still a NOT NULL FK into users(user_id) though, so each demo admin also gets a
+  // bookkeeping-only users row — never used for login (role = 'admin' is rejected by
+  // the customer login route) — purely to satisfy that foreign key.
+  function createDemoAdmin(adminId, name, email, password, role, createdAt) {
+    insertAdmin.run(adminId, name, email, bcrypt.hashSync(password, 10), role, createdAt, createdAt);
+    return insertUser.run(name, email, bcrypt.hashSync(crypto.randomUUID(), 10), 'admin', '', createdAt).lastInsertRowid;
+  }
 
-  insertUser.run(
-    'NTK Testing', 'ntk.testing12@gmail.com', bcrypt.hashSync('Testing12', 10), 'admin',
-    'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-1.jpg',
+  const adminId = createDemoAdmin(
+    'ADM-0001', 'Lesedi Molefe', 'admin@culturedafrica.co.za', 'admin123', 'super_admin',
+    toSqlDateTime(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 60))
+  );
+
+  createDemoAdmin(
+    'ADM-0002', 'NTK Testing', 'ntk.testing12@gmail.com', 'Testing12', 'admin',
     toSqlDateTime(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 10))
   );
 

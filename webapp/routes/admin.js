@@ -1,10 +1,17 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { db, logActivity, notify } = require('../db');
-const { requireAdmin } = require('../middleware/auth');
+const bcrypt = require('bcryptjs');
+const { db, logActivity, notify, logAudit, ensureShadowUserForAdmin } = require('../db');
+const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
 const handleUploads = require('../middleware/upload');
 const { startOfWeek, endOfWeek, toSqlDateTime, formatWeekLabel } = require('../utils/dates');
+const mockReports = require('../data/mockReports');
+const { buildScreenshotPdf } = require('../utils/screenshotPdf');
+const { containsProfanity } = require('../utils/profanityFilter');
+const { nextAdminId } = require('../utils/adminId');
+const { generateInviteCode, hashInviteCode, INVITE_TTL_MS, MAX_INVITE_ATTEMPTS } = require('../utils/adminInvites');
+const { sendAdminInviteEmail } = require('../services/email');
 
 const router = express.Router();
 
@@ -12,14 +19,20 @@ router.use(requireAdmin);
 
 const CONTENT_SELECT = `
   SELECT c.*, cu.name AS culture_name,
-    (SELECT AVG(rating) FROM feedback WHERE content_id = c.content_id) AS avg_rating
+    (SELECT AVG(rating) FROM feedback WHERE content_id = c.content_id AND status = 'published') AS avg_rating
   FROM content c
   JOIN cultures cu ON cu.culture_id = c.culture_id
 `;
 
+const FEEDBACK_PAGE_SIZE = 15;
+
+function appendQueryParam(url, key, value) {
+  return `${url}${url.includes('?') ? '&' : '?'}${key}=${encodeURIComponent(value)}`;
+}
+
 function deleteUploadedFile(urlPath) {
   if (!urlPath || !urlPath.startsWith('/uploads/')) return;
-  const filePath = path.join(__dirname, '..', 'public', urlPath);
+  const filePath = path.join(handleUploads.UPLOAD_DIR, urlPath.slice('/uploads/'.length));
   fs.unlink(filePath, () => {});
 }
 
@@ -43,6 +56,11 @@ function mapContent(row) {
 function getContent(id) {
   const row = db.prepare(`${CONTENT_SELECT} WHERE c.content_id = ?`).get(id);
   return row ? mapContent(row) : null;
+}
+
+function verifyOwnPassword(req, password) {
+  const admin = db.prepare('SELECT password_hash FROM admins WHERE admin_id = ?').get(req.session.admin.id);
+  return Boolean(admin && admin.password_hash && bcrypt.compareSync(password || '', admin.password_hash));
 }
 
 function getCultureId(name) {
@@ -166,7 +184,7 @@ router.post('/upload', handleUploads, (req, res) => {
     INSERT INTO content (culture_id, uploaded_by, title, description, content_type, price, file_url, thumbnail_url, trailer_url)
     VALUES (?, ?, ?, ?, 'Uncategorized', ?, ?, ?, ?)
   `).run(
-    getCultureId(culture), req.session.user.id, title, description, isFree ? 0 : Number(price) || 0,
+    getCultureId(culture), ensureShadowUserForAdmin(req.session.admin), title, description, isFree ? 0 : Number(price) || 0,
     `/uploads/${videoFile.filename}`, `/uploads/${thumbnailFile.filename}`,
     trailerFile ? `/uploads/${trailerFile.filename}` : ''
   );
@@ -176,145 +194,400 @@ router.post('/upload', handleUploads, (req, res) => {
 });
 
 router.get('/feedback', (req, res) => {
-  const feedback = db.prepare(`
+  const films = db.prepare('SELECT content_id, title FROM content ORDER BY title').all()
+    .map(r => ({ id: r.content_id, title: r.title }));
+
+  const statusCounts = { all: 0, published: 0, removed: 0 };
+  db.prepare('SELECT status, COUNT(*) AS n FROM feedback GROUP BY status').all().forEach(r => {
+    statusCounts[r.status] = r.n;
+    statusCounts.all += r.n;
+  });
+
+  const filters = {
+    film: req.query.film || '',
+    rating: req.query.rating || '',
+    status: req.query.status || '',
+    flagged: req.query.flagged === '1'
+  };
+
+  let sql = `
     SELECT f.*, c.title AS film_title, u.full_name AS user_full_name
     FROM feedback f
     JOIN content c ON c.content_id = f.content_id
     JOIN users u ON u.user_id = f.user_id
-    ORDER BY f.submitted_date DESC
-  `).all().map(r => ({
+    WHERE 1 = 1
+  `;
+  const params = [];
+  if (filters.film) { sql += ' AND f.content_id = ?'; params.push(Number(filters.film)); }
+  if (filters.rating) { sql += ' AND f.rating = ?'; params.push(Number(filters.rating)); }
+  if (filters.status) { sql += ' AND f.status = ?'; params.push(filters.status); }
+  sql += ' ORDER BY f.submitted_date DESC';
+
+  let feedback = db.prepare(sql).all(...params).map(r => ({
     id: r.feedback_id,
     rating: r.rating,
     comment: r.comment,
     adminReply: r.admin_reply,
+    status: r.status,
+    removedBy: r.removed_by,
+    removedAt: r.removed_at ? new Date(r.removed_at) : null,
+    removalReason: r.removal_reason,
     createdAt: new Date(r.submitted_date),
     userId: r.user_id,
+    contentId: r.content_id,
     film: { title: r.film_title },
-    user: { fullName: r.user_full_name }
+    user: { fullName: r.user_full_name },
+    flagged: containsProfanity(r.comment)
   }));
 
-  res.render('admin-feedback', { feedback });
+  // The profanity filter matches whole words in the comment text, which isn't
+  // expressible as a plain SQL WHERE clause, so this filter is applied in JS
+  // after the other (SQL-filterable) filters above.
+  if (filters.flagged) {
+    feedback = feedback.filter(r => r.flagged);
+  }
+
+  const total = feedback.length;
+  const totalPages = Math.max(1, Math.ceil(total / FEEDBACK_PAGE_SIZE));
+  const page = Math.min(Math.max(1, parseInt(req.query.page, 10) || 1), totalPages);
+  const pageFeedback = feedback.slice((page - 1) * FEEDBACK_PAGE_SIZE, page * FEEDBACK_PAGE_SIZE);
+
+  res.render('admin-feedback', {
+    feedback: pageFeedback,
+    films,
+    filters,
+    statusCounts,
+    pagination: { page, totalPages, total, pageSize: FEEDBACK_PAGE_SIZE },
+    toast: req.query.toast || null,
+    toastCount: req.query.count || null
+  });
 });
 
 router.post('/feedback/:id/reply', (req, res) => {
   const reply = (req.body.reply || '').trim();
+  const returnTo = req.body.returnTo || '/admin/feedback';
   const review = db.prepare('SELECT * FROM feedback WHERE feedback_id = ?').get(req.params.id);
-  if (review) {
+
+  // Removed comments are hidden from the public film page, so replying to one would
+  // notify the customer about a reply attached to a comment nobody else can see.
+  if (review && review.status === 'published') {
     db.prepare('UPDATE feedback SET admin_reply = ? WHERE feedback_id = ?').run(reply, review.feedback_id);
     if (reply) {
       const film = db.prepare('SELECT title FROM content WHERE content_id = ?').get(review.content_id);
       notify(review.user_id, 'admin_reply', `Cultured Africa replied to your review of "${film ? film.title : 'a film'}": ${reply}`);
     }
   }
-  res.redirect('/admin/feedback');
+  res.redirect(returnTo);
 });
 
-router.get('/reports', (req, res) => {
-  const now = new Date();
-  const weekStart = startOfWeek(now);
-  const weekEnd = endOfWeek(now);
-  const weekStartSql = toSqlDateTime(weekStart);
-  const weekEndSql = toSqlDateTime(weekEnd);
-  const weekLabel = formatWeekLabel(weekStart, weekEnd);
+router.post('/feedback/:id/delete', (req, res) => {
+  const returnTo = req.body.returnTo || '/admin/feedback';
+  const review = db.prepare(`
+    SELECT f.*, c.title AS film_title FROM feedback f
+    JOIN content c ON c.content_id = f.content_id
+    WHERE f.feedback_id = ?
+  `).get(req.params.id);
 
-  const films = db.prepare(`${CONTENT_SELECT} ORDER BY c.title`).all().map(mapContent);
+  if (!review) return res.redirect(returnTo);
 
-  // ---- Weekly Revenue Report ----
-  const revenueByFilm = films.map(film => {
-    const row = db.prepare(`
-      SELECT COUNT(*) AS units, COALESCE(SUM(amount_paid), 0) AS revenue
-      FROM purchases WHERE content_id = ? AND payment_status = 'completed' AND purchase_date >= ? AND purchase_date < ?
-    `).get(film.id, weekStartSql, weekEndSql);
-    return { title: film.title, culture: film.culture, price: film.price, units: row.units, revenue: row.revenue };
-  }).sort((a, b) => b.revenue - a.revenue);
+  const reason = (req.body.reason || '').trim() || null;
+  db.prepare(`
+    UPDATE feedback SET status = 'removed', removed_by = ?, removed_at = datetime('now'), removal_reason = ?
+    WHERE feedback_id = ?
+  `).run(req.session.admin.id, reason, review.feedback_id);
 
-  const revenueTotals = db.prepare(`
-    SELECT COUNT(*) AS units, COALESCE(SUM(amount_paid), 0) AS revenue
-    FROM purchases WHERE payment_status = 'completed' AND purchase_date >= ? AND purchase_date < ?
-  `).get(weekStartSql, weekEndSql);
+  logAudit(req.session.admin.id, 'removed_feedback', 'feedback', review.feedback_id, reason);
+  logActivity('Feedback removed', review.film_title);
 
-  const topPerformer = revenueByFilm.find(f => f.revenue > 0) || null;
-  const freeFilmWithViews = films
-    .filter(f => f.price === 0)
-    .map(f => ({
-      title: f.title,
-      views: db.prepare('SELECT COUNT(*) AS n FROM watch_history WHERE content_id = ? AND watch_date >= ? AND watch_date < ?')
-        .get(f.id, weekStartSql, weekEndSql).n
-    }))
-    .sort((a, b) => b.views - a.views)[0] || null;
+  res.redirect(appendQueryParam(returnTo, 'toast', 'removed'));
+});
 
-  const revenueReport = {
-    weekLabel,
-    totalRevenue: revenueTotals.revenue,
-    totalUnitsSold: revenueTotals.units,
-    activeFilms: films.filter(f => f.isAvailable).length,
-    byFilm: revenueByFilm,
-    insights: { topPerformer, freeFilmWithViews }
-  };
+router.post('/feedback/:id/restore', (req, res) => {
+  const returnTo = req.body.returnTo || '/admin/feedback';
+  const review = db.prepare(`
+    SELECT f.*, c.title AS film_title FROM feedback f
+    JOIN content c ON c.content_id = f.content_id
+    WHERE f.feedback_id = ?
+  `).get(req.params.id);
 
-  // ---- Content Performance Report ----
-  const perFilmPerformance = films.map(film => {
-    const viewRow = db.prepare(`
-      SELECT COUNT(*) AS views, COALESCE(SUM(completed), 0) AS completedCount
-      FROM watch_history WHERE content_id = ? AND watch_date >= ? AND watch_date < ?
-    `).get(film.id, weekStartSql, weekEndSql);
-    const reviewRow = db.prepare(`
-      SELECT COUNT(*) AS n, AVG(rating) AS avg
-      FROM feedback WHERE content_id = ? AND submitted_date >= ? AND submitted_date < ?
-    `).get(film.id, weekStartSql, weekEndSql);
-    return {
-      title: film.title,
-      culture: film.culture,
-      views: viewRow.views,
-      completionRate: viewRow.views ? Math.round((viewRow.completedCount / viewRow.views) * 100) : 0,
-      reviewCount: reviewRow.n,
-      avgRating: reviewRow.avg ? Math.round(reviewRow.avg * 10) / 10 : null
-    };
-  }).sort((a, b) => b.views - a.views);
+  if (!review) return res.redirect(returnTo);
 
-  const viewTotals = db.prepare(`
-    SELECT COUNT(*) AS views
-    FROM watch_history WHERE watch_date >= ? AND watch_date < ?
-  `).get(weekStartSql, weekEndSql);
+  db.prepare(`
+    UPDATE feedback SET status = 'published', removed_by = NULL, removed_at = NULL, removal_reason = NULL
+    WHERE feedback_id = ?
+  `).run(review.feedback_id);
 
-  const reviewTotals = db.prepare(`
-    SELECT COUNT(*) AS n, AVG(rating) AS avg
-    FROM feedback WHERE submitted_date >= ? AND submitted_date < ?
-  `).get(weekStartSql, weekEndSql);
+  logAudit(req.session.admin.id, 'restored_feedback', 'feedback', review.feedback_id, null);
+  logActivity('Feedback restored', review.film_title);
 
-  const fourWeekTrend = [];
-  for (let weekAgo = 3; weekAgo >= 0; weekAgo--) {
-    const ws = new Date(weekStart.getTime() - weekAgo * 7 * 24 * 60 * 60 * 1000);
-    const we = new Date(ws.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const count = db.prepare('SELECT COUNT(*) AS n FROM watch_history WHERE watch_date >= ? AND watch_date < ?')
-      .get(toSqlDateTime(ws), toSqlDateTime(we)).n;
-    fourWeekTrend.push({ label: `Week ${4 - weekAgo}`, views: count });
+  res.redirect(appendQueryParam(returnTo, 'toast', 'restored'));
+});
+
+router.post('/feedback/bulk-delete', (req, res) => {
+  const returnTo = req.body.returnTo || '/admin/feedback';
+  const idsRaw = req.body.ids;
+  const ids = [...new Set((Array.isArray(idsRaw) ? idsRaw : idsRaw ? [idsRaw] : []).map(Number).filter(Number.isInteger))];
+
+  if (ids.length === 0) {
+    return res.redirect(appendQueryParam(returnTo, 'toast', 'bulk-empty'));
   }
 
-  const mostViewed = perFilmPerformance.find(f => f.views > 0) || null;
-  const highestRated = [...perFilmPerformance]
-    .filter(f => f.avgRating !== null)
-    .sort((a, b) => b.avgRating - a.avgRating)[0] || null;
-  const bestCompletion = [...perFilmPerformance]
-    .filter(f => f.views > 0)
-    .sort((a, b) => b.completionRate - a.completionRate)[0] || null;
-  const cultureViewMap = {};
-  perFilmPerformance.forEach(f => {
-    cultureViewMap[f.culture] = (cultureViewMap[f.culture] || 0) + f.views;
+  // High-impact action: re-verify the acting admin's own password before touching
+  // anything. Wrong password rejects the whole batch — nothing is deleted.
+  const admin = db.prepare('SELECT password_hash FROM admins WHERE admin_id = ?').get(req.session.admin.id);
+  if (!admin || !admin.password_hash || !bcrypt.compareSync(req.body.password || '', admin.password_hash)) {
+    return res.redirect(appendQueryParam(returnTo, 'toast', 'bulk-auth-failed'));
+  }
+
+  const placeholders = ids.map(() => '?').join(',');
+  const targets = db.prepare(`
+    SELECT f.feedback_id, c.title AS film_title FROM feedback f
+    JOIN content c ON c.content_id = f.content_id
+    WHERE f.feedback_id IN (${placeholders}) AND f.status = 'published'
+  `).all(...ids);
+
+  const removeStmt = db.prepare(`
+    UPDATE feedback SET status = 'removed', removed_by = ?, removed_at = datetime('now'), removal_reason = 'Bulk removal'
+    WHERE feedback_id = ?
+  `);
+  targets.forEach(t => removeStmt.run(req.session.admin.id, t.feedback_id));
+
+  logAudit(
+    req.session.admin.id, 'bulk_removed_feedback', 'feedback',
+    targets.map(t => t.feedback_id).join(','),
+    `Removed ${targets.length} comment(s)`
+  );
+  if (targets.length > 0) {
+    logActivity('Bulk feedback removal', `${targets.length} comment(s) removed`);
+  }
+
+  res.redirect(appendQueryParam(appendQueryParam(returnTo, 'toast', 'bulk-removed'), 'count', targets.length));
+});
+
+router.get('/manage-admins', requireSuperAdmin, (req, res) => {
+  const admins = db.prepare('SELECT * FROM admins ORDER BY admin_id ASC').all().map(a => {
+    const invite = !a.password_hash
+      ? db.prepare('SELECT * FROM admin_invites WHERE lower(email) = lower(?) ORDER BY id DESC LIMIT 1').get(a.email)
+      : null;
+    return {
+      id: a.admin_id,
+      name: a.name,
+      email: a.email,
+      role: a.role,
+      status: a.status,
+      pending: !a.password_hash,
+      isSelf: a.admin_id === req.session.admin.id,
+      invite: invite ? { id: invite.id, status: invite.status, expiresAt: new Date(invite.expires_at) } : null,
+      createdAt: new Date(a.created_at)
+    };
   });
-  const topCulture = Object.entries(cultureViewMap).sort((a, b) => b[1] - a[1])[0];
 
-  const contentReport = {
-    weekLabel,
-    totalViews: viewTotals.views,
-    avgRating: reviewTotals.avg ? Math.round(reviewTotals.avg * 10) / 10 : null,
-    totalReviews: reviewTotals.n,
-    byFilm: perFilmPerformance,
-    trend: fourWeekTrend,
-    insights: { mostViewed, highestRated, bestCompletion, topCulture: topCulture ? topCulture[0] : null }
-  };
+  res.render('admin-manage-admins', {
+    admins,
+    toast: req.query.toast || null,
+    error: req.query.error || null
+  });
+});
 
-  res.render('admin-reports', { revenueReport, contentReport });
+router.post('/manage-admins/invite', requireSuperAdmin, async (req, res) => {
+  const name = (req.body.name || '').trim();
+  const email = (req.body.email || '').trim();
+
+  if (!name || !email) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'Name and email are required.'));
+  }
+  if (db.prepare('SELECT admin_id FROM admins WHERE lower(email) = lower(?)').get(email)) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'An admin with that email already exists.'));
+  }
+  if (db.prepare("SELECT id FROM admin_invites WHERE lower(email) = lower(?) AND status = 'pending'").get(email)) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'There is already a pending invite for that email.'));
+  }
+
+  // The admin_id is reserved immediately (password_hash stays NULL) so it's stable
+  // from the moment the invite is sent, even before the invitee verifies anything.
+  const adminId = nextAdminId(db);
+  db.prepare(`
+    INSERT INTO admins (admin_id, name, email, password_hash, role, status, invited_by, verified_at, created_at)
+    VALUES (?, ?, ?, NULL, 'admin', 'active', ?, NULL, datetime('now'))
+  `).run(adminId, name, email, req.session.admin.id);
+
+  const code = generateInviteCode();
+  const expiresAt = toSqlDateTime(new Date(Date.now() + INVITE_TTL_MS));
+  db.prepare(`
+    INSERT INTO admin_invites (name, email, code_hash, expires_at, invited_by, status, attempts)
+    VALUES (?, ?, ?, ?, ?, 'pending', 0)
+  `).run(name, email, hashInviteCode(code), expiresAt, req.session.admin.id);
+
+  try {
+    await sendAdminInviteEmail({ name, email }, code);
+  } catch (err) {
+    console.error('Failed to send admin invite email:', err.message);
+  }
+
+  logAudit(req.session.admin.id, 'invited_admin', 'admin', adminId, email);
+  res.redirect(appendQueryParam('/admin/manage-admins', 'toast', 'invited'));
+});
+
+router.post('/manage-admins/invites/:inviteId/resend', requireSuperAdmin, async (req, res) => {
+  const invite = db.prepare('SELECT * FROM admin_invites WHERE id = ?').get(req.params.inviteId);
+  if (!invite) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'Invite not found.'));
+  }
+
+  const admin = db.prepare('SELECT * FROM admins WHERE lower(email) = lower(?)').get(invite.email);
+  if (!admin || admin.password_hash) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'This invite has already been used.'));
+  }
+
+  db.prepare("UPDATE admin_invites SET status = 'expired' WHERE lower(email) = lower(?) AND status = 'pending'").run(invite.email);
+
+  const code = generateInviteCode();
+  const expiresAt = toSqlDateTime(new Date(Date.now() + INVITE_TTL_MS));
+  db.prepare(`
+    INSERT INTO admin_invites (name, email, code_hash, expires_at, invited_by, status, attempts)
+    VALUES (?, ?, ?, ?, ?, 'pending', 0)
+  `).run(invite.name, invite.email, hashInviteCode(code), expiresAt, req.session.admin.id);
+
+  try {
+    await sendAdminInviteEmail({ name: invite.name, email: invite.email }, code);
+  } catch (err) {
+    console.error('Failed to resend admin invite email:', err.message);
+  }
+
+  logAudit(req.session.admin.id, 'resent_admin_invite', 'admin', admin.admin_id, invite.email);
+  res.redirect(appendQueryParam('/admin/manage-admins', 'toast', 'invite-resent'));
+});
+
+router.post('/manage-admins/:adminId/cancel-invite', requireSuperAdmin, (req, res) => {
+  const targetId = req.params.adminId;
+  const target = db.prepare('SELECT * FROM admins WHERE admin_id = ?').get(targetId);
+
+  if (!target) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'Admin not found.'));
+  }
+  // Only a not-yet-verified invite can be unsent this way — once a password is set
+  // they're a real admin, and removing their access goes through Deactivate instead
+  // (which, unlike this, keeps the row and re-auth-gates the action).
+  if (target.password_hash) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'This admin has already verified their invite — use Deactivate instead.'));
+  }
+
+  // The admin_id was only ever a reservation for someone who never completed
+  // onboarding, so both the invite and the placeholder admin row are removed
+  // outright rather than soft-deleted — there's no real admin activity to preserve.
+  db.prepare('DELETE FROM admin_invites WHERE lower(email) = lower(?)').run(target.email);
+  db.prepare('DELETE FROM admins WHERE admin_id = ?').run(targetId);
+
+  logAudit(req.session.admin.id, 'cancelled_invite', 'admin', targetId, target.email);
+  res.redirect(appendQueryParam('/admin/manage-admins', 'toast', 'invite-cancelled'));
+});
+
+router.post('/manage-admins/:adminId/deactivate', requireSuperAdmin, (req, res) => {
+  const targetId = req.params.adminId;
+
+  if (targetId === req.session.admin.id) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'You cannot deactivate your own account.'));
+  }
+  if (!verifyOwnPassword(req, req.body.password)) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'Incorrect password. No changes were made.'));
+  }
+
+  const target = db.prepare('SELECT * FROM admins WHERE admin_id = ?').get(targetId);
+  if (!target) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'Admin not found.'));
+  }
+  if (target.role === 'super_admin') {
+    const activeSuperAdmins = db.prepare("SELECT COUNT(*) AS n FROM admins WHERE role = 'super_admin' AND status = 'active'").get().n;
+    if (activeSuperAdmins <= 1) {
+      return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'Cannot deactivate the last active super admin.'));
+    }
+  }
+
+  // Sessions aren't stored server-side by admin_id, so there's nothing to revoke by
+  // reference — but server.js re-checks status against the DB on every request, so
+  // this takes effect on the deactivated admin's very next request either way.
+  db.prepare("UPDATE admins SET status = 'inactive' WHERE admin_id = ?").run(targetId);
+  logAudit(req.session.admin.id, 'deactivated_admin', 'admin', targetId, null);
+  res.redirect(appendQueryParam('/admin/manage-admins', 'toast', 'deactivated'));
+});
+
+router.post('/manage-admins/:adminId/reactivate', requireSuperAdmin, (req, res) => {
+  const targetId = req.params.adminId;
+
+  if (!verifyOwnPassword(req, req.body.password)) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'Incorrect password. No changes were made.'));
+  }
+  const target = db.prepare('SELECT * FROM admins WHERE admin_id = ?').get(targetId);
+  if (!target) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'Admin not found.'));
+  }
+
+  db.prepare("UPDATE admins SET status = 'active' WHERE admin_id = ?").run(targetId);
+  logAudit(req.session.admin.id, 'reactivated_admin', 'admin', targetId, null);
+  res.redirect(appendQueryParam('/admin/manage-admins', 'toast', 'reactivated'));
+});
+
+router.post('/manage-admins/:adminId/role', requireSuperAdmin, (req, res) => {
+  const targetId = req.params.adminId;
+  const newRole = req.body.role === 'super_admin' ? 'super_admin' : 'admin';
+
+  if (targetId === req.session.admin.id) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'You cannot change your own role here.'));
+  }
+  if (!verifyOwnPassword(req, req.body.password)) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'Incorrect password. No changes were made.'));
+  }
+
+  const target = db.prepare('SELECT * FROM admins WHERE admin_id = ?').get(targetId);
+  if (!target) {
+    return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'Admin not found.'));
+  }
+  if (target.role === 'super_admin' && newRole === 'admin') {
+    const activeSuperAdmins = db.prepare("SELECT COUNT(*) AS n FROM admins WHERE role = 'super_admin' AND status = 'active'").get().n;
+    if (activeSuperAdmins <= 1) {
+      return res.redirect(appendQueryParam('/admin/manage-admins', 'error', 'Cannot demote the last active super admin.'));
+    }
+  }
+
+  db.prepare('UPDATE admins SET role = ? WHERE admin_id = ?').run(newRole, targetId);
+  logAudit(req.session.admin.id, 'changed_admin_role', 'admin', targetId, `role -> ${newRole}`);
+  res.redirect(appendQueryParam('/admin/manage-admins', 'toast', 'role-updated'));
+});
+
+// Reports below use a fixed, hand-authored sample dataset (webapp/data/mockReports.js)
+// rather than live queries, so the numbers stay presentable regardless of how sparse
+// real activity in the dev database is. All figures cross-check against each other —
+// see the comment at the top of that file for how consistency is enforced.
+router.get('/reports', (req, res) => {
+  res.render('admin-reports', {
+    revenueReport: mockReports.buildRevenueReport(),
+    contentReport: mockReports.buildContentReport()
+  });
+});
+
+router.get('/analytics', (req, res) => {
+  res.render('admin-analytics', mockReports.buildAnalyticsReport());
+});
+
+router.get('/engagement', (req, res) => {
+  res.render('admin-engagement', mockReports.buildEngagementReport());
+});
+
+router.get('/reports/pdf', async (req, res) => {
+  try {
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const pdfBuffer = await buildScreenshotPdf({
+      baseUrl,
+      cookieHeader: req.headers.cookie,
+      paths: ['/admin/reports', '/admin/analytics', '/admin/engagement']
+    });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="cultured-africa-reports.pdf"');
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('PDF export failed:', err);
+    res.status(500).send('Could not generate the PDF export. ' + err.message);
+  }
 });
 
 module.exports = router;

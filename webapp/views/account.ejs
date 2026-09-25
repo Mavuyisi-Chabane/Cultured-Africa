@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Manage Account' }) %>
+<style>
+    /* See views/admin-feedback.ejs for why this is needed: the modal below combines
+       the native `hidden` attribute with a `flex` display class, which otherwise lets
+       `.flex` win the cascade over `[hidden]` and leaves a "closed" modal visible. */
+    [hidden] { display: none !important; }
+</style>
+</head>
+<body class="min-h-screen">
+<%- include('partials/header') %>
+
+<%
+  const initials = user.fullName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+%>
+
+<main class="max-w-3xl mx-auto px-6 py-10 relative">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+    <div class="mb-8 z-10 relative">
+        <h1 class="text-2xl md:text-3xl font-bold text-[#f7efe6] mb-1">Manage Account</h1>
+        <p class="text-[#a99a8b] text-sm">Update your email address or delete your account.</p>
+    </div>
+
+    <% if (success) { %>
+        <div class="mb-6 z-10 relative px-4 py-3 rounded-xl bg-[#271c17] text-[#9db183] text-sm font-medium flex items-center gap-2">
+            <i class="fa-solid fa-circle-check"></i> <%= success %>
+        </div>
+    <% } %>
+    <% if (error) { %>
+        <div class="mb-6 z-10 relative px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ef420f] text-sm font-medium"><%= error %></div>
+    <% } %>
+
+    <!-- Profile -->
+    <div class="bg-[#1e1613] rounded-[24px] border border-[#38281f] p-8 shadow-sm mb-8 z-10 relative flex items-center gap-5">
+        <div class="w-16 h-16 rounded-full bg-[#0f0a08] flex items-center justify-center text-[#fcaa13] text-xl font-bold flex-shrink-0">
+            <%= initials %>
+        </div>
+        <div>
+            <p class="text-lg font-bold text-[#f7efe6]"><%= user.fullName %></p>
+            <p class="text-[#a99a8b] text-sm"><%= user.email %></p>
+        </div>
+    </div>
+
+    <!-- Change Email -->
+    <div class="bg-[#1e1613] rounded-[24px] border border-[#38281f] p-8 shadow-sm mb-8 z-10 relative">
+        <h2 class="text-sm font-bold uppercase tracking-widest text-[#f7efe6] mb-1">Email Address</h2>
+
+        <% if (pendingEmail) { %>
+            <p class="text-[#a99a8b] text-sm mb-5">
+                We sent a 6-digit code to <span class="font-bold text-[#f7efe6]"><%= pendingEmail %></span>. Enter it below to confirm the change.
+                It expires in <span class="font-bold text-[#f7efe6]">15 minutes</span>.
+            </p>
+            <form method="POST" action="/account/email/verify" class="flex flex-wrap items-end gap-4 mb-4">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Verification Code</label>
+                    <input type="text" name="code" placeholder="123456" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required
+                        class="px-4 py-2.5 bg-[#271c17]/50 border border-[#38281f] rounded-xl text-sm focus:border-[#fcaa13] transition-all tracking-[0.3em] font-bold text-center w-40">
+                </div>
+                <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold px-5 py-2.5 rounded-xl text-sm transition-all">Confirm Change</button>
+            </form>
+            <form method="POST" action="/account/email/cancel">
+                <button type="submit" class="text-[#a99a8b] hover:text-[#f7efe6] text-xs font-bold uppercase tracking-wider">Cancel this change</button>
+            </form>
+        <% } else { %>
+            <p class="text-[#a99a8b] text-sm mb-5">Changing your email requires your current password, and a code sent to the new address to confirm you own it.</p>
+            <form method="POST" action="/account/email" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">New Email Address</label>
+                    <input type="email" name="newEmail" required placeholder="new-email@example.com"
+                        class="w-full px-4 py-2.5 bg-[#271c17]/50 border border-[#38281f] rounded-xl text-sm focus:border-[#fcaa13] transition-all">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Current Password</label>
+                    <input type="password" name="password" required autocomplete="current-password"
+                        class="w-full px-4 py-2.5 bg-[#271c17]/50 border border-[#38281f] rounded-xl text-sm focus:border-[#fcaa13] transition-all">
+                </div>
+                <button type="submit" class="bg-[#0f0a08] hover:bg-[#0a0605] text-[#fcaa13] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#fcaa13]/30">Send Verification Code</button>
+            </form>
+        <% } %>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="bg-[#1e1613] rounded-[24px] border border-[#b62319]/30 p-8 shadow-sm z-10 relative">
+        <h2 class="text-sm font-bold uppercase tracking-widest text-[#ef420f] mb-1">Danger Zone</h2>
+        <p class="text-[#a99a8b] text-sm mb-5">Deleting your account permanently removes your profile, purchases, watch history, and reviews. This cannot be undone.</p>
+        <button type="button" id="delete-account-trigger" class="bg-[#b62319]/15 hover:bg-[#b62319] hover:text-[#f4ece3] text-[#ef420f] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#b62319]/30">
+            Delete My Account
+        </button>
+    </div>
+
+    <footer class="mt-20 py-10 flex flex-col items-center">
+        <span class="text-[10px] uppercase tracking-[0.2em] text-[#a99a8b] font-bold">Cultured Africa</span>
+        <p class="text-[10px] text-[#a99a8b]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
+    </footer>
+</main>
+
+<!-- Delete account modal -->
+<div id="delete-account-modal" hidden class="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] px-4">
+    <div class="bg-[#1e1613] rounded-2xl shadow-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-[#f7efe6] mb-2">Delete your account?</h3>
+        <p class="text-sm text-[#a99a8b] mb-4">This permanently deletes your account and everything tied to it. Re-enter your password to confirm.</p>
+        <form method="POST" action="/account/delete">
+            <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Password</label>
+            <input type="password" name="password" required autocomplete="current-password"
+                class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all mb-6">
+            <div class="flex items-center justify-end gap-3">
+                <button type="button" id="delete-account-cancel" class="text-[#a99a8b] hover:text-[#f7efe6] text-sm font-medium px-4 py-2.5">Cancel</button>
+                <button type="submit" class="bg-[#b62319] hover:bg-[#ef420f] text-[#f4ece3] font-bold px-5 py-2.5 rounded-xl text-sm transition-all">Delete My Account</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal = document.getElementById('delete-account-modal');
+    document.getElementById('delete-account-trigger').addEventListener('click', () => { modal.hidden = false; });
+    document.getElementById('delete-account-cancel').addEventListener('click', () => { modal.hidden = true; });
+    modal.addEventListener('click', e => { if (e.target === modal) modal.hidden = true; });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.hidden = true; });
+})();
+</script>
+</body>
+</html>

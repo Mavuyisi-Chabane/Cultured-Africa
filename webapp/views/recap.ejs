@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — My Recap' }) %>
+</head>
+<body class="min-h-screen">
+<%- include('partials/header') %>
+
+<main class="max-w-5xl mx-auto px-6 py-8 relative">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-[#f7efe6] mb-1">My Recap</h1>
+            <p class="text-[#a99a8b] text-sm">Your viewing activity and purchases — <%= periodLabel %>.</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="/recap?period=week" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all <%= period === 'week' ? 'bg-[#fb6b10] text-[#f4ece3]' : 'border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]' %>">This Week</a>
+            <a href="/recap?period=month" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all <%= period === 'month' ? 'bg-[#fb6b10] text-[#f4ece3]' : 'border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]' %>">This Month</a>
+            <a href="/recap?period=all" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all <%= period === 'all' ? 'bg-[#fb6b10] text-[#f4ece3]' : 'border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]' %>">All Time</a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+        <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
+            <i class="fa-solid fa-clock text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]">
+                <% if (totalMinutes >= 60) { %><%= Math.floor(totalMinutes / 60) %>h <%= totalMinutes % 60 %>m<% } else { %><%= totalMinutes %>m<% } %>
+            </p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Watch Time</p>
+        </div>
+        <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
+            <i class="fa-solid fa-film text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= filmsWatched %></p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Films Watched</p>
+        </div>
+        <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
+            <i class="fa-solid fa-sack-dollar text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]">R<%= totalSpent.toFixed(0) %></p>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Spent (<%= purchaseCount %> purchase<%= purchaseCount === 1 ? '' : 's' %>)</p>
+        </div>
+    </div>
+
+    <div class="mb-10">
+        <h2 class="text-lg font-bold text-[#f7efe6] mb-4">Most Watched</h2>
+        <% if (mostWatched.length === 0) { %>
+            <p class="text-[#a99a8b] text-sm">No viewing activity <%= period === 'all' ? 'yet' : 'in this period' %>.</p>
+        <% } else { %>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <% mostWatched.forEach(f => { %>
+                    <a href="/film/<%= f.id %>" class="bg-[#1e1613] rounded-2xl border border-[#38281f] overflow-hidden group hover:shadow-lg transition-all">
+                        <div class="h-32 overflow-hidden">
+                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= f.thumbnailUrl %>" alt="<%= f.title %>">
+                        </div>
+                        <div class="p-4">
+                            <h3 class="text-sm font-bold text-[#f7efe6]"><%= f.title %></h3>
+                            <p class="text-[#a99a8b] text-xs italic mb-2"><%= f.culture %> Heritage</p>
+                            <p class="text-[#a99a8b] text-xs"><%= f.minutes %> min watched · <%= f.sessions %> session<%= f.sessions === 1 ? '' : 's' %></p>
+                        </div>
+                    </a>
+                <% }) %>
+            </div>
+        <% } %>
+    </div>
+
+    <div class="mb-10">
+        <h2 class="text-lg font-bold text-[#f7efe6] mb-4">Purchase History</h2>
+        <% if (purchaseHistory.length === 0) { %>
+            <p class="text-[#a99a8b] text-sm">No purchases <%= period === 'all' ? 'yet' : 'in this period' %>.</p>
+        <% } else { %>
+            <div class="overflow-x-auto rounded-2xl border border-[#38281f] bg-[#1e1613]">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-[#271c17]/50">
+                            <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Film</th>
+                            <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Price</th>
+                            <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#38281f]">
+                        <% purchaseHistory.forEach(p => { %>
+                            <tr>
+                                <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><%= p.title %></td>
+                                <td class="px-6 py-4 text-sm text-[#9db183] font-bold">R<%= p.amountPaid.toFixed(0) %></td>
+                                <td class="px-6 py-4 text-xs text-[#a99a8b]"><%= p.purchasedAt.toLocaleDateString() %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+
+    <%- include('partials/footer') %>
+</main>
+</body>
+</html>

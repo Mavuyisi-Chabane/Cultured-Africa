@@ -12,61 +12,61 @@
 
     <div class="flex items-center justify-between mb-10 z-10 relative">
         <div>
-            <h1 class="display-font text-3xl font-bold text-[#1a1a2e]">Manage Films</h1>
-            <p class="text-[#8a7f73] text-sm mt-1">Your full content catalogue — edit or remove films.</p>
+            <h1 class="display-font text-3xl font-bold text-[#f7efe6]">Manage Films</h1>
+            <p class="text-[#a99a8b] text-sm mt-1">Your full content catalogue — edit or remove films.</p>
         </div>
-        <a href="/admin/upload" class="bg-[#c9a84c] hover:bg-[#b8973d] text-white px-6 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#c9a84c]/20 transition-all flex items-center gap-2">
+        <a href="/admin/upload" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-6 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all flex items-center gap-2">
             <i class="fa-solid fa-plus"></i> Upload Film
         </a>
     </div>
 
-    <div class="bg-white rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#e8e0d5] overflow-hidden z-10 relative">
+    <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] overflow-hidden z-10 relative">
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead>
-                    <tr class="bg-[#f5f0e8]/30">
-                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Film</th>
-                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Culture</th>
-                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Price</th>
-                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Rating</th>
-                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Status</th>
-                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#8a7f73]">Actions</th>
+                    <tr class="bg-[#271c17]/30">
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Film</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Culture</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Price</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Rating</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Status</th>
+                        <th class="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#f5f0e8]">
+                <tbody class="divide-y divide-[#38281f]">
                     <% if (films.length === 0) { %>
-                        <tr><td colspan="6" class="px-8 py-6 text-sm text-[#8a7f73]">No films uploaded yet.</td></tr>
+                        <tr><td colspan="6" class="px-8 py-6 text-sm text-[#a99a8b]">No films uploaded yet.</td></tr>
                     <% } %>
                     <% films.forEach(film => { %>
-                        <tr class="hover:bg-[#f5f0e8]/20 transition-colors">
+                        <tr class="hover:bg-[#271c17]/20 transition-colors">
                             <td class="px-8 py-5">
                                 <div class="flex items-center gap-3">
                                     <img src="<%= film.thumbnailUrl %>" class="w-12 h-12 rounded-lg object-cover" alt="<%= film.title %>">
-                                    <span class="text-sm font-bold text-[#1a1a2e]"><%= film.title %></span>
+                                    <span class="text-sm font-bold text-[#f7efe6]"><%= film.title %></span>
                                 </div>
                             </td>
-                            <td class="px-8 py-5"><span class="text-sm text-[#2d2d2d]"><%= film.culture %></span></td>
+                            <td class="px-8 py-5"><span class="text-sm text-[#f7efe6]"><%= film.culture %></span></td>
                             <td class="px-8 py-5">
-                                <span class="text-[10px] px-1.5 py-0.5 rounded font-bold <%= film.price > 0 ? 'bg-[#f5f0e8] text-[#2d6b6b]' : 'bg-[#f5f0e8] text-[#c9a84c]' %>">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded font-bold <%= film.price > 0 ? 'bg-[#271c17] text-[#9db183]' : 'bg-[#271c17] text-[#fcaa13]' %>">
                                     <%= film.price > 0 ? 'R' + film.price.toFixed(0) : 'FREE' %>
                                 </span>
                             </td>
-                            <td class="px-8 py-5"><span class="text-sm text-[#8a7f73]"><i class="fa-solid fa-star text-[#c9a84c] text-xs mr-1"></i><%= film.rating.toFixed(1) %></span></td>
+                            <td class="px-8 py-5"><span class="text-sm text-[#a99a8b]"><i class="fa-solid fa-star text-[#fcaa13] text-xs mr-1"></i><%= film.rating.toFixed(1) %></span></td>
                             <td class="px-8 py-5">
-                                <span class="text-[10px] px-1.5 py-0.5 rounded font-bold <%= film.isAvailable ? 'bg-[#e8f5f5] text-[#2d6b6b]' : 'bg-gray-100 text-[#8a7f73]' %>">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded font-bold <%= film.isAvailable ? 'bg-[#271c17] text-[#9db183]' : 'bg-[#271c17] text-[#a99a8b]' %>">
                                     <%= film.isAvailable ? 'ACTIVE' : 'ARCHIVED' %>
                                 </span>
                             </td>
                             <td class="px-8 py-5">
                                 <div class="flex items-center gap-3">
-                                    <a href="/admin/films/<%= film.id %>/edit" class="text-[#8a7f73] hover:text-[#c9a84c]" title="Edit"><i class="fa-solid fa-pen text-sm"></i></a>
+                                    <a href="/admin/films/<%= film.id %>/edit" class="text-[#a99a8b] hover:text-[#fcaa13]" title="Edit"><i class="fa-solid fa-pen text-sm"></i></a>
                                     <form action="/admin/films/<%= film.id %>/toggle-availability" method="POST">
-                                        <button type="submit" class="text-[#8a7f73] hover:text-[#c9a84c]" title="<%= film.isAvailable ? 'Archive (hide from browsing)' : 'Restore to active library' %>">
+                                        <button type="submit" class="text-[#a99a8b] hover:text-[#fcaa13]" title="<%= film.isAvailable ? 'Archive (hide from browsing)' : 'Restore to active library' %>">
                                             <i class="fa-solid <%= film.isAvailable ? 'fa-box-archive' : 'fa-rotate-left' %> text-sm"></i>
                                         </button>
                                     </form>
                                     <form action="/admin/films/<%= film.id %>/delete" method="POST" onsubmit="return confirm('Permanently delete &quot;<%= film.title %>&quot;? This cannot be undone.');">
-                                        <button type="submit" class="text-[#8a7f73] hover:text-red-500" title="Delete permanently"><i class="fa-solid fa-trash text-sm"></i></button>
+                                        <button type="submit" class="text-[#a99a8b] hover:text-[#ef420f]" title="Delete permanently"><i class="fa-solid fa-trash text-sm"></i></button>
                                     </form>
                                 </div>
                             </td>
@@ -78,8 +78,8 @@
     </div>
 
     <footer class="mt-20 py-10 flex flex-col items-center">
-        <span class="text-[10px] uppercase tracking-[0.2em] text-[#8a7f73] font-bold">Cultured Africa Admin Portal</span>
-        <p class="text-[10px] text-[#8a7f73]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
+        <span class="text-[10px] uppercase tracking-[0.2em] text-[#a99a8b] font-bold">Cultured Africa Admin Portal</span>
+        <p class="text-[10px] text-[#a99a8b]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
     </footer>
 </main>
 </body>

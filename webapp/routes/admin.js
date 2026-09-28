@@ -2,12 +2,13 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const { db, logActivity, notify, logAudit, ensureShadowUserForAdmin } = require('../db');
+const { db, logActivity, adminActor, notify, logAudit, ensureShadowUserForAdmin } = require('../db');
 const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
 const handleUploads = require('../middleware/upload');
 const { startOfWeek, endOfWeek, toSqlDateTime, formatWeekLabel } = require('../utils/dates');
 const mockReports = require('../data/mockReports');
 const { buildScreenshotPdf } = require('../utils/screenshotPdf');
+const { THRESHOLDS, flagLevel } = require('../utils/reportThresholds');
 const { containsProfanity } = require('../utils/profanityFilter');
 const { nextAdminId } = require('../utils/adminId');
 const { generateInviteCode, hashInviteCode, INVITE_TTL_MS, MAX_INVITE_ATTEMPTS } = require('../utils/adminInvites');
@@ -63,9 +64,41 @@ function verifyOwnPassword(req, password) {
   return Boolean(admin && admin.password_hash && bcrypt.compareSync(password || '', admin.password_hash));
 }
 
-function getCultureId(name) {
-  const row = db.prepare('SELECT culture_id FROM cultures WHERE name = ?').get(name);
-  return row ? row.culture_id : db.prepare('SELECT culture_id FROM cultures ORDER BY culture_id LIMIT 1').get().culture_id;
+// Value of the "Other (type a new culture)" option in admin-upload.ejs's culture select.
+const OTHER_CULTURE = '__other__';
+const MAX_CULTURE_NAME_LENGTH = 50;
+
+function listCultures() {
+  return db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
+}
+
+// Turns the upload form's culture fields into a culture_id: either a culture picked from
+// the list, or a new one typed in via "Other". A typed name matching an existing culture
+// (ignoring case and extra spaces) reuses it rather than creating a near-duplicate.
+// Returns { id } or { error } — never silently falls back to some other culture.
+function resolveCulture(body, admin) {
+  if (body.culture !== OTHER_CULTURE) {
+    const row = db.prepare('SELECT culture_id FROM cultures WHERE name = ?').get(body.culture);
+    return row ? { id: row.culture_id } : { error: 'Please choose a culture category.' };
+  }
+
+  const name = (body.newCulture || '').trim().replace(/\s+/g, ' ');
+  if (!name) return { error: 'Please type the name of the new culture.' };
+  if (name.length > MAX_CULTURE_NAME_LENGTH) {
+    return { error: `Culture names must be ${MAX_CULTURE_NAME_LENGTH} characters or fewer.` };
+  }
+  if (!/^\p{L}[\p{L}\p{M}' -]*$/u.test(name)) {
+    return { error: 'Culture names may only contain letters, spaces, hyphens and apostrophes.' };
+  }
+  if (containsProfanity(name)) return { error: 'Please choose a different culture name.' };
+
+  const existing = db.prepare('SELECT culture_id FROM cultures WHERE lower(name) = lower(?)').get(name);
+  if (existing) return { id: existing.culture_id };
+
+  const id = db.prepare("INSERT INTO cultures (name, description, region, banner_image_url) VALUES (?, '', '', '')")
+    .run(name).lastInsertRowid;
+  logActivity('Culture added', name, adminActor(admin));
+  return { id };
 }
 
 router.get('/dashboard', (req, res) => {
@@ -81,9 +114,12 @@ router.get('/dashboard', (req, res) => {
 });
 
 router.get('/activity', (req, res) => {
-  const recentActivity = db.prepare('SELECT type, entity, created_at FROM activity_log ORDER BY created_at DESC, id DESC LIMIT 200')
+  const recentActivity = db.prepare('SELECT type, entity, actor_name, actor_role, created_at FROM activity_log ORDER BY created_at DESC, id DESC LIMIT 200')
     .all()
-    .map(a => ({ type: a.type, entity: a.entity, timestamp: new Date(a.created_at) }));
+    .map(a => ({
+      type: a.type, entity: a.entity, timestamp: new Date(a.created_at),
+      actor: a.actor_name ? { name: a.actor_name, role: a.actor_role } : null
+    }));
 
   res.render('admin-activity', { recentActivity });
 });
@@ -100,7 +136,7 @@ router.post('/films/:id/delete', (req, res) => {
     deleteUploadedFile(film.videoUrl);
     deleteUploadedFile(film.thumbnailUrl);
     deleteUploadedFile(film.trailerUrl);
-    logActivity('Film removed', film.title);
+    logActivity('Film removed', film.title, adminActor(req.session.admin));
   }
   res.redirect('/admin/films');
 });
@@ -109,7 +145,7 @@ router.post('/films/:id/toggle-availability', (req, res) => {
   const film = getContent(req.params.id);
   if (film) {
     db.prepare('UPDATE content SET is_available = ? WHERE content_id = ?').run(film.isAvailable ? 0 : 1, film.id);
-    logActivity(film.isAvailable ? 'Film archived' : 'Film restored', film.title);
+    logActivity(film.isAvailable ? 'Film archived' : 'Film restored', film.title, adminActor(req.session.admin));
   }
   res.redirect('/admin/films');
 });
@@ -117,23 +153,26 @@ router.post('/films/:id/toggle-availability', (req, res) => {
 router.get('/films/:id/edit', (req, res) => {
   const film = getContent(req.params.id);
   if (!film) return res.status(404).send('Film not found.');
-  const cultures = db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
-  res.render('admin-upload', { editing: film, cultures, error: null, success: false });
+  res.render('admin-upload', { editing: film, cultures: listCultures(), error: null, success: false });
 });
 
 router.post('/films/:id/edit', handleUploads, (req, res) => {
   const film = getContent(req.params.id);
   if (!film) return res.status(404).send('Film not found.');
 
-  const { title, description, culture, price, isFree } = req.body;
+  const { title, description, price, isFree } = req.body;
   const videoFile = req.files && req.files.videoFile && req.files.videoFile[0];
   const thumbnailFile = req.files && req.files.thumbnailFile && req.files.thumbnailFile[0];
   const trailerFile = req.files && req.files.trailerFile && req.files.trailerFile[0];
 
-  if (!title || !description) {
-    const cultures = db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
-    return res.render('admin-upload', { editing: { ...film, ...req.body }, cultures, error: 'Please fill in all required fields.', success: false });
-  }
+  const rejectEdit = error => {
+    [videoFile, thumbnailFile, trailerFile].forEach(f => { if (f) deleteUploadedFile(`/uploads/${f.filename}`); });
+    res.render('admin-upload', { editing: { ...film, ...req.body }, cultures: listCultures(), error, success: false });
+  };
+
+  if (!title || !description) return rejectEdit('Please fill in all required fields.');
+  const cultureResult = resolveCulture(req.body, req.session.admin);
+  if (cultureResult.error) return rejectEdit(cultureResult.error);
 
   let videoUrl = film.videoUrl;
   let thumbnailUrl = film.thumbnailUrl;
@@ -155,40 +194,42 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
   db.prepare(`
     UPDATE content SET title = ?, description = ?, culture_id = ?, price = ?, file_url = ?, thumbnail_url = ?, trailer_url = ?
     WHERE content_id = ?
-  `).run(title, description, getCultureId(culture), isFree ? 0 : Number(price) || 0, videoUrl, thumbnailUrl, trailerUrl, film.id);
-  logActivity('Film updated', title);
+  `).run(title, description, cultureResult.id, isFree ? 0 : Number(price) || 0, videoUrl, thumbnailUrl, trailerUrl, film.id);
+  logActivity('Film updated', title, adminActor(req.session.admin));
 
   res.redirect('/admin/films');
 });
 
 router.get('/upload', (req, res) => {
-  const cultures = db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
-  res.render('admin-upload', { editing: null, cultures, error: null, success: req.query.success === '1' });
+  res.render('admin-upload', { editing: null, cultures: listCultures(), error: null, success: req.query.success === '1' });
 });
 
 router.post('/upload', handleUploads, (req, res) => {
-  const { title, description, culture, price, isFree } = req.body;
+  const { title, description, price, isFree } = req.body;
   const videoFile = req.files && req.files.videoFile && req.files.videoFile[0];
   const thumbnailFile = req.files && req.files.thumbnailFile && req.files.thumbnailFile[0];
   const trailerFile = req.files && req.files.trailerFile && req.files.trailerFile[0];
 
+  const rejectUpload = error => {
+    [videoFile, thumbnailFile, trailerFile].forEach(f => { if (f) deleteUploadedFile(`/uploads/${f.filename}`); });
+    res.render('admin-upload', { editing: req.body, cultures: listCultures(), error, success: false });
+  };
+
   if (!title || !description || !videoFile || !thumbnailFile) {
-    if (videoFile) deleteUploadedFile(`/uploads/${videoFile.filename}`);
-    if (thumbnailFile) deleteUploadedFile(`/uploads/${thumbnailFile.filename}`);
-    if (trailerFile) deleteUploadedFile(`/uploads/${trailerFile.filename}`);
-    const cultures = db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
-    return res.render('admin-upload', { editing: req.body, cultures, error: 'Please fill in all required fields, including a video file and a thumbnail image.', success: false });
+    return rejectUpload('Please fill in all required fields, including a video file and a thumbnail image.');
   }
+  const cultureResult = resolveCulture(req.body, req.session.admin);
+  if (cultureResult.error) return rejectUpload(cultureResult.error);
 
   db.prepare(`
     INSERT INTO content (culture_id, uploaded_by, title, description, content_type, price, file_url, thumbnail_url, trailer_url)
     VALUES (?, ?, ?, ?, 'Uncategorized', ?, ?, ?, ?)
   `).run(
-    getCultureId(culture), ensureShadowUserForAdmin(req.session.admin), title, description, isFree ? 0 : Number(price) || 0,
+    cultureResult.id, ensureShadowUserForAdmin(req.session.admin), title, description, isFree ? 0 : Number(price) || 0,
     `/uploads/${videoFile.filename}`, `/uploads/${thumbnailFile.filename}`,
     trailerFile ? `/uploads/${trailerFile.filename}` : ''
   );
-  logActivity('Film uploaded', title);
+  logActivity('Film uploaded', title, adminActor(req.session.admin));
 
   res.redirect('/admin/upload?success=1');
 });
@@ -297,7 +338,7 @@ router.post('/feedback/:id/delete', (req, res) => {
   `).run(req.session.admin.id, reason, review.feedback_id);
 
   logAudit(req.session.admin.id, 'removed_feedback', 'feedback', review.feedback_id, reason);
-  logActivity('Feedback removed', review.film_title);
+  logActivity('Feedback removed', review.film_title, adminActor(req.session.admin));
 
   res.redirect(appendQueryParam(returnTo, 'toast', 'removed'));
 });
@@ -318,7 +359,7 @@ router.post('/feedback/:id/restore', (req, res) => {
   `).run(review.feedback_id);
 
   logAudit(req.session.admin.id, 'restored_feedback', 'feedback', review.feedback_id, null);
-  logActivity('Feedback restored', review.film_title);
+  logActivity('Feedback restored', review.film_title, adminActor(req.session.admin));
 
   res.redirect(appendQueryParam(returnTo, 'toast', 'restored'));
 });
@@ -358,7 +399,7 @@ router.post('/feedback/bulk-delete', (req, res) => {
     `Removed ${targets.length} comment(s)`
   );
   if (targets.length > 0) {
-    logActivity('Bulk feedback removal', `${targets.length} comment(s) removed`);
+    logActivity('Bulk feedback removal', `${targets.length} comment(s) removed`, adminActor(req.session.admin));
   }
 
   res.redirect(appendQueryParam(appendQueryParam(returnTo, 'toast', 'bulk-removed'), 'count', targets.length));
@@ -558,31 +599,75 @@ router.post('/manage-admins/:adminId/role', requireSuperAdmin, (req, res) => {
 // rather than live queries, so the numbers stay presentable regardless of how sparse
 // real activity in the dev database is. All figures cross-check against each other —
 // see the comment at the top of that file for how consistency is enforced.
-router.get('/reports', (req, res) => {
-  res.render('admin-reports', {
-    revenueReport: mockReports.buildRevenueReport(),
-    contentReport: mockReports.buildContentReport()
-  });
+
+// Shared by every report page: the active filters (date range, culture, issues only),
+// the same filters as a query string for tab/PDF/drill-down links, and the flag helper.
+function withReportFilters(req, res, next) {
+  const filters = mockReports.parseReportFilters(req.query);
+  res.locals.reportFilters = filters;
+  res.locals.reportQuery = mockReports.filterQueryString(filters);
+  res.locals.periodOptions = mockReports.PERIOD_OPTIONS;
+  res.locals.cultures = mockReports.CULTURES;
+  res.locals.flagLevel = flagLevel;
+  res.locals.THRESHOLDS = THRESHOLDS;
+  next();
+}
+
+router.get('/reports', withReportFilters, (req, res) => {
+  res.render('admin-reports', mockReports.buildRevenueContentReport(res.locals.reportFilters));
 });
 
-router.get('/analytics', (req, res) => {
+router.get('/analytics', withReportFilters, (req, res) => {
   res.render('admin-analytics', mockReports.buildAnalyticsReport());
 });
 
-router.get('/engagement', (req, res) => {
-  res.render('admin-engagement', mockReports.buildEngagementReport());
+router.get('/engagement', withReportFilters, (req, res) => {
+  res.render('admin-engagement', mockReports.buildEngagementReport(res.locals.reportFilters));
 });
 
-router.get('/reports/pdf', async (req, res) => {
+router.get('/reports/film/:slug', withReportFilters, (req, res) => {
+  const detail = mockReports.buildFilmDetail(req.params.slug, res.locals.reportFilters);
+  if (!detail) return res.status(404).send('Film not found.');
+  res.render('admin-report-detail', detail);
+});
+
+router.get('/reports/culture/:slug', withReportFilters, (req, res) => {
+  const detail = mockReports.buildCultureDetail(req.params.slug, res.locals.reportFilters);
+  if (!detail) return res.status(404).send('Culture not found.');
+  res.render('admin-report-detail', detail);
+});
+
+// Keys match the `r` checkboxes in partials/admin-report-tabs.ejs. Order here is the
+// order pages appear in the merged PDF, regardless of the order they were ticked.
+const PDF_REPORTS = {
+  reports: { path: '/admin/reports', slug: 'revenue-content' },
+  analytics: { path: '/admin/analytics', slug: 'user-analytics' },
+  engagement: { path: '/admin/engagement', slug: 'engagement-behaviour' }
+};
+
+router.get('/reports/pdf', withReportFilters, async (req, res) => {
+  // No selection (e.g. an old bookmarked link) falls back to exporting everything.
+  const requested = [].concat(req.query.r || Object.keys(PDF_REPORTS));
+  const selected = Object.keys(PDF_REPORTS).filter(key => requested.includes(key));
+  if (selected.length === 0) {
+    return res.status(400).send('Select at least one report to download.');
+  }
+
+  const filename = selected.length === Object.keys(PDF_REPORTS).length
+    ? 'cultured-africa-reports.pdf'
+    : `cultured-africa-${selected.map(key => PDF_REPORTS[key].slug).join('-')}-report.pdf`;
+  // The PDF shows the same filtered view the admin was looking at.
+  const query = res.locals.reportQuery ? `?${res.locals.reportQuery}` : '';
+
   try {
     const baseUrl = `${req.protocol}://${req.get('host')}`;
     const pdfBuffer = await buildScreenshotPdf({
       baseUrl,
       cookieHeader: req.headers.cookie,
-      paths: ['/admin/reports', '/admin/analytics', '/admin/engagement']
+      paths: selected.map(key => PDF_REPORTS[key].path + query)
     });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="cultured-africa-reports.pdf"');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(pdfBuffer);
   } catch (err) {
     console.error('PDF export failed:', err);

@@ -20,11 +20,16 @@ function toSqlDateTime(date) {
   return date.toISOString().slice(0, 19).replace('T', ' ');
 }
 
-function formatWeekLabel(start, end) {
+// `end` is exclusive, matching endOfWeek().
+function formatDateRange(start, end) {
   const last = new Date(end.getTime() - 1);
   const startStr = `${start.getDate()} ${MONTH_NAMES[start.getMonth()]}`;
   const endStr = `${last.getDate()} ${MONTH_NAMES[last.getMonth()]} ${last.getFullYear()}`;
-  return `Week of ${startStr} – ${endStr}`;
+  return `${startStr} – ${endStr}`;
 }
 
-module.exports = { startOfWeek, endOfWeek, toSqlDateTime, formatWeekLabel };
+function formatWeekLabel(start, end) {
+  return `Week of ${formatDateRange(start, end)}`;
+}
+
+module.exports = { startOfWeek, endOfWeek, toSqlDateTime, formatDateRange, formatWeekLabel };

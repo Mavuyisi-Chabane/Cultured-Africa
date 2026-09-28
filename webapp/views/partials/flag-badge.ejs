@@ -1,0 +1,15 @@
+<%#
+  Amber/red badge for a value below its report threshold (utils/reportThresholds.js).
+  Params: kind ('rating' | 'completion' | 'reviewStars'), value. Renders nothing when
+  the value is on target. Colours match the drop-off risk pills on the engagement report.
+%>
+<% const level = flagLevel(kind, value); %>
+<% if (level) { %>
+    <% const t = THRESHOLDS[kind]; %>
+    <% const limit = level === 'critical' ? t.critical : t.warn; %>
+    <% const unit = kind === 'completion' ? '%' : kind === 'reviewStars' ? '★' : ''; %>
+    <span title="Below the <%= limit %><%= unit %> <%= level === 'critical' ? 'critical level' : 'target' %>"
+          class="ml-2 inline-block align-middle text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-widest whitespace-nowrap <%= level === 'critical' ? 'bg-[#b62319]/15 text-[#ef420f]' : 'bg-[#fcaa13]/15 text-[#fcaa13]' %>">
+        <i class="fa-solid fa-triangle-exclamation"></i> <%= level === 'critical' ? 'Critical' : 'Below target' %>
+    </span>
+<% } %>

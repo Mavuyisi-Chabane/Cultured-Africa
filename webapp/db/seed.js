@@ -120,7 +120,7 @@ function seed(db) {
     VALUES (?, ?, ?, ?, ?)
   `);
   const insertActivity = db.prepare(`
-    INSERT INTO activity_log (type, entity, created_at) VALUES (?, ?, ?)
+    INSERT INTO activity_log (type, entity, actor_name, actor_role, created_at) VALUES (?, ?, ?, ?, ?)
   `);
   const insertNotification = db.prepare(`
     INSERT INTO notifications (user_id, type, message, is_read, sent_date) VALUES (?, ?, ?, ?, ?)
@@ -163,6 +163,7 @@ function seed(db) {
   ).lastInsertRowid;
 
   const viewerIds = [memberId];
+  const viewerNames = new Map([[memberId, 'Thabo Mokoena']]);
   DEMO_VIEWERS.forEach((v, i) => {
     const id = insertUser.run(
       v.fullName, v.email, bcrypt.hashSync('demo1234', 10), 'customer',
@@ -170,6 +171,7 @@ function seed(db) {
       toSqlDateTime(new Date(now.getTime() - 1000 * 60 * 60 * 24 * (40 - i * 5)))
     ).lastInsertRowid;
     viewerIds.push(id);
+    viewerNames.set(id, v.fullName);
   });
 
   const contentIds = FILMS.map((f, i) => {
@@ -178,11 +180,11 @@ function seed(db) {
       cultureIds[f.culture], adminId, f.title, f.description, f.contentType, f.price,
       f.videoUrl, f.thumbnailUrl, uploadedAt
     ).lastInsertRowid;
-    insertActivity.run('Film uploaded', f.title, uploadedAt);
+    insertActivity.run('Film uploaded', f.title, 'Lesedi Molefe', 'super_admin', uploadedAt);
     return id;
   });
 
-  insertActivity.run('New user registered', 'Thabo Mokoena', toSqlDateTime(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 45)));
+  insertActivity.run('New user registered', 'Thabo Mokoena', 'Thabo Mokoena', 'customer', toSqlDateTime(new Date(now.getTime() - 1000 * 60 * 60 * 24 * 45)));
 
   // Four weeks of synthetic purchases, watch history and feedback so reports have real data immediately.
   const week0Start = startOfWeek(now);
@@ -211,7 +213,7 @@ function seed(db) {
           const buyerId = pick(viewerIds);
           const ref = `SEED-${contentId}-${weekAgo}-${i}`;
           insertPurchase.run(buyerId, contentId, f.price, ref, toSqlDateTime(purchasedAt));
-          insertActivity.run('Purchase made', f.title, toSqlDateTime(purchasedAt));
+          insertActivity.run('Purchase made', f.title, viewerNames.get(buyerId), 'customer', toSqlDateTime(purchasedAt));
           insertNotification.run(buyerId, 'purchase_confirmation', `Your purchase of "${f.title}" was successful.`, 1, toSqlDateTime(purchasedAt));
         }
       }
@@ -221,8 +223,9 @@ function seed(db) {
         for (let i = 0; i < reviewCount; i++) {
           const submittedAt = new Date(weekStart.getTime() + randInt(0, 6 * 24 * 60 * 60 * 1000) + randInt(0, 86400000));
           if (submittedAt > now) continue;
-          insertFeedback.run(contentId, pick(viewerIds), randInt(3, 5), pick(REVIEW_COMMENTS), toSqlDateTime(submittedAt));
-          insertActivity.run('Review submitted', f.title, toSqlDateTime(submittedAt));
+          const reviewerId = pick(viewerIds);
+          insertFeedback.run(contentId, reviewerId, randInt(3, 5), pick(REVIEW_COMMENTS), toSqlDateTime(submittedAt));
+          insertActivity.run('Review submitted', f.title, viewerNames.get(reviewerId), 'customer', toSqlDateTime(submittedAt));
         }
       }
     });

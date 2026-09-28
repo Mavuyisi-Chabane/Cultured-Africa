@@ -1,0 +1,36 @@
+<%#
+  "About this report" card shown at the top of each admin report on screen only — like
+  the tab bar, it is left out of the PDF export (pdf-hide). Params:
+    purpose  – one or two sentences on what the report is for
+    period   – the time window the figures cover
+    sections – [{ name, text }] one entry per chart/table explaining what it shows
+%>
+<section class="pdf-hide bg-[#271c17]/60 rounded-2xl border border-[#38281f] p-6 md:p-8 mb-10 z-10 relative">
+    <h2 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-[#fcaa13]"></i> About this report
+    </h2>
+    <p class="text-sm text-[#f7efe6] leading-relaxed mb-2"><%= purpose %></p>
+    <p class="text-xs text-[#a99a8b] mb-5"><span class="font-bold uppercase tracking-widest">Period covered:</span> <%= period %></p>
+    <h3 class="text-[11px] font-bold uppercase tracking-widest text-[#a99a8b] mb-3">What's inside</h3>
+    <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+        <% sections.forEach(s => { %>
+            <div>
+                <dt class="font-bold text-[#fcaa13]"><%= s.name %></dt>
+                <dd class="text-[#a99a8b]"><%= s.text %></dd>
+            </div>
+        <% }) %>
+    </dl>
+    <div class="mt-6 pt-5 border-t border-[#38281f] text-xs text-[#a99a8b] space-y-2">
+        <p>
+            <span class="font-bold uppercase tracking-widest">Flags:</span>
+            <span class="inline-block text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-widest bg-[#fcaa13]/15 text-[#fcaa13] mx-1">Below target</span>
+            rating under <%= THRESHOLDS.rating.warn %> or completion under <%= THRESHOLDS.completion.warn %>%;
+            <span class="inline-block text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-widest bg-[#b62319]/15 text-[#ef420f] mx-1">Critical</span>
+            rating under <%= THRESHOLDS.rating.critical %> or completion under <%= THRESHOLDS.completion.critical %>%.
+        </p>
+        <p>
+            Tables open sorted to show the weakest items first — click any column heading to re-sort.
+            Click a film or culture row to open its detail view (weekly trend, completion and reviews, lowest rated first).
+        </p>
+    </div>
+</section>

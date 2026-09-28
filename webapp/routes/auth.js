@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { db, logActivity, notify } = require('../db');
+const { db, logActivity, customerActor, notify } = require('../db');
 const { issueVerificationToken, hashToken } = require('../utils/verification');
 const { issuePasswordResetToken } = require('../utils/passwordReset');
 const { getPasswordRequirementFailures } = require('../utils/password');
@@ -95,7 +95,7 @@ router.post('/register', async (req, res) => {
     VALUES (?, ?, ?, 0, 'customer', ?)
   `).run(fullName, email, passwordHash, avatar).lastInsertRowid;
 
-  logActivity('New user registered', fullName);
+  logActivity('New user registered', fullName, customerActor(fullName));
 
   const code = issueVerificationToken(userId);
   try {
@@ -155,7 +155,7 @@ router.post('/verify-email', verifyEmailLimiter, (req, res) => {
   db.prepare('UPDATE email_verification_tokens SET used = 1 WHERE token_id = ?').run(row.token_id);
   db.prepare('UPDATE users SET is_verified = 1 WHERE user_id = ?').run(user.user_id);
 
-  logActivity('Email verified', user.full_name);
+  logActivity('Email verified', user.full_name, customerActor(user.full_name));
   notify(user.user_id, 'system', `Welcome to Cultured Africa, ${user.full_name}! Start exploring films from across South Africa's cultures.`);
 
   res.render('verify-result', { status: 'success', email: user.email });
@@ -287,7 +287,7 @@ router.post('/reset-password', (req, res) => {
     .run(passwordHash, row.user_id);
 
   const user = db.prepare('SELECT full_name FROM users WHERE user_id = ?').get(row.user_id);
-  logActivity('Password reset', user.full_name);
+  logActivity('Password reset', user.full_name, customerActor(user.full_name));
   notify(row.user_id, 'system', 'Your password was just changed. If this wasn\'t you, please contact support immediately.');
 
   res.render('reset-password', { status: 'success', token: null, error: null });

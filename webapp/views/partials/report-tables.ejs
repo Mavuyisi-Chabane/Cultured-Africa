@@ -1,0 +1,101 @@
+<%#
+  Report table behaviour: sorting and row drill-down. Markup contract:
+    <table data-sortable>                 – opt a table in to sorting
+    <th data-default-sort>                – column the table starts sorted by (lowest first)
+    <td data-sort-value="123">            – raw value to sort by when the cell text is
+                                            formatted (R, %, "2m 3s"); an empty value means
+                                            "no data" and always sorts to the bottom.
+    <tr data-href="/admin/reports/film/x"> – clicking the row opens that drill-down view
+                                            (links and buttons inside the row still work).
+  Cells without data-sort-value sort by their text. Clicking a heading sorts that column
+  lowest-first; clicking it again flips to highest-first. Ties keep the server's original
+  row order (e.g. cultures with the same film count stay ranked by views). Runs on load,
+  so the PDF export (rendered in a real browser) comes out in the same default order.
+%>
+<script>
+  (function () {
+    function cellValue(row, index) {
+      const cell = row.cells[index];
+      if (cell.hasAttribute('data-sort-value')) {
+        const raw = cell.getAttribute('data-sort-value');
+        return raw === '' ? null : raw;
+      }
+      return cell.textContent.trim();
+    }
+
+    function compare(a, b, numeric) {
+      return numeric ? Number(a) - Number(b) : a.localeCompare(b, undefined, { sensitivity: 'base' });
+    }
+
+    document.querySelectorAll('table[data-sortable]').forEach(table => {
+      const headers = [...table.tHead.rows[0].cells];
+      const tbody = table.tBodies[0];
+      const originalOrder = new Map([...tbody.rows].map((row, i) => [row, i]));
+
+      const status = document.createElement('p');
+      status.className = 'pdf-hide text-xs text-[#a99a8b] mb-3';
+      table.parentElement.before(status);
+
+      const buttons = headers.map((th, index) => {
+        const label = th.textContent.trim();
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'inline-flex items-center gap-1.5 uppercase tracking-widest font-bold hover:text-[#f7efe6] transition-colors';
+        button.innerHTML = '<span></span><i class="fa-solid fa-sort text-[9px] opacity-50"></i>';
+        button.firstChild.textContent = label;
+        button.addEventListener('click', () => {
+          const current = th.getAttribute('aria-sort');
+          sortBy(index, current === 'ascending' ? 'descending' : 'ascending');
+        });
+        th.textContent = '';
+        th.appendChild(button);
+        return { th, button, label };
+      });
+
+      function sortBy(index, direction) {
+        const rows = [...tbody.rows];
+        const values = rows.map(r => cellValue(r, index));
+        const numeric = values.every(v => v === null || (v !== '' && !isNaN(Number(v))));
+        const sign = direction === 'ascending' ? 1 : -1;
+
+        rows
+          .map((row, i) => ({ row, value: values[i], i: originalOrder.get(row) }))
+          .sort((a, b) => {
+            if (a.value === null || b.value === null) {
+              return (a.value === null) - (b.value === null) || a.i - b.i;
+            }
+            return sign * compare(a.value, b.value, numeric) || a.i - b.i;
+          })
+          .forEach(({ row }) => tbody.appendChild(row));
+
+        buttons.forEach((b, i) => {
+          const icon = b.button.querySelector('i');
+          if (i === index) {
+            b.th.setAttribute('aria-sort', direction);
+            b.button.classList.add('text-[#fcaa13]');
+            icon.className = 'fa-solid ' + (direction === 'ascending' ? 'fa-sort-up' : 'fa-sort-down') + ' text-[9px]';
+          } else {
+            b.th.removeAttribute('aria-sort');
+            b.button.classList.remove('text-[#fcaa13]');
+            icon.className = 'fa-solid fa-sort text-[9px] opacity-50';
+          }
+        });
+
+        status.textContent = 'Sorted by ' + buttons[index].label + ' (' +
+          (direction === 'ascending' ? 'lowest first' : 'highest first') +
+          '). Click any column heading to re-sort.';
+      }
+
+      const defaultIndex = headers.findIndex(th => th.hasAttribute('data-default-sort'));
+      sortBy(defaultIndex === -1 ? 0 : defaultIndex, 'ascending');
+    });
+
+    document.querySelectorAll('tr[data-href]').forEach(row => {
+      row.classList.add('cursor-pointer');
+      row.addEventListener('click', e => {
+        if (e.target.closest('a, button')) return;
+        window.location.href = row.dataset.href;
+      });
+    });
+  })();
+</script>

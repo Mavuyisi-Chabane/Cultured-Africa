@@ -11,8 +11,9 @@
 
     <div class="mb-8">
         <h1 class="text-2xl md:text-3xl font-bold text-[#f7efe6] mb-1">My Library</h1>
-        <p class="text-[#a99a8b] text-sm">Films you own — purchased titles and free content, ready to watch anytime.</p>
+        <p class="text-[#a99a8b] text-sm">Films you can watch right now — free content, plus purchased titles for <%= accessMonths %> months from the date you bought them.</p>
     </div>
+    <% const formatAccessDate = d => d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }); %>
 
     <% if (films.length === 0) { %>
         <div class="bg-[#1e1613] rounded-[24px] border border-[#38281f] p-12 text-center">
@@ -28,7 +29,7 @@
                     <div class="h-56 overflow-hidden relative">
                         <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>" />
                         <div class="absolute top-4 right-4 bg-[#1e1613]/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-[#f7efe6] uppercase tracking-widest">
-                            <%= film.purchasedAt ? 'Purchased' : 'Free' %>
+                            <%= film.price > 0 ? 'Purchased' : 'Free' %>
                         </div>
                     </div>
                     <div class="p-6">
@@ -51,14 +52,42 @@
 
                         <div class="flex items-center justify-between mt-6 pt-4 border-t border-[#38281f]">
                             <span class="text-[#a99a8b] text-xs">
-                                <% if (film.purchasedAt) { %>
-                                    Bought <%= film.purchasedAt.toLocaleDateString() %>
+                                <% if (film.price > 0 && film.accessExpiresAt) { %>
+                                    <% const daysLeft = Math.ceil((film.accessExpiresAt - Date.now()) / 86400000); %>
+                                    <span class="block">Bought <%= formatAccessDate(film.purchasedAt) %></span>
+                                    <span class="block <%= daysLeft <= 14 ? 'text-[#fcaa13] font-bold' : '' %>">
+                                        Access until <%= formatAccessDate(film.accessExpiresAt) %><%= daysLeft <= 14 ? ' (' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' left)' : '' %>
+                                    </span>
                                 <% } else { %>
                                     Free to watch
                                 <% } %>
                             </span>
                             <span class="bg-[#fb6b10] group-hover:bg-[#ef420f] text-[#f4ece3] px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">Watch</span>
                         </div>
+                    </div>
+                </a>
+            <% }) %>
+        </div>
+    <% } %>
+
+    <% if (expiredFilms.length) { %>
+        <div class="mt-16 mb-6">
+            <h2 class="text-xl font-bold text-[#f7efe6] mb-1">Access Expired</h2>
+            <p class="text-[#a99a8b] text-sm">Your <%= accessMonths %>-month access to these films has ended. Buy again for another <%= accessMonths %> months.</p>
+        </div>
+        <div id="expired-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <% expiredFilms.forEach(film => { %>
+                <a href="/film/<%= film.id %>" class="bg-[#1e1613] rounded-[16px] shadow-sm border border-[#38281f] overflow-hidden group hover:shadow-xl transition-all duration-300">
+                    <div class="h-40 overflow-hidden relative">
+                        <img class="w-full h-full object-cover opacity-50 grayscale group-hover:opacity-70 transition-all duration-500" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>" />
+                        <div class="absolute top-4 right-4 bg-[#1e1613]/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-[#fcaa13] uppercase tracking-widest">Expired</div>
+                    </div>
+                    <div class="p-6 flex items-center justify-between gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-[#f7efe6]"><%= film.title %></h3>
+                            <p class="text-[#a99a8b] text-xs mt-1">Expired <%= formatAccessDate(film.accessExpiresAt) %></p>
+                        </div>
+                        <span class="shrink-0 bg-[#fb6b10] group-hover:bg-[#ef420f] text-[#f4ece3] px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">Buy again R<%= film.price.toFixed(0) %></span>
                     </div>
                 </a>
             <% }) %>

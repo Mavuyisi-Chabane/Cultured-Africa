@@ -18,6 +18,18 @@
 
     <%- include('partials/admin-report-tabs', { active }) %>
 
+    <%- include('partials/report-about', {
+        purpose: 'This report describes who uses Cultured Africa and what they choose to watch. It tracks how the user base is growing and which cultures and genres attract the most viewers, so the team can see which parts of the catalogue are popular and which cultures are under-served and worth commissioning more films for.',
+        period: 'User totals are current as of today; registrations cover the last 4 weeks; culture, genre and viewer rankings are all-time.',
+        sections: [
+            { name: 'User summary', text: 'Total registered users, how many have verified their email, how many are customers, and how many signed up this week.' },
+            { name: 'New Registrations', text: 'Line chart of new sign-ups per week over the last four weeks (Week 4 = current week).' },
+            { name: 'Content Preference by Culture (All-time)', text: 'Bar chart and table of all-time views per culture, with film count, films per 1,000 views, revenue and average rating. The table starts sorted by films per 1,000 views, lowest first, so under-served cultures (lots of demand, few films) lead. Click a culture to see its films, weekly trend and reviews.' },
+            { name: 'Views by Genre', text: 'Bar chart of all-time views per film genre.' },
+            { name: 'Most Active Viewers', text: 'The users with the most viewing sessions, and how many different films each has watched.' }
+        ]
+    }) %>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 z-10 relative">
         <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
             <i class="fa-solid fa-users text-[#fcaa13] text-xl mb-2"></i>
@@ -42,37 +54,46 @@
     </div>
 
     <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8 md:p-10 mb-10 z-10 relative">
-        <h2 class="text-lg font-bold text-[#f7efe6] mb-6">New Registrations (Last 4 Weeks)</h2>
+        <h2 class="text-lg font-bold text-[#f7efe6] mb-2">New Registrations (Last 4 Weeks)</h2>
+        <p class="text-[#a99a8b] text-sm mb-6">Number of new user accounts created each week — shows whether the audience is growing.</p>
         <div class="h-56">
             <canvas id="registrationChart"></canvas>
         </div>
     </div>
 
     <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8 md:p-10 mb-10 z-10 relative">
-        <h2 class="text-lg font-bold text-[#f7efe6] mb-2">Content Preference by Culture</h2>
-        <p class="text-[#a99a8b] text-sm mb-6">Where to focus future commissions — cultures with strong views/revenue but few films are under-served.</p>
+        <h2 class="text-lg font-bold text-[#f7efe6] mb-2 flex items-center gap-3 flex-wrap">
+            Content Preference by Culture
+            <span class="text-[10px] px-2 py-1 rounded font-bold uppercase tracking-widest bg-[#271c17] text-[#fcaa13] border border-[#38281f]">All-time</span>
+        </h2>
+        <p class="text-[#a99a8b] text-sm mb-6">
+            Where to focus future commissions — cultures with strong views but few films are under-served.
+            All figures here are <span class="font-bold text-[#f7efe6]">all-time totals</span>, so they are larger than the weekly figures on the Revenue &amp; Content report.
+        </p>
         <div class="h-64 mb-8">
             <canvas id="cultureChart"></canvas>
         </div>
         <div class="overflow-x-auto rounded-2xl border border-[#38281f]">
-            <table class="w-full text-left">
+            <table data-sortable class="w-full text-left">
                 <thead>
                     <tr class="bg-[#271c17]">
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Culture</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Films</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Views</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Revenue</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Views (All-time)</th>
+                        <th data-default-sort class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Films per 1k Views</th>
+                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Revenue (All-time)</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Avg Rating</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#38281f]">
                     <% byCulture.forEach(c => { %>
-                        <tr class="hover:bg-[#271c17]/30 transition-colors">
-                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><%= c.name %></td>
+                        <tr data-href="/admin/reports/culture/<%= c.slug %>" class="hover:bg-[#271c17]/30 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><a href="/admin/reports/culture/<%= c.slug %>" class="hover:text-[#fcaa13] hover:underline"><%= c.name %></a></td>
                             <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= c.filmCount %></td>
                             <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= c.views %></td>
-                            <td class="px-6 py-4 text-sm font-bold text-[#9db183]">R<%= c.revenue.toFixed(0) %></td>
-                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= c.avgRating !== null ? c.avgRating.toFixed(1) : '—' %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= c.filmsPer1kViews !== null ? c.filmsPer1kViews : '' %>"><%= c.filmsPer1kViews !== null ? c.filmsPer1kViews.toFixed(2) : '—' %></td>
+                            <td class="px-6 py-4 text-sm font-bold text-[#9db183]" data-sort-value="<%= c.revenue %>">R<%= c.revenue.toFixed(0) %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= c.avgRating !== null ? c.avgRating : '' %>"><%= c.avgRating !== null ? c.avgRating.toFixed(1) : '—' %><%- include('partials/flag-badge', { kind: 'rating', value: c.avgRating }) %></td>
                         </tr>
                     <% }) %>
                 </tbody>
@@ -82,13 +103,15 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 z-10 relative">
         <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8">
-            <h2 class="text-lg font-bold text-[#f7efe6] mb-6">Views by Genre</h2>
+            <h2 class="text-lg font-bold text-[#f7efe6] mb-2">Views by Genre</h2>
+            <p class="text-[#a99a8b] text-sm mb-6">All-time viewing sessions for each genre — shows which kinds of stories viewers prefer.</p>
             <div class="h-56">
                 <canvas id="genreChart"></canvas>
             </div>
         </div>
         <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8">
-            <h2 class="text-lg font-bold text-[#f7efe6] mb-6">Most Active Viewers</h2>
+            <h2 class="text-lg font-bold text-[#f7efe6] mb-2">Most Active Viewers</h2>
+            <p class="text-[#a99a8b] text-sm mb-6">Users ranked by number of viewing sessions, with the number of distinct films each has watched.</p>
             <% if (mostActiveViewers.length === 0) { %>
                 <p class="text-[#a99a8b] text-sm">No viewing activity yet.</p>
             <% } %>
@@ -112,6 +135,8 @@
     </footer>
 </main>
 
+<%- include('partials/report-tables') %>
+
 <script>
     var brandGold = '#fcaa13';
     var brandNavy = '#b62319';
@@ -120,6 +145,10 @@
 
     Chart.defaults.font.family = "'EB Garamond', serif";
     Chart.defaults.color = '#a99a8b';
+
+    function axisTitle(text) {
+        return { display: true, text: text, color: '#f7efe6', font: { size: 13, weight: 'bold' } };
+    }
 
     new Chart(document.getElementById('registrationChart'), {
         type: 'line',
@@ -139,7 +168,7 @@
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } }
+            scales: { y: { beginAtZero: true, grid: { color: gridColor }, title: axisTitle('New users registered'), ticks: { precision: 0 } }, x: { grid: { display: false }, title: axisTitle('Week (Week 4 = current week)') } }
         }
     });
 
@@ -158,7 +187,7 @@
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } }
+            scales: { y: { beginAtZero: true, grid: { color: gridColor }, title: axisTitle('Views (all-time)') }, x: { grid: { display: false }, title: axisTitle('Culture') } }
         }
     });
 
@@ -177,7 +206,7 @@
         options: {
             indexAxis: 'y', responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { x: { beginAtZero: true, grid: { color: gridColor } }, y: { grid: { display: false } } }
+            scales: { x: { beginAtZero: true, grid: { color: gridColor }, title: axisTitle('Views (all-time)') }, y: { grid: { display: false }, title: axisTitle('Genre') } }
         }
     });
 </script>

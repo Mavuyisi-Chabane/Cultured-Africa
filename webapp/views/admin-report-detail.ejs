@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — ' + name }) %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body class="min-h-screen">
+<% const active = 'reports' %>
+<%- include('partials/admin-header', { active }) %>
+<%
+  // Drill-down for one film or one culture (kind === 'film' | 'culture'), opened by
+  // clicking a row on the report tables.
+  const isFilm = kind === 'film';
+  const weeksQuery = reportFilters.weeks !== 1 ? '?weeks=' + reportFilters.weeks : '';
+  const backHref = isFilm ? '/admin/reports' + weeksQuery : '/admin/analytics';
+  const backLabel = isFilm ? 'Revenue & Content report' : 'User Analytics report';
+  const selfPath = '/admin/reports/' + kind + '/' + slug;
+  const formatDate = d => d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+  const stars = n => '★'.repeat(n) + '☆'.repeat(5 - n);
+  const tile = 'bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]';
+  const tileLabel = 'text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1';
+  const th = 'px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]';
+%>
+
+<main class="max-w-7xl mx-auto px-6 py-10 relative">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+    <a href="<%= backHref %>" class="pdf-hide inline-flex items-center gap-2 text-xs font-bold text-[#fcaa13] hover:underline mb-6 z-10 relative">
+        <i class="fa-solid fa-arrow-left"></i> Back to <%= backLabel %>
+    </a>
+
+    <div class="mb-8 z-10 relative">
+        <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]"><%= isFilm ? 'Film' : 'Culture' %> drill-down</p>
+        <h1 class="display-font text-3xl font-bold text-[#f7efe6] mt-1"><%= name %></h1>
+        <div class="flex flex-wrap items-center gap-2 mt-3 text-xs">
+            <% if (isFilm) { %>
+                <a href="/admin/reports/culture/<%= film.cultureSlug %><%= weeksQuery %>" class="px-3 py-1 rounded-full border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]"><%= film.culture %></a>
+                <span class="px-3 py-1 rounded-full border border-[#38281f] bg-[#1e1613] text-[#a99a8b]"><%= film.genre %></span>
+                <span class="px-3 py-1 rounded-full border border-[#38281f] bg-[#1e1613] text-[#a99a8b]"><%= film.price > 0 ? 'R' + film.price.toFixed(0) : 'Free' %></span>
+            <% } else { %>
+                <span class="px-3 py-1 rounded-full border border-[#38281f] bg-[#1e1613] text-[#a99a8b]"><%= films.length %> film<%= films.length === 1 ? '' : 's' %></span>
+            <% } %>
+            <span class="px-3 py-1 rounded-full border border-[#38281f] bg-[#1e1613] text-[#a99a8b]"><%= period.label %></span>
+        </div>
+    </div>
+
+    <%- include('partials/report-filters', { action: selfPath, showPeriod: true, showCulture: false, showIssues: false }) %>
+
+    <%- include('partials/report-about', {
+        purpose: isFilm
+            ? 'A closer look at one film, to understand why it is performing the way it is: how its audience has moved week to week, how much of it viewers finish, and what reviewers actually said — lowest ratings first, since those explain problems fastest.'
+            : 'A closer look at one culture, to judge whether it deserves more commissions and which of its films need attention: its films side by side, its week-to-week audience, and every review across its films — lowest ratings first.',
+        period: period.label + ' for views, completion, ratings and reviews; the weekly trend always shows the last 4 weeks; the "All-time" row covers every session ever.',
+        sections: (isFilm ? [] : [
+            { name: 'Films in this culture', text: 'Each film’s views, completion rate, average rating and revenue for the period. Starts sorted by average rating, lowest first. Click a film to drill into it.' }
+        ]).concat([
+            { name: 'Weekly trend', text: 'Bars show views per week (left axis); the line shows the completion rate that week (right axis). Week 4 is the current week.' },
+            { name: 'Reviews', text: 'Every review in the period, sorted by star rating, lowest first (newest first within the same rating). 3★ reviews are flagged amber and 1–2★ red.' }
+        ])
+    }) %>
+
+    <!-- ============ Period figures ============ -->
+    <h2 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4 z-10 relative"><%= period.label %></h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 z-10 relative">
+        <div class="<%= tile %>">
+            <i class="fa-solid fa-eye text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= stats.views %></p>
+            <p class="<%= tileLabel %>">Views</p>
+        </div>
+        <div class="<%= tile %>">
+            <i class="fa-solid fa-gauge-high text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= stats.views ? stats.completionRate + '%' : '—' %></p>
+            <p class="<%= tileLabel %>">Completion Rate</p>
+            <%- include('partials/flag-badge', { kind: 'completion', value: stats.views ? stats.completionRate : null }) %>
+        </div>
+        <div class="<%= tile %>">
+            <i class="fa-solid fa-star text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]"><%= stats.avgRating !== null ? stats.avgRating.toFixed(1) : '—' %></p>
+            <p class="<%= tileLabel %>">Avg Rating (<%= stats.reviewCount %> review<%= stats.reviewCount === 1 ? '' : 's' %>)</p>
+            <%- include('partials/flag-badge', { kind: 'rating', value: stats.avgRating }) %>
+        </div>
+        <div class="<%= tile %>">
+            <i class="fa-solid fa-sack-dollar text-[#fcaa13] text-xl mb-2"></i>
+            <p class="text-2xl font-bold text-[#f7efe6]">R<%= stats.revenue.toFixed(0) %></p>
+            <p class="<%= tileLabel %>">Revenue</p>
+        </div>
+    </div>
+
+    <h2 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4 z-10 relative">All-time</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 z-10 relative">
+        <% if (isFilm) { %>
+            <% const mins = Math.floor(allTime.avgWatchSeconds / 60); const secs = allTime.avgWatchSeconds % 60; %>
+            <div class="<%= tile %>">
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= allTime.sessions %></p>
+                <p class="<%= tileLabel %>">Sessions</p>
+            </div>
+            <div class="<%= tile %>">
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= allTime.sessions ? allTime.completionRate + '%' : '—' %></p>
+                <p class="<%= tileLabel %>">Completion Rate</p>
+                <%- include('partials/flag-badge', { kind: 'completion', value: allTime.sessions ? allTime.completionRate : null }) %>
+            </div>
+            <div class="<%= tile %>">
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= allTime.sessions ? mins + 'm ' + secs + 's' : '—' %></p>
+                <p class="<%= tileLabel %>">Avg Watch Time</p>
+            </div>
+            <div class="<%= tile %>">
+                <p class="text-2xl font-bold <%= allTime.dropOffRisk === 'High' ? 'text-[#ef420f]' : allTime.dropOffRisk === 'Medium' ? 'text-[#fcaa13]' : 'text-[#9db183]' %>"><%= allTime.dropOffRisk %></p>
+                <p class="<%= tileLabel %>">Drop-off Risk</p>
+            </div>
+        <% } else { %>
+            <div class="<%= tile %>">
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= allTime.views %></p>
+                <p class="<%= tileLabel %>">Views</p>
+            </div>
+            <div class="<%= tile %>">
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= allTime.filmsPer1kViews !== null ? allTime.filmsPer1kViews.toFixed(2) : '—' %></p>
+                <p class="<%= tileLabel %>">Films per 1k Views</p>
+            </div>
+            <div class="<%= tile %>">
+                <p class="text-2xl font-bold text-[#f7efe6]">R<%= allTime.revenue.toFixed(0) %></p>
+                <p class="<%= tileLabel %>">Revenue</p>
+            </div>
+            <div class="<%= tile %>">
+                <p class="text-2xl font-bold text-[#f7efe6]"><%= allTime.avgRating !== null ? allTime.avgRating.toFixed(1) : '—' %></p>
+                <p class="<%= tileLabel %>">Avg Rating</p>
+                <%- include('partials/flag-badge', { kind: 'rating', value: allTime.avgRating }) %>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- ============ Weekly trend ============ -->
+    <section class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8 md:p-10 mb-10 z-10 relative">
+        <h2 class="text-lg font-bold text-[#f7efe6] mb-2">Weekly Trend (Last 4 Weeks)</h2>
+        <p class="text-[#a99a8b] text-sm mb-6">Views per week and the share of those views watched to the end — a falling line with steady views means viewers are starting but not finishing.</p>
+        <div class="h-64">
+            <canvas id="detailTrendChart"></canvas>
+        </div>
+    </section>
+
+    <% if (!isFilm) { %>
+        <!-- ============ Films in this culture ============ -->
+        <section class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8 md:p-10 mb-10 z-10 relative">
+            <h2 class="text-lg font-bold text-[#f7efe6] mb-2">Films in this Culture</h2>
+            <p class="text-[#a99a8b] text-sm mb-6">Figures for <%= period.label.charAt(0).toLowerCase() + period.label.slice(1) %>. Click a film to drill into it.</p>
+            <div class="overflow-x-auto rounded-2xl border border-[#38281f]">
+                <table data-sortable class="w-full text-left">
+                    <thead>
+                        <tr class="bg-[#271c17]">
+                            <th class="<%= th %>">Film</th>
+                            <th class="<%= th %>">Genre</th>
+                            <th class="<%= th %>">Views</th>
+                            <th class="<%= th %>">Completion Rate</th>
+                            <th data-default-sort class="<%= th %>">Avg Rating</th>
+                            <th class="<%= th %>">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#38281f]">
+                        <% films.forEach(f => { %>
+                            <% const href = '/admin/reports/film/' + f.slug + weeksQuery; %>
+                            <tr data-href="<%= href %>" class="hover:bg-[#271c17]/30 transition-colors">
+                                <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><a href="<%= href %>" class="hover:text-[#fcaa13] hover:underline"><%= f.title %></a></td>
+                                <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.genre %></td>
+                                <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.views %></td>
+                                <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= f.views ? f.completionRate : '' %>"><%= f.views ? f.completionRate + '%' : '—' %><%- include('partials/flag-badge', { kind: 'completion', value: f.views ? f.completionRate : null }) %></td>
+                                <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= f.avgRating !== null ? f.avgRating : '' %>"><%= f.avgRating !== null ? f.avgRating.toFixed(1) + '/5 (' + f.reviewCount + ')' : '—' %><%- include('partials/flag-badge', { kind: 'rating', value: f.avgRating }) %></td>
+                                <td class="px-6 py-4 text-sm font-bold text-[#9db183]" data-sort-value="<%= f.price > 0 ? f.revenue : '' %>"><%= f.price > 0 ? 'R' + f.revenue.toFixed(0) : 'Free' %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    <% } %>
+
+    <!-- ============ Reviews ============ -->
+    <section class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8 md:p-10 mb-10 z-10 relative">
+        <h2 class="text-lg font-bold text-[#f7efe6] mb-2">Reviews (<%= reviews.length %>)</h2>
+        <p class="text-[#a99a8b] text-sm mb-6">Lowest-rated first, so the reasons viewers are unhappy are the first thing you read.</p>
+        <% if (!reviews.length) { %>
+            <p class="text-[#a99a8b] text-sm">No reviews in this period.</p>
+        <% } else { %>
+            <div class="overflow-x-auto rounded-2xl border border-[#38281f]">
+                <table data-sortable class="w-full text-left">
+                    <thead>
+                        <tr class="bg-[#271c17]">
+                            <th data-default-sort class="<%= th %>">Rating</th>
+                            <% if (!isFilm) { %><th class="<%= th %>">Film</th><% } %>
+                            <th class="<%= th %>">Comment</th>
+                            <th class="<%= th %>">Reviewer</th>
+                            <th class="<%= th %>">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#38281f]">
+                        <% reviews.forEach(r => { %>
+                            <tr class="hover:bg-[#271c17]/30 transition-colors">
+                                <td class="px-6 py-4 text-sm whitespace-nowrap" data-sort-value="<%= r.rating %>">
+                                    <span class="text-[#fcaa13] tracking-wider" aria-label="<%= r.rating %> out of 5 stars"><%= stars(r.rating) %></span>
+                                    <%- include('partials/flag-badge', { kind: 'reviewStars', value: r.rating }) %>
+                                </td>
+                                <% if (!isFilm) { %>
+                                    <td class="px-6 py-4 text-sm font-bold text-[#f7efe6] whitespace-nowrap"><a href="/admin/reports/film/<%= r.filmSlug %><%= weeksQuery %>" class="hover:text-[#fcaa13] hover:underline"><%= r.film %></a></td>
+                                <% } %>
+                                <td class="px-6 py-4 text-sm text-[#f7efe6] min-w-[18rem]"><%= r.comment %></td>
+                                <td class="px-6 py-4 text-sm text-[#a99a8b] whitespace-nowrap"><%= r.reviewer %></td>
+                                <td class="px-6 py-4 text-sm text-[#a99a8b] whitespace-nowrap" data-sort-value="<%= r.date.getTime() %>"><%= formatDate(r.date) %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </section>
+
+    <footer class="mt-20 py-10 flex flex-col items-center">
+        <span class="text-[10px] uppercase tracking-[0.2em] text-[#a99a8b] font-bold">Cultured Africa Admin Portal</span>
+        <p class="text-[10px] text-[#a99a8b]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
+    </footer>
+</main>
+
+<%- include('partials/report-tables') %>
+
+<script>
+    var brandGold = '#fcaa13';
+    var brandNavy = '#b62319';
+    var gridColor = 'rgba(169, 154, 139, 0.15)';
+
+    Chart.defaults.font.family = "'EB Garamond', serif";
+    Chart.defaults.color = '#a99a8b';
+
+    function axisTitle(text) {
+        return { display: true, text: text, color: '#f7efe6', font: { size: 13, weight: 'bold' } };
+    }
+
+    new Chart(document.getElementById('detailTrendChart'), {
+        data: {
+            labels: <%- JSON.stringify(trend.map(t => t.label)) %>,
+            datasets: [{
+                type: 'bar',
+                label: 'Views',
+                data: <%- JSON.stringify(trend.map(t => t.views)) %>,
+                backgroundColor: brandGold,
+                borderRadius: 6,
+                maxBarThickness: 56,
+                yAxisID: 'y',
+                order: 2
+            }, {
+                type: 'line',
+                label: 'Completion rate (%)',
+                data: <%- JSON.stringify(trend.map(t => t.completionRate)) %>,
+                borderColor: brandNavy,
+                backgroundColor: brandNavy,
+                tension: 0.35,
+                pointRadius: 4,
+                yAxisID: 'y1',
+                order: 1
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: true, labels: { color: '#f7efe6' } } },
+            scales: {
+                x: { grid: { display: false }, title: axisTitle('Week (Week 4 = current week)') },
+                y: { beginAtZero: true, position: 'left', grid: { color: gridColor }, title: axisTitle('Views') },
+                y1: { beginAtZero: true, max: 100, position: 'right', grid: { display: false }, title: axisTitle('Completion rate (%)') }
+            }
+        }
+    });
+</script>
+</body>
+</html>

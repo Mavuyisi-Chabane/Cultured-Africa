@@ -7,22 +7,44 @@
 <body class="min-h-screen">
 <% const active = 'reports' %>
 <%- include('partials/admin-header', { active }) %>
+<%
+  const detailQuery = reportFilters.weeks !== 1 ? '?weeks=' + reportFilters.weeks : '';
+  const filmHref = f => '/admin/reports/film/' + f.slug + detailQuery;
+  const cultureHref = f => '/admin/reports/culture/' + f.cultureSlug + detailQuery;
+  const noFilmsRow = cols => `<tr><td colspan="${cols}" class="px-6 py-8 text-center text-sm text-[#a99a8b]">No films match the current filters.</td></tr>`;
+%>
 
 <main class="max-w-7xl mx-auto px-6 py-10 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="mb-10 z-10 relative">
         <h1 class="display-font text-3xl font-bold text-[#f7efe6]">Reports</h1>
-        <p class="text-[#a99a8b] text-sm mt-1">Revenue and content performance, computed live from the database.</p>
+        <p class="text-[#a99a8b] text-sm mt-1">How much money each film earned, and how well each film is being watched and received — <%= period.label %>.</p>
     </div>
 
     <%- include('partials/admin-report-tabs', { active }) %>
 
-    <!-- ============ Weekly Revenue Report ============ -->
+    <%- include('partials/report-filters', { action: '/admin/reports', showPeriod: true, showCulture: true, showIssues: true }) %>
+
+    <%- include('partials/report-about', {
+        purpose: 'This report combines two views of the catalogue for the selected date range. The Revenue Report shows which films are making money from paid purchases, and the Content Performance Report shows how many people watched each film, how much of it they finished, and how they rated it. Use it to decide which films to promote, re-price or investigate.',
+        period: period.label + ', plus a 4-week view trend for context.',
+        sections: [
+            { name: 'Revenue by Film', text: 'Bar chart of rand revenue earned per film (units sold × price). Free films earn R0 by design.' },
+            { name: 'Detailed Breakdown', text: "Table of each film's culture, price, units sold and revenue. Starts sorted by revenue, lowest paid film first, so underperformers stand out; free films sit at the bottom." },
+            { name: 'Views per Film', text: 'Number of viewing sessions started for each film.' },
+            { name: 'Completion Rate', text: 'Percentage of views where the viewer watched the film through to the end.' },
+            { name: 'Detailed Film Performance', text: 'Table of views, completion rate and average star rating (with review count) per film. Starts sorted by average rating, lowest first.' },
+            { name: '4-Week View Trend', text: 'Total views across the selected films for each of the last four weeks, where Week 4 is the current week.' }
+        ]
+    }) %>
+
+    <!-- ============ Revenue Report ============ -->
     <section class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8 md:p-10 mb-10 z-10 relative">
         <div class="mb-8">
-            <h2 class="display-font text-2xl font-bold text-[#f7efe6]">Weekly Revenue Report</h2>
-            <p class="text-[#a99a8b] text-sm mt-1"><%= revenueReport.weekLabel %></p>
+            <h2 class="display-font text-2xl font-bold text-[#f7efe6]">Revenue Report</h2>
+            <p class="text-[#a99a8b] text-sm mt-1"><%= period.label %></p>
+            <p class="text-[#a99a8b] text-sm mt-2">Money earned from paid film purchases <%= period.phrase %>, broken down by film.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
@@ -56,38 +78,40 @@
                 </h3>
                 <ul class="space-y-4 text-sm text-[#f7efe6]">
                     <% if (revenueReport.insights.topPerformer) { %>
-                        <li><span class="font-bold">Top performer:</span> <%= revenueReport.insights.topPerformer.title %> — R<%= revenueReport.insights.topPerformer.revenue.toFixed(0) %> this week</li>
+                        <li><span class="font-bold">Top performer:</span> <%= revenueReport.insights.topPerformer.title %> — R<%= revenueReport.insights.topPerformer.revenue.toFixed(0) %> <%= period.phrase %></li>
                     <% } else { %>
-                        <li>No paid purchases yet this week.</li>
+                        <li>No paid purchases among these films <%= period.phrase %>.</li>
                     <% } %>
                     <% if (revenueReport.insights.freeFilmWithViews) { %>
-                        <li><span class="font-bold">Free film (<%= revenueReport.insights.freeFilmWithViews.title %>)</span> serves as a viewer acquisition tool — <%= revenueReport.insights.freeFilmWithViews.views %> views this week</li>
+                        <li><span class="font-bold">Free film (<%= revenueReport.insights.freeFilmWithViews.title %>)</span> serves as a viewer acquisition tool — <%= revenueReport.insights.freeFilmWithViews.views %> views <%= period.phrase %></li>
                     <% } %>
-                    <li><span class="font-bold">Total platform revenue:</span> R<%= revenueReport.totalRevenue.toFixed(0) %></li>
+                    <li><span class="font-bold">Total revenue:</span> R<%= revenueReport.totalRevenue.toFixed(0) %></li>
                 </ul>
             </div>
         </div>
 
         <h3 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4">Detailed Breakdown</h3>
         <div class="overflow-x-auto rounded-2xl border border-[#38281f]">
-            <table class="w-full text-left">
+            <table data-sortable class="w-full text-left">
                 <thead>
                     <tr class="bg-[#271c17]">
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Film</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Culture</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Price</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Units Sold</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Revenue</th>
+                        <th data-default-sort class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Revenue</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#38281f]">
+                    <% if (!revenueReport.byFilm.length) { %><%- noFilmsRow(5) %><% } %>
                     <% revenueReport.byFilm.forEach(f => { %>
-                        <tr class="hover:bg-[#271c17]/30 transition-colors">
-                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><%= f.title %></td>
-                            <td class="px-6 py-4 text-sm text-[#f7efe6]"><%= f.culture %></td>
-                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.price > 0 ? 'R' + f.price.toFixed(0) : 'Free' %></td>
-                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.price > 0 ? f.units : 'N/A' %></td>
-                            <td class="px-6 py-4 text-sm font-bold text-[#9db183]">R<%= f.revenue.toFixed(0) %></td>
+                        <tr data-href="<%= filmHref(f) %>" class="hover:bg-[#271c17]/30 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><a href="<%= filmHref(f) %>" class="hover:text-[#fcaa13] hover:underline"><%= f.title %></a></td>
+                            <td class="px-6 py-4 text-sm text-[#f7efe6]"><a href="<%= cultureHref(f) %>" class="hover:text-[#fcaa13] hover:underline"><%= f.culture %></a></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= f.price %>"><%= f.price > 0 ? 'R' + f.price.toFixed(0) : 'Free' %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= f.price > 0 ? f.units : '' %>"><%= f.price > 0 ? f.units : 'N/A' %></td>
+                            <%# Free films earn R0 by design, so they sort as "no data" — lowest *paid* film leads. %>
+                            <td class="px-6 py-4 text-sm font-bold text-[#9db183]" data-sort-value="<%= f.price > 0 ? f.revenue : '' %>">R<%= f.revenue.toFixed(0) %></td>
                         </tr>
                     <% }) %>
                 </tbody>
@@ -100,7 +124,8 @@
         <div class="flex items-start justify-between flex-wrap gap-2 mb-8">
             <div>
                 <h2 class="display-font text-2xl font-bold text-[#f7efe6]">Content Performance Report</h2>
-                <p class="text-[#a99a8b] text-sm mt-1">Views, Engagement &amp; Completion Rates · <%= contentReport.weekLabel %></p>
+                <p class="text-[#a99a8b] text-sm mt-1">Views, Engagement &amp; Completion Rates · <%= period.label %></p>
+                <p class="text-[#a99a8b] text-sm mt-2">How many people watched each film <%= period.phrase %>, how much of it they finished, and how they rated it.</p>
             </div>
         </div>
 
@@ -114,11 +139,13 @@
                 <i class="fa-solid fa-gauge-high text-[#fcaa13] text-xl mb-2"></i>
                 <p class="text-2xl font-bold text-[#f7efe6]"><%= contentReport.avgCompletion %>%</p>
                 <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Avg. Completion</p>
+                <%- include('partials/flag-badge', { kind: 'completion', value: contentReport.totalViews ? contentReport.avgCompletion : null }) %>
             </div>
             <div class="bg-[#271c17]/50 rounded-2xl p-6 text-center">
                 <i class="fa-solid fa-star text-[#fcaa13] text-xl mb-2"></i>
                 <p class="text-2xl font-bold text-[#f7efe6]"><%= contentReport.avgRating !== null ? contentReport.avgRating.toFixed(1) : '—' %></p>
                 <p class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1">Average Rating</p>
+                <%- include('partials/flag-badge', { kind: 'rating', value: contentReport.avgRating }) %>
             </div>
             <div class="bg-[#271c17]/50 rounded-2xl p-6 text-center">
                 <i class="fa-solid fa-comments text-[#fcaa13] text-xl mb-2"></i>
@@ -144,24 +171,25 @@
 
         <h3 class="text-sm font-bold text-[#f7efe6] uppercase tracking-widest mb-4">Detailed Film Performance</h3>
         <div class="overflow-x-auto rounded-2xl border border-[#38281f] mb-10">
-            <table class="w-full text-left">
+            <table data-sortable class="w-full text-left">
                 <thead>
                     <tr class="bg-[#271c17]">
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Film</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Culture</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Views</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Completion Rate</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Avg Rating</th>
+                        <th data-default-sort class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Avg Rating</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#38281f]">
+                    <% if (!contentReport.byFilm.length) { %><%- noFilmsRow(5) %><% } %>
                     <% contentReport.byFilm.forEach(f => { %>
-                        <tr class="hover:bg-[#271c17]/30 transition-colors">
-                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><%= f.title %></td>
-                            <td class="px-6 py-4 text-sm text-[#f7efe6]"><%= f.culture %></td>
+                        <tr data-href="<%= filmHref(f) %>" class="hover:bg-[#271c17]/30 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><a href="<%= filmHref(f) %>" class="hover:text-[#fcaa13] hover:underline"><%= f.title %></a></td>
+                            <td class="px-6 py-4 text-sm text-[#f7efe6]"><a href="<%= cultureHref(f) %>" class="hover:text-[#fcaa13] hover:underline"><%= f.culture %></a></td>
                             <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.views %></td>
-                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.completionRate %>%</td>
-                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.avgRating !== null ? f.avgRating.toFixed(1) + '/5 (' + f.reviewCount + ')' : '—' %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= f.completionRate %>"><%= f.completionRate %>%<%- include('partials/flag-badge', { kind: 'completion', value: f.completionRate }) %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= f.avgRating !== null ? f.avgRating : '' %>"><%= f.avgRating !== null ? f.avgRating.toFixed(1) + '/5 (' + f.reviewCount + ')' : '—' %><%- include('partials/flag-badge', { kind: 'rating', value: f.avgRating }) %></td>
                         </tr>
                     <% }) %>
                 </tbody>
@@ -189,11 +217,11 @@
                     <% if (contentReport.insights.bestCompletion) { %>
                         <li><span class="font-bold">Best completion rate:</span> <%= contentReport.insights.bestCompletion.title %> (<%= contentReport.insights.bestCompletion.completionRate %>%)</li>
                     <% } %>
-                    <% if (contentReport.insights.topCulture) { %>
-                        <li><span class="font-bold">Recommendation:</span> Produce more <%= contentReport.insights.topCulture %> content — it's drawing the most views this week</li>
+                    <% if (contentReport.insights.topCulture && !reportFilters.culture) { %>
+                        <li><span class="font-bold">Recommendation:</span> Produce more <%= contentReport.insights.topCulture %> content — it's drawing the most views <%= period.phrase %></li>
                     <% } %>
                     <% if (!contentReport.insights.mostViewed) { %>
-                        <li>No views recorded yet this week.</li>
+                        <li>No views recorded for these films <%= period.phrase %>.</li>
                     <% } %>
                 </ul>
             </div>
@@ -206,14 +234,21 @@
     </footer>
 </main>
 
+<%- include('partials/report-tables') %>
+
 <script>
     var brandGold = '#fcaa13';
     var brandNavy = '#b62319';
     var brandTeal = '#9db183';
     var gridColor = 'rgba(169, 154, 139, 0.15)';
+    var periodPhrase = <%- JSON.stringify(period.phrase) %>;
 
     Chart.defaults.font.family = "'EB Garamond', serif";
     Chart.defaults.color = '#a99a8b';
+
+    function axisTitle(text) {
+        return { display: true, text: text, color: '#f7efe6', font: { size: 13, weight: 'bold' } };
+    }
 
     new Chart(document.getElementById('revenueByFilmChart'), {
         type: 'bar',
@@ -230,7 +265,7 @@
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } }
+            scales: { y: { beginAtZero: true, grid: { color: gridColor }, title: axisTitle('Revenue (ZAR, R)') }, x: { grid: { display: false }, title: axisTitle('Film') } }
         }
     });
 
@@ -249,7 +284,7 @@
         options: {
             indexAxis: 'y', responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { x: { beginAtZero: true, grid: { color: gridColor } }, y: { grid: { display: false } } }
+            scales: { x: { beginAtZero: true, grid: { color: gridColor }, title: axisTitle('Views (sessions ' + periodPhrase + ')') }, y: { grid: { display: false }, title: axisTitle('Film') } }
         }
     });
 
@@ -268,7 +303,7 @@
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, max: 100, grid: { color: gridColor } }, x: { grid: { display: false } } }
+            scales: { y: { beginAtZero: true, max: 100, grid: { color: gridColor }, title: axisTitle('Completion rate (%)') }, x: { grid: { display: false }, title: axisTitle('Film') } }
         }
     });
 
@@ -290,7 +325,7 @@
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } }
+            scales: { y: { beginAtZero: true, grid: { color: gridColor }, title: axisTitle('Total views') }, x: { grid: { display: false }, title: axisTitle('Week (Week 4 = current week)') } }
         }
     });
 </script>

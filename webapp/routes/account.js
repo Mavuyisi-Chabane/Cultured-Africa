@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { db, logActivity } = require('../db');
+const { db, logActivity, customerActor } = require('../db');
 const { requireLogin, redirectAdminAway } = require('../middleware/auth');
 const { hashToken } = require('../utils/verification');
 const { toSqlDateTime } = require('../utils/dates');
@@ -110,7 +110,7 @@ router.post('/account/email/verify', redirectAdminAway, requireLogin, verifyEmai
   const user = db.prepare('SELECT full_name FROM users WHERE user_id = ?').get(userId);
   db.prepare('UPDATE users SET email = ? WHERE user_id = ?').run(request.new_email, userId);
   db.prepare('DELETE FROM email_change_requests WHERE id = ?').run(request.id);
-  logActivity('Email address changed', user.full_name);
+  logActivity('Email address changed', user.full_name, customerActor(user.full_name));
 
   req.session.user.email = request.new_email;
   req.session.pendingEmailChange = null;
@@ -136,7 +136,7 @@ router.post('/account/delete', redirectAdminAway, requireLogin, (req, res) => {
   // regular customer's user_id is never referenced by content.uploaded_by, so this
   // never runs into the FK that only matters for admin shadow rows (see db/index.js).
   db.prepare('DELETE FROM users WHERE user_id = ?').run(user.user_id);
-  logActivity('Account deleted', user.full_name);
+  logActivity('Account deleted', user.full_name, customerActor(user.full_name));
 
   req.session.destroy(() => res.redirect('/login'));
 });

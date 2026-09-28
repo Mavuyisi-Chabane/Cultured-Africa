@@ -73,7 +73,7 @@
                 <img class="w-full h-full object-cover opacity-40 blur-sm" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>">
                 <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-[#f4ece3]">
                     <i class="fa-solid fa-lock text-3xl"></i>
-                    <p class="text-sm font-medium">Buy this film to unlock playback</p>
+                    <p class="text-sm font-medium"><%= access ? 'Your ' + accessMonths + '-month access has ended — buy again to keep watching' : 'Buy this film to unlock playback' %></p>
                 </div>
             <% } %>
         </div>
@@ -84,14 +84,26 @@
                     <h1 class="display-font text-3xl font-bold text-[#f7efe6] mb-1"><%= film.title %></h1>
                     <p class="text-[#a99a8b] text-sm italic"><%= film.culture %> Heritage · <%= film.genre %></p>
                 </div>
+                <% const formatAccessDate = d => d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }); %>
                 <% if (owned) { %>
-                    <span class="px-4 py-2 rounded-xl bg-[#9db183]/10 text-[#9db183] text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-circle-check"></i> Ready to watch</span>
+                    <div class="text-right">
+                        <span class="px-4 py-2 rounded-xl bg-[#9db183]/10 text-[#9db183] text-sm font-bold inline-flex items-center gap-2"><i class="fa-solid fa-circle-check"></i> Ready to watch</span>
+                        <% if (access && access.active) { %>
+                            <% const daysLeft = Math.ceil((access.expiresAt - Date.now()) / 86400000); %>
+                            <p class="text-xs mt-2 <%= daysLeft <= 14 ? 'text-[#fcaa13] font-bold' : 'text-[#a99a8b]' %>">
+                                <i class="fa-regular fa-clock mr-1"></i>Access until <%= formatAccessDate(access.expiresAt) %><%= daysLeft <= 14 ? ' — ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' left' : '' %>
+                            </p>
+                        <% } %>
+                    </div>
                 <% } else if (paystackPublicKey) { %>
-                    <div>
-                        <button type="button" id="paystackBuyBtn" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-8 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all flex items-center gap-2">
-                            <i class="fa-solid fa-lock text-xs"></i> Buy R<%= film.price.toFixed(0) %>
+                    <div class="text-right">
+                        <% if (access) { %>
+                            <p class="text-xs text-[#fcaa13] font-bold mb-2"><i class="fa-regular fa-clock mr-1"></i>Your access expired on <%= formatAccessDate(access.expiresAt) %>.</p>
+                        <% } %>
+                        <button type="button" id="paystackBuyBtn" class="ml-auto bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-8 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-lock text-xs"></i> <%= access ? 'Buy again' : 'Buy' %> R<%= film.price.toFixed(0) %>
                         </button>
-                        <p class="text-[10px] text-[#a99a8b] mt-2 text-right">Secured by Paystack (test mode)</p>
+                        <p class="text-[10px] text-[#a99a8b] mt-2">Includes <%= accessMonths %> months' access from purchase · Secured by Paystack (test mode)</p>
                     </div>
                     <form id="paystackBuyForm" action="/film/<%= film.id %>/buy" method="POST" class="hidden">
                         <input type="hidden" name="reference" id="paystackReference">
@@ -139,7 +151,7 @@
     <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/5 p-8 md:p-10 mb-10">
         <h2 class="text-xl font-bold text-[#f7efe6] mb-6">Leave a Review</h2>
 
-        <% if (owned) { %>
+        <% if (canReview) { %>
             <form action="/film/<%= film.id %>/review" method="POST" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Rating <span class="text-[#a99a8b] normal-case font-normal">(optional)</span></label>
@@ -163,7 +175,7 @@
             <div class="bg-[#271c17]/50 border border-[#38281f] rounded-xl px-6 py-8 text-center">
                 <i class="fa-solid fa-lock text-[#a99a8b] text-xl mb-3"></i>
                 <p class="text-[#f7efe6] text-sm font-medium">Buy this film to leave a review.</p>
-                <p class="text-[#a99a8b] text-xs mt-1">Reviews are only open to viewers who own the film.</p>
+                <p class="text-[#a99a8b] text-xs mt-1">Reviews are only open to viewers who have bought the film.</p>
             </div>
         <% } %>
     </div>

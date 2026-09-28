@@ -7,6 +7,7 @@
 <body class="min-h-screen">
 <% const active = 'engagement' %>
 <%- include('partials/admin-header', { active }) %>
+<% const filmHref = f => '/admin/reports/film/' + f.slug; %>
 
 <main class="max-w-7xl mx-auto px-6 py-10 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
@@ -17,6 +18,19 @@
     </div>
 
     <%- include('partials/admin-report-tabs', { active }) %>
+
+    <%- include('partials/report-filters', { action: '/admin/engagement', showPeriod: false, showCulture: true, showIssues: true }) %>
+
+    <%- include('partials/report-about', {
+        purpose: 'This report shows how viewers behave once they press play: when they watch, how long they stay, whether they finish films and whether they come back to rewatch them. Use it to schedule releases and promotions for peak times and to spot films that viewers tend to abandon part-way through.',
+        period: 'All-time' + (reportFilters.culture ? ', ' + reportFilters.culture + ' films only' : ', across every film on the platform') + (reportFilters.issuesOnly ? ', films with issues only' : '') + '.',
+        sections: [
+            { name: 'Engagement summary', text: 'Total viewing sessions, the share of sessions that were rewatches (repeat view rate), and the busiest hour and day.' },
+            { name: 'Views by Hour of Day', text: 'Bar chart of viewing sessions started in each hour of the day (UTC), from 0:00 to 23:00.' },
+            { name: 'Views by Day of Week', text: 'Bar chart of viewing sessions started on each day of the week.' },
+            { name: 'Engagement Depth by Film', text: 'Table of sessions, average watch time, completion rate, repeat rate and drop-off risk per film. Drop-off risk is Low at 70%+ completion, Medium at 40–69% and High below 40%. Starts sorted by completion rate, lowest first, so the films viewers abandon most lead.' }
+        ]
+    }) %>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 z-10 relative">
         <div class="bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]">
@@ -43,13 +57,15 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10 z-10 relative">
         <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8">
-            <h2 class="text-lg font-bold text-[#f7efe6] mb-6">Views by Hour of Day</h2>
+            <h2 class="text-lg font-bold text-[#f7efe6] mb-2">Views by Hour of Day</h2>
+            <p class="text-[#a99a8b] text-sm mb-6">Viewing sessions started in each hour (UTC) — shows the best times to release or promote films.</p>
             <div class="h-56">
                 <canvas id="hourChart"></canvas>
             </div>
         </div>
         <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/[0.03] border border-[#38281f] p-8">
-            <h2 class="text-lg font-bold text-[#f7efe6] mb-6">Views by Day of Week</h2>
+            <h2 class="text-lg font-bold text-[#f7efe6] mb-2">Views by Day of Week</h2>
+            <p class="text-[#a99a8b] text-sm mb-6">Viewing sessions started on each weekday — shows which days are busiest.</p>
             <div class="h-56">
                 <canvas id="dayChart"></canvas>
             </div>
@@ -62,27 +78,30 @@
             "Drop-off risk" is based on completion rate (the platform tracks the furthest point reached per session, not a full frame-by-frame retention curve).
         </p>
         <div class="overflow-x-auto rounded-2xl border border-[#38281f]">
-            <table class="w-full text-left">
+            <table data-sortable class="w-full text-left">
                 <thead>
                     <tr class="bg-[#271c17]">
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Film</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Sessions</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Avg Watch Time</th>
-                        <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Completion Rate</th>
+                        <th data-default-sort class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Completion Rate</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Repeat Rate</th>
                         <th class="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Drop-off Risk</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-[#38281f]">
+                    <% if (!engagementByFilm.length) { %>
+                        <tr><td colspan="6" class="px-6 py-8 text-center text-sm text-[#a99a8b]">No films match the current filters.</td></tr>
+                    <% } %>
                     <% engagementByFilm.forEach(f => { %>
                         <% const mins = Math.floor(f.avgWatchSeconds / 60); const secs = f.avgWatchSeconds % 60; %>
-                        <tr class="hover:bg-[#271c17]/30 transition-colors">
-                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><%= f.title %></td>
+                        <tr data-href="<%= filmHref(f) %>" class="hover:bg-[#271c17]/30 transition-colors">
+                            <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><a href="<%= filmHref(f) %>" class="hover:text-[#fcaa13] hover:underline"><%= f.title %></a></td>
                             <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.sessions %></td>
-                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.sessions ? mins + 'm ' + secs + 's' : '—' %></td>
-                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.sessions ? f.completionRate + '%' : '—' %></td>
-                            <td class="px-6 py-4 text-sm text-[#a99a8b]"><%= f.sessions ? f.repeatRate + '%' : '—' %></td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= f.sessions ? f.avgWatchSeconds : '' %>"><%= f.sessions ? mins + 'm ' + secs + 's' : '—' %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= f.sessions ? f.completionRate : '' %>"><%= f.sessions ? f.completionRate + '%' : '—' %><%- include('partials/flag-badge', { kind: 'completion', value: f.sessions ? f.completionRate : null }) %></td>
+                            <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= f.sessions ? f.repeatRate : '' %>"><%= f.sessions ? f.repeatRate + '%' : '—' %></td>
+                            <td class="px-6 py-4" data-sort-value="<%= { Low: 1, Medium: 2, High: 3 }[f.dropOffRisk] || '' %>">
                                 <span class="text-[10px] px-2 py-1 rounded font-bold uppercase tracking-widest
                                     <%= f.dropOffRisk === 'Low' ? 'bg-[#271c17] text-[#9db183]' : f.dropOffRisk === 'Medium' ? 'bg-[#fcaa13]/15 text-[#fcaa13]' : f.dropOffRisk === 'High' ? 'bg-[#b62319]/15 text-[#ef420f]' : 'bg-[#271c17] text-[#a99a8b]' %>">
                                     <%= f.dropOffRisk %>
@@ -118,6 +137,8 @@
     </footer>
 </main>
 
+<%- include('partials/report-tables') %>
+
 <script>
     var brandGold = '#fcaa13';
     var brandTeal = '#9db183';
@@ -125,6 +146,10 @@
 
     Chart.defaults.font.family = "'EB Garamond', serif";
     Chart.defaults.color = '#a99a8b';
+
+    function axisTitle(text) {
+        return { display: true, text: text, color: '#f7efe6', font: { size: 13, weight: 'bold' } };
+    }
 
     new Chart(document.getElementById('hourChart'), {
         type: 'bar',
@@ -141,7 +166,7 @@
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } } }
+            scales: { y: { beginAtZero: true, grid: { color: gridColor }, title: axisTitle('Viewing sessions') }, x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 }, title: axisTitle('Hour of day (UTC, 24-hour clock)') } }
         }
     });
 
@@ -160,7 +185,7 @@
         options: {
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true, grid: { color: gridColor } }, x: { grid: { display: false } } }
+            scales: { y: { beginAtZero: true, grid: { color: gridColor }, title: axisTitle('Viewing sessions') }, x: { grid: { display: false }, title: axisTitle('Day of week') } }
         }
     });
 </script>

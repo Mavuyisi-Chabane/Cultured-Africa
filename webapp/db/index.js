@@ -94,6 +94,52 @@ if (adminsIsEmpty) {
   });
 }
 
+// Migration: record who made each change. Adds the actor columns to an activity_log
+// that existed before they were introduced, then backfills older rows wherever the
+// actor can be recovered unambiguously from other tables; anything else stays NULL
+// and shows as "Not recorded" rather than guessing.
+const activityColumns = db.prepare('PRAGMA table_info(activity_log)').all().map(c => c.name);
+if (!activityColumns.includes('actor_name')) {
+  db.exec(`
+    ALTER TABLE activity_log ADD COLUMN actor_name TEXT;
+    ALTER TABLE activity_log ADD COLUMN actor_role TEXT;
+
+    -- Account events: the entity already is the customer's own name.
+    UPDATE activity_log SET actor_name = entity, actor_role = 'customer'
+    WHERE type IN ('New user registered', 'Email verified', 'Password reset', 'Email address changed', 'Account deleted');
+
+    -- Uploads: the uploader of the film with that title.
+    UPDATE activity_log SET
+      actor_name = (SELECT a.name FROM content c JOIN users u ON u.user_id = c.uploaded_by
+                    JOIN admins a ON lower(a.email) = lower(u.email) WHERE c.title = activity_log.entity LIMIT 1),
+      actor_role = (SELECT a.role FROM content c JOIN users u ON u.user_id = c.uploaded_by
+                    JOIN admins a ON lower(a.email) = lower(u.email) WHERE c.title = activity_log.entity LIMIT 1)
+    WHERE type = 'Film uploaded';
+
+    -- Purchases and reviews: the customer whose purchase/review has that film and timestamp.
+    UPDATE activity_log SET actor_role = 'customer', actor_name = (
+      SELECT u.full_name FROM purchases p JOIN content c ON c.content_id = p.content_id JOIN users u ON u.user_id = p.user_id
+      WHERE c.title = activity_log.entity AND p.purchase_date = activity_log.created_at LIMIT 1)
+    WHERE type = 'Purchase made';
+    UPDATE activity_log SET actor_role = 'customer', actor_name = (
+      SELECT u.full_name FROM feedback f JOIN content c ON c.content_id = f.content_id JOIN users u ON u.user_id = f.user_id
+      WHERE c.title = activity_log.entity AND f.submitted_date = activity_log.created_at LIMIT 1)
+    WHERE type = 'Review submitted';
+
+    -- Feedback moderation: the admin audit log entry written in the same second.
+    UPDATE activity_log SET
+      actor_name = (SELECT a.name FROM admin_audit_log l JOIN admins a ON a.admin_id = l.admin_id
+                    WHERE l.created_at = activity_log.created_at
+                      AND l.action IN ('removed_feedback', 'restored_feedback', 'bulk_removed_feedback') LIMIT 1),
+      actor_role = (SELECT a.role FROM admin_audit_log l JOIN admins a ON a.admin_id = l.admin_id
+                    WHERE l.created_at = activity_log.created_at
+                      AND l.action IN ('removed_feedback', 'restored_feedback', 'bulk_removed_feedback') LIMIT 1)
+    WHERE type IN ('Feedback removed', 'Feedback restored', 'Bulk feedback removal');
+
+    UPDATE activity_log SET actor_role = NULL WHERE actor_name IS NULL;
+  `);
+}
+
 seed(db);
 
 // content.uploaded_by is a NOT NULL FK into users(user_id). Admins created through
@@ -110,8 +156,19 @@ function ensureShadowUserForAdmin(admin) {
   `).run(admin.name, admin.email, bcrypt.hashSync(crypto.randomUUID(), 10)).lastInsertRowid;
 }
 
-function logActivity(type, entity) {
-  db.prepare('INSERT INTO activity_log (type, entity) VALUES (?, ?)').run(type, entity);
+// `actor` is who made the change: { name, role } with role 'super_admin' | 'admin' |
+// 'customer'. Build it with adminActor(req.session.admin) or customerActor(name).
+function logActivity(type, entity, actor) {
+  db.prepare('INSERT INTO activity_log (type, entity, actor_name, actor_role) VALUES (?, ?, ?, ?)')
+    .run(type, entity, actor ? actor.name : null, actor ? actor.role : null);
+}
+
+function adminActor(admin) {
+  return { name: admin.name, role: admin.role };
+}
+
+function customerActor(name) {
+  return { name, role: 'customer' };
 }
 
 function notify(userId, type, message) {
@@ -125,4 +182,4 @@ function logAudit(adminId, action, targetType, targetId, details) {
   `).run(String(adminId), action, targetType, targetId === null || targetId === undefined ? null : String(targetId), details || null);
 }
 
-module.exports = { db, logActivity, notify, logAudit, ensureShadowUserForAdmin };
+module.exports = { db, logActivity, adminActor, customerActor, notify, logAudit, ensureShadowUserForAdmin };

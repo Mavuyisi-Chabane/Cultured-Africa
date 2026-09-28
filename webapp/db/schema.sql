@@ -146,10 +146,15 @@ CREATE TABLE IF NOT EXISTS notifications (
 
 -- Not part of the ERD; an internal operational log powering the admin dashboard's
 -- Recent Activity feed (the ERD models per-entity audit trails via Notification instead).
+-- actor_name/actor_role record who made the change (a snapshot, so the log still reads
+-- correctly after that person is renamed or deleted). actor_role is 'super_admin',
+-- 'admin' or 'customer'; both are NULL for rows logged before this was tracked.
 CREATE TABLE IF NOT EXISTS activity_log (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   type       TEXT NOT NULL,
   entity     TEXT NOT NULL,
+  actor_name TEXT,
+  actor_role TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

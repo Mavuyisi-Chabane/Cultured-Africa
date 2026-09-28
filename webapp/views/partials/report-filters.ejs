@@ -1,0 +1,71 @@
+<%#
+  Filter bar for the report pages. Submits as a plain GET form so every filtered view has
+  its own URL (which the PDF export and drill-down links reuse). Params:
+    action      – the page's own path
+    showPeriod  – include the date range picker (only data with weekly history has one)
+    showCulture / showIssues – include the culture picker / "only films with issues"
+  A print-only summary replaces the controls in the PDF so readers know what was filtered.
+%>
+<% const f = reportFilters; %>
+<% const isFiltered = (showPeriod && f.weeks !== 1) || (showCulture && f.culture) || (showIssues && f.issuesOnly); %>
+<form method="get" action="<%= action %>" data-report-filters
+      class="pdf-hide flex flex-wrap items-end gap-4 bg-[#1e1613] border border-[#38281f] rounded-2xl p-5 mb-10 z-20 relative">
+    <p class="w-full text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] flex items-center gap-2">
+        <i class="fa-solid fa-filter text-[#fcaa13]"></i> Filters
+    </p>
+    <% if (showPeriod) { %>
+        <label class="flex flex-col gap-1 text-xs text-[#a99a8b]">
+            Date range
+            <select name="weeks" class="bg-[#271c17] border border-[#38281f] rounded-full px-4 py-2 text-xs font-bold text-[#f7efe6]">
+                <% periodOptions.forEach(p => { %>
+                    <option value="<%= p.weeks %>" <%= f.weeks === p.weeks ? 'selected' : '' %>><%= p.label %></option>
+                <% }) %>
+            </select>
+        </label>
+    <% } else if (f.weeks !== 1) { %>
+        <input type="hidden" name="weeks" value="<%= f.weeks %>">
+    <% } %>
+    <% if (showCulture) { %>
+        <label class="flex flex-col gap-1 text-xs text-[#a99a8b]">
+            Culture
+            <select name="culture" class="bg-[#271c17] border border-[#38281f] rounded-full px-4 py-2 text-xs font-bold text-[#f7efe6]">
+                <option value="">All cultures</option>
+                <% cultures.forEach(c => { %>
+                    <option value="<%= c %>" <%= f.culture === c ? 'selected' : '' %>><%= c %></option>
+                <% }) %>
+            </select>
+        </label>
+    <% } %>
+    <% if (showIssues) { %>
+        <label class="flex items-center gap-2 text-xs font-bold text-[#f7efe6] cursor-pointer py-2">
+            <input type="checkbox" name="issues" value="1" <%= f.issuesOnly ? 'checked' : '' %> class="accent-[#fb6b10] w-4 h-4">
+            Only films with issues
+        </label>
+    <% } %>
+    <noscript><button type="submit" class="px-4 py-2 rounded-full text-xs font-bold bg-[#fb6b10] text-[#f4ece3]">Apply</button></noscript>
+    <% if (isFiltered) { %>
+        <a href="<%= action %>" class="text-xs font-bold text-[#fcaa13] hover:underline py-2">Clear filters</a>
+    <% } %>
+</form>
+<% if (isFiltered) { %>
+    <p class="hidden print:block text-sm text-[#a99a8b] mb-6 z-10 relative">
+        <span class="font-bold uppercase tracking-widest text-xs">Filters applied:</span>
+        <%= [
+            showPeriod && f.weeks !== 1 ? periodOptions.find(p => p.weeks === f.weeks).label : null,
+            showCulture && f.culture ? 'Culture: ' + f.culture : null,
+            showIssues && f.issuesOnly ? 'Only films with issues' : null
+        ].filter(Boolean).join(' · ') %>
+    </p>
+<% } %>
+<script>
+  (function () {
+    const form = document.querySelector('form[data-report-filters]');
+    // Apply immediately on change; drop default values so URLs stay short.
+    form.addEventListener('change', () => {
+      [...form.elements].forEach(el => {
+        if ((el.name === 'weeks' && el.value === '1') || (el.name === 'culture' && !el.value)) el.disabled = true;
+      });
+      form.submit();
+    });
+  })();
+</script>

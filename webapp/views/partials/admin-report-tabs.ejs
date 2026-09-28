@@ -4,14 +4,61 @@
     { href: '/admin/analytics', label: 'User Analytics', key: 'analytics' },
     { href: '/admin/engagement', label: 'Engagement & Behaviour', key: 'engagement' }
   ];
+  // Keep the active filters when switching tabs or downloading.
+  const withQuery = href => reportQuery ? `${href}?${reportQuery}` : href;
 %>
-<div class="pdf-hide flex flex-wrap items-center justify-between gap-3 mb-10 z-10 relative">
+<div class="pdf-hide flex flex-wrap items-center justify-between gap-3 mb-10 z-30 relative">
     <div class="flex flex-wrap items-center gap-2">
         <% reportTabs.forEach(t => { %>
-            <a href="<%= t.href %>" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all <%= active === t.key ? 'bg-[#0f0a08] text-[#fcaa13]' : 'border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]' %>"><%= t.label %></a>
+            <a href="<%= withQuery(t.href) %>" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all <%= active === t.key ? 'bg-[#0f0a08] text-[#fcaa13]' : 'border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]' %>"><%= t.label %></a>
         <% }) %>
     </div>
-    <a href="/admin/reports/pdf" class="px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all bg-[#fb6b10] text-[#f4ece3] hover:bg-[#ef420f] flex items-center gap-2">
-        <i class="fa-solid fa-file-pdf"></i> Download PDF
-    </a>
+    <details class="relative" id="pdf-export">
+        <summary class="list-none cursor-pointer select-none px-4 py-2 rounded-full text-xs font-bold shadow-sm transition-all bg-[#fb6b10] text-[#f4ece3] hover:bg-[#ef420f] flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf"></i> Download PDF <i class="fa-solid fa-chevron-down text-[10px]"></i>
+        </summary>
+        <form action="/admin/reports/pdf" method="get" class="absolute right-0 mt-2 w-64 rounded-2xl border border-[#38281f] bg-[#1e1613] p-4 shadow-xl z-20">
+            <% if (reportFilters.weeks !== 1) { %><input type="hidden" name="weeks" value="<%= reportFilters.weeks %>"><% } %>
+            <% if (reportFilters.culture) { %><input type="hidden" name="culture" value="<%= reportFilters.culture %>"><% } %>
+            <% if (reportFilters.issuesOnly) { %><input type="hidden" name="issues" value="1"><% } %>
+            <p class="text-[11px] font-bold uppercase tracking-wider text-[#a89484] mb-3">Reports to include</p>
+            <% reportTabs.forEach(t => { %>
+                <label class="flex items-center gap-3 py-1.5 text-xs text-[#f7efe6] cursor-pointer">
+                    <input type="checkbox" name="r" value="<%= t.key %>" checked class="accent-[#fb6b10] w-4 h-4">
+                    <%= t.label %>
+                </label>
+            <% }) %>
+            <% if (reportQuery) { %>
+                <p class="text-[11px] text-[#a89484] mt-2">Your current filters will be applied.</p>
+            <% } %>
+            <div class="flex items-center justify-between mt-3 pt-3 border-t border-[#38281f]">
+                <button type="button" data-pdf-toggle-all class="text-[11px] font-bold text-[#fcaa13] hover:underline">Deselect all</button>
+                <button type="submit" class="px-4 py-2 rounded-full text-xs font-bold bg-[#fb6b10] text-[#f4ece3] hover:bg-[#ef420f] disabled:opacity-40 disabled:cursor-not-allowed">Download</button>
+            </div>
+        </form>
+    </details>
 </div>
+<script>
+  (function () {
+    const form = document.querySelector('#pdf-export form');
+    const boxes = form.querySelectorAll('input[name="r"]');
+    const submit = form.querySelector('button[type="submit"]');
+    const toggleAll = form.querySelector('[data-pdf-toggle-all]');
+    function sync() {
+      const checked = [...boxes].filter(b => b.checked).length;
+      submit.disabled = checked === 0;
+      toggleAll.textContent = checked === boxes.length ? 'Deselect all' : 'Select all';
+    }
+    boxes.forEach(b => b.addEventListener('change', sync));
+    toggleAll.addEventListener('click', () => {
+      const selectAll = [...boxes].some(b => !b.checked);
+      boxes.forEach(b => { b.checked = selectAll; });
+      sync();
+    });
+    // Close the dropdown when clicking anywhere outside it.
+    document.addEventListener('click', e => {
+      const details = document.getElementById('pdf-export');
+      if (details.open && !details.contains(e.target)) details.open = false;
+    });
+  })();
+</script>

@@ -22,6 +22,16 @@
         </p>
     </div>
 
+    <div class="mb-8 z-10 relative flex flex-wrap items-center justify-between gap-4 bg-[#1e1613] rounded-2xl border border-[#38281f] px-6 py-4">
+        <div>
+            <p class="text-sm font-bold text-[#f7efe6]"><i class="fa-solid fa-envelope-open-text text-[#fcaa13] mr-2"></i>Newsletter: <%= newsletter.confirmed || 0 %> confirmed subscriber<%= newsletter.confirmed === 1 ? '' : 's' %></p>
+            <p class="text-xs text-[#a99a8b] mt-1"><%= newsletter.pending || 0 %> waiting to confirm their email. Only confirmed subscribers may be emailed.</p>
+        </div>
+        <a href="/admin/customers/newsletter.csv" class="text-xs font-bold text-[#fcaa13] border border-[#fcaa13]/40 hover:bg-[#fcaa13]/10 px-4 py-2 rounded-lg <%= newsletter.confirmed ? '' : 'pointer-events-none opacity-50' %>">
+            <i class="fa-solid fa-download mr-1"></i> Download subscribers (CSV)
+        </a>
+    </div>
+
     <% if (message) { %>
         <div class="mb-6 px-4 py-3 rounded-xl bg-[#271c17] text-[#9db183] text-sm font-medium flex items-center gap-2 z-10 relative" role="status">
             <i class="fa-solid fa-circle-check"></i> <%= message %>

@@ -16,7 +16,7 @@
     <% } %>
 
     <div class="bg-[#1e1613] rounded-[24px] shadow-xl shadow-black/5 overflow-hidden mb-10">
-        <div class="h-72 md:h-96 relative bg-black">
+        <div id="playerFrame" class="h-72 md:h-96 relative bg-black">
             <% const ageGate = film.ageRestricted && currentUser && !currentUser.adultConfirmed && !film.comingSoon; %>
             <% if (ageGate) { %>
                 <img class="w-full h-full object-cover opacity-30 blur-md" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>">
@@ -51,6 +51,11 @@
                         <% } else { %>
                             <a href="/film/<%= film.id %>" class="w-20 h-20 rounded-full bg-[#fb6b10] text-[#f4ece3] shadow-xl flex items-center justify-center" aria-label="Play <%= film.title %>"><i class="fa-solid fa-play text-2xl ml-1"></i></a>
                         <% } %>
+                    </div>
+                    <%# Personal watermark: identifies the account on any recording of the film. %>
+                    <div id="filmWatermark" class="absolute hidden pointer-events-none select-none whitespace-nowrap font-bold tracking-wide text-xs md:text-sm"
+                        style="color: rgba(255,255,255,0.36); text-shadow: 0 1px 3px rgba(0,0,0,0.55); transition: top 1.2s ease, left 1.2s ease; top: 12%; left: 8%;" aria-hidden="true">
+                        <%= currentUser.email %> · CA-<%= String(currentUser.id).padStart(5, '0') %>
                     </div>
                     <div id="otherDeviceOverlay" class="absolute inset-0 hidden flex-col items-center justify-center gap-4 bg-black/85 text-center px-6" role="alert">
                         <i class="fa-solid fa-tv text-3xl text-[#fcaa13]"></i>
@@ -104,6 +109,30 @@
                                     if (playing && playing.catch) playing.catch(function () {});
                                 });
                             }
+                            // Watermark: visible while the film plays, moving every 20 seconds so it
+                            // can't simply be cropped out of a screen recording.
+                            var frame = document.getElementById('playerFrame');
+                            var watermark = document.getElementById('filmWatermark');
+                            function moveWatermark() {
+                                watermark.style.top = (8 + Math.random() * 74) + '%';
+                                watermark.style.left = (4 + Math.random() * 56) + '%';
+                            }
+                            video.addEventListener('playing', function () { watermark.classList.remove('hidden'); });
+                            setInterval(function () { if (!video.paused) moveWatermark(); }, 20000);
+                            // The player's own full-screen button enlarges only the <video>, which would
+                            // leave the watermark behind; enlarge the whole frame instead.
+                            function onFullscreenChange() {
+                                var fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+                                if (fsEl !== video) return;
+                                var exit = document.exitFullscreen ? document.exitFullscreen() : (document.webkitExitFullscreen && document.webkitExitFullscreen());
+                                Promise.resolve(exit).then(function () {
+                                    var enter = frame.requestFullscreen || frame.webkitRequestFullscreen;
+                                    if (enter) enter.call(frame);
+                                }).catch(function () {});
+                            }
+                            document.addEventListener('fullscreenchange', onFullscreenChange);
+                            document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
                             document.getElementById('startPlayback').addEventListener('click', claimAndPlay);
                             document.getElementById('watchHere').addEventListener('click', claimAndPlay);
                             // The stream refuses this tab once another device has taken over.

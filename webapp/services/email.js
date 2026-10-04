@@ -141,4 +141,23 @@ ${receipt.vatLabel ? `<tr><td style="padding:4px 8px;color:#645a50">Includes VAT
   });
 }
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendAdminInviteEmail, sendEmailChangeVerification, sendPurchaseReceipt };
+async function sendNewsletterConfirmation(email, token) {
+  const confirmUrl = `${config.APP_BASE_URL}/newsletter/confirm?token=${token}`;
+  const unsubscribeUrl = `${config.APP_BASE_URL}/newsletter/unsubscribe?token=${token}`;
+  await deliver({
+    from: config.MAIL_FROM,
+    to: email,
+    subject: 'Confirm your Cultured Africa newsletter subscription',
+    headers: { 'List-Unsubscribe': `<${unsubscribeUrl}>` },
+    text: `Hi,\n\nPlease confirm that you'd like to receive the Cultured Africa newsletter (news about new films and releases):\n\n${confirmUrl}\n\nIf you didn't sign up, ignore this email and you won't be subscribed.\n\nUnsubscribe at any time: ${unsubscribeUrl}`,
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#1f1a16;max-width:560px">
+<p>Hi,</p>
+<p>Please confirm that you'd like to receive the <strong>Cultured Africa</strong> newsletter, with news about new films and releases.</p>
+<p><a href="${confirmUrl}" style="display:inline-block;background:#c9a84c;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Yes, subscribe me</a></p>
+<p>If you didn't sign up, just ignore this email and you won't be subscribed.</p>
+<p style="font-size:12px;color:#645a50;margin-top:24px">You can <a href="${unsubscribeUrl}" style="color:#645a50">unsubscribe</a> at any time.</p>
+</div>`
+  });
+}
+
+module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendAdminInviteEmail, sendEmailChangeVerification, sendPurchaseReceipt, sendNewsletterConfirmation };

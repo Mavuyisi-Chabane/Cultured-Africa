@@ -84,11 +84,32 @@ router.get('/customers', (req, res) => {
     FROM users WHERE role = 'customer'
   `).get();
 
+  const newsletter = db.prepare(`
+    SELECT SUM(status = 'confirmed') AS confirmed, SUM(status = 'pending') AS pending FROM newsletter_subscribers
+  `).get();
+
   res.render('admin-customers', {
-    customers, filters, totals,
+    customers, filters, totals, newsletter,
     statusOptions: Object.entries(CUSTOMER_STATUSES).map(([value, label]) => ({ value, label })),
     message: CUSTOMER_MESSAGES[req.query.msg] || null
   });
+});
+
+// Confirmed newsletter subscribers as CSV, for importing into a mailing tool.
+router.get('/customers/newsletter.csv', (req, res) => {
+  const rows = db.prepare(`
+    SELECT email, confirmed_at, source FROM newsletter_subscribers WHERE status = 'confirmed' ORDER BY confirmed_at
+  `).all();
+  const cell = v => {
+    const s = String(v == null ? '' : v);
+    // Quote every cell; a leading = + - @ is neutralised so spreadsheets never run it as a formula.
+    return '"' + (/^[=+\-@]/.test(s) ? "'" + s : s).replace(/"/g, '""') + '"';
+  };
+  const csv = ['email,confirmed_at_utc,source', ...rows.map(r => [r.email, r.confirmed_at, r.source].map(cell).join(','))].join('\r\n');
+  logAudit(req.session.admin.id, 'exported_newsletter_list', 'newsletter', null, `${rows.length} subscribers`);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="cultured-africa-newsletter-${new Date().toISOString().slice(0, 10)}.csv"`);
+  res.send('\uFEFF' + csv);
 });
 
 router.post('/customers/:id/suspend', (req, res) => {

@@ -20,6 +20,7 @@ const adminRoutes = require('./routes/admin');
 const adminManageRoutes = require('./routes/adminManage');
 const notificationRoutes = require('./routes/notifications');
 const privacyRoutes = require('./routes/privacy');
+const newsletterRoutes = require('./routes/newsletter');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,7 +28,7 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Pages a logged-in customer can still reach before agreeing to the privacy policy:
 // the consent screen itself, the policy, logging out, and deleting their account.
-const CONSENT_EXEMPT_PATHS = new Set(['/consent', '/privacy', '/purchase-terms', '/logout', '/account', '/account/delete', '/about']);
+const CONSENT_EXEMPT_PATHS = new Set(['/consent', '/privacy', '/purchase-terms', '/newsletter/confirm', '/newsletter/unsubscribe', '/logout', '/account', '/account/delete', '/about']);
 
 // Refuse to run in production with a guessable session secret: anyone who knows it can
 // forge a logged-in session cookie for any user or admin.
@@ -126,6 +127,7 @@ app.get('/about', (req, res) => {
 });
 
 app.use('/', privacyRoutes);
+app.use('/', newsletterRoutes);
 app.use('/', authRoutes);
 app.use('/', accountRoutes);
 app.use('/', filmRoutes);

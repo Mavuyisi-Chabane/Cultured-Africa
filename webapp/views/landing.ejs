@@ -334,9 +334,19 @@
                 <a href="#" class="text-[#f4ece3]/40 hover:text-accent transition-colors"><i class="fab fa-twitter"></i></a>
                 <a href="#" class="text-[#f4ece3]/40 hover:text-accent transition-colors"><i class="fab fa-facebook-f"></i></a>
             </div>
-            <div class="flex items-center gap-4">
-                <input type="email" placeholder="Newsletter" class="bg-transparent border-b border-[#38281f]/20 pb-2 text-sm focus:outline-none focus:border-accent w-48 transition-colors">
-                <button class="text-[#f4ece3]/40 hover:text-[#f4ece3]"><i class="fas fa-paper-plane"></i></button>
+            <div id="newsletter" class="max-w-xs">
+                <form method="POST" action="/newsletter" class="flex items-center gap-4">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <label for="newsletter-email" class="sr-only">Email address for the newsletter</label>
+                    <input id="newsletter-email" type="email" name="email" required maxlength="254" placeholder="Your email for our newsletter" autocomplete="email"
+                        class="bg-transparent border-b border-[#f4ece3]/30 pb-2 text-sm text-[#f4ece3] placeholder-[#f4ece3]/50 focus:outline-none focus:border-accent w-56 transition-colors">
+                    <button type="submit" class="text-[#f4ece3]/70 hover:text-[#fcaa13] w-10 h-10" aria-label="Subscribe to the newsletter"><i class="fas fa-paper-plane"></i></button>
+                </form>
+                <% if (newsletterNotice) { %>
+                    <p class="mt-2 text-xs <%= newsletterNotice.ok ? 'text-[#9db183]' : 'text-[#ef8a80]' %>" role="status"><%= newsletterNotice.text %></p>
+                <% } else { %>
+                    <p class="mt-2 text-[11px] text-[#f4ece3]/50 normal-case tracking-normal">News about new films. We'll email you to confirm; unsubscribe any time. See our <a href="/privacy" class="underline">Privacy Policy</a>.</p>
+                <% } %>
             </div>
         </div>
 

@@ -148,7 +148,12 @@ router.get('/', redirectAdminAway, (req, res) => {
       ORDER BY c.upload_date DESC
       LIMIT ?
     `).all(MAX_FEATURED_TRAILERS).map(mapContent);
-    return res.render('landing', { featuredFilms });
+    const NEWSLETTER_NOTICES = {
+      sent: { ok: true, text: "Almost done: check your inbox and click the link to confirm your subscription." },
+      invalid: { ok: false, text: 'Please enter a valid email address.' },
+      busy: { ok: false, text: 'Too many sign-ups from your connection. Please try again in a few minutes.' }
+    };
+    return res.render('landing', { featuredFilms, newsletterNotice: NEWSLETTER_NOTICES[req.query.newsletter] || null });
   }
 
   renderCatalogue(req, res, '/');

@@ -222,6 +222,20 @@ CREATE TABLE IF NOT EXISTS email_change_requests (
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Newsletter mailing list with double opt-in (POPIA direct marketing): an address is
+-- only "confirmed" after its owner clicks the link in the confirmation email. The token
+-- is used for both the confirm and the one-click unsubscribe links.
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  email           TEXT NOT NULL UNIQUE,
+  status          TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'unsubscribed')),
+  token           TEXT NOT NULL UNIQUE,
+  source          TEXT,
+  requested_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  confirmed_at    TEXT,
+  unsubscribed_at TEXT
+);
+
 CREATE INDEX IF NOT EXISTS idx_content_culture ON content(culture_id);
 CREATE INDEX IF NOT EXISTS idx_purchases_content ON purchases(content_id);
 CREATE INDEX IF NOT EXISTS idx_purchases_user ON purchases(user_id);

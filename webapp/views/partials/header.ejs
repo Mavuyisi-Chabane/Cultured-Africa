@@ -1,30 +1,118 @@
 <%
-  const headerInitials = currentUser.fullName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  // Customer header for every customer-facing page, for visitors (not logged in) as well
+  // as customers. Desktop: links + search box inline. Phones: a search button and a ☰
+  // button that each open a panel below the bar.
+  const isLoggedIn = typeof currentUser !== 'undefined' && currentUser;
+  const headerInitials = isLoggedIn ? currentUser.fullName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase() : '';
+  const headerQuery = typeof filters !== 'undefined' && filters && filters.q ? filters.q : '';
+  const navCls = 'text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium';
+  const mobileLinkCls = 'flex items-center gap-3 px-4 py-3 rounded-xl text-[#f4ece3] hover:bg-[#1e1613] font-medium';
 %>
-<nav id="header" class="bg-[#0f0a08] px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg">
-    <div class="flex items-center gap-8">
-        <a href="/" class="display-font text-2xl font-bold text-[#fcaa13] tracking-tight flex items-center gap-2"><img src="/images/brand/sun.png" alt="" class="h-8 w-8">Cultured Africa</a>
-        <div class="hidden md:flex items-center gap-6">
-            <a href="/" class="text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium">Home</a>
-            <a href="/library" class="text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium">My Library</a>
+<nav id="header" class="bg-[#0f0a08] sticky top-0 z-50 shadow-lg">
+    <div class="px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-6 lg:gap-8 min-w-0">
+            <a href="/" class="display-font text-xl sm:text-2xl font-bold text-[#fcaa13] tracking-tight flex items-center gap-2 flex-shrink-0"><img src="/images/brand/sun.png" alt="" class="h-8 w-8">Cultured Africa</a>
+            <div class="hidden md:flex items-center gap-6">
+                <% if (isLoggedIn) { %>
+                    <a href="/" class="<%= navCls %>">Home</a>
+                    <a href="/films" class="<%= navCls %>">Browse</a>
+                    <a href="/library" class="<%= navCls %>">My Library</a>
+                <% } else { %>
+                    <a href="/films" class="<%= navCls %>">Films</a>
+                    <a href="/about" class="<%= navCls %>">About</a>
+                <% } %>
+            </div>
+        </div>
+
+        <form action="/films" method="get" role="search" class="hidden md:flex flex-1 max-w-sm items-center gap-2 bg-[#1e1613] border border-[#38281f] rounded-full pl-4 pr-1 py-1 focus-within:border-[#fcaa13]">
+            <i class="fa-solid fa-magnifying-glass text-[#a99a8b] text-xs" aria-hidden="true"></i>
+            <label for="header-search" class="sr-only">Search films</label>
+            <input id="header-search" type="search" name="q" value="<%= headerQuery %>" maxlength="100" placeholder="Search films, cultures…" autocomplete="off"
+                class="flex-1 min-w-0 bg-transparent border-0 text-sm text-[#f7efe6] placeholder-[#a99a8b]/70 focus:outline-none py-1.5">
+            <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] text-xs font-bold px-4 py-2 rounded-full">Search</button>
+        </form>
+
+        <div class="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+            <% if (isLoggedIn) { %>
+                <a href="/notifications" class="relative text-[#f4ece3] hover:text-[#fcaa13] transition-colors p-2" title="Notifications" aria-label="Notifications<%= unreadNotifications > 0 ? ', ' + unreadNotifications + ' unread' : '' %>">
+                    <i class="fa-solid fa-bell"></i>
+                    <% if (unreadNotifications > 0) { %>
+                        <span class="absolute top-0 right-0 bg-[#fb6b10] text-[#f7efe6] text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center"><%= unreadNotifications > 9 ? '9+' : unreadNotifications %></span>
+                    <% } %>
+                </a>
+                <a href="/account" class="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity" title="Manage Account">
+                    <div class="w-8 h-8 rounded-full border border-[#fcaa13] bg-[#1e1613]/5 flex items-center justify-center text-[#fcaa13] text-xs font-bold"><%= headerInitials %></div>
+                    <span class="text-[#f4ece3] text-xs hidden lg:inline"><%= currentUser.fullName %></span>
+                </a>
+                <form action="/logout" method="POST" class="hidden md:block">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="<%= navCls %>">Logout</button>
+                </form>
+            <% } else { %>
+                <a href="/login" class="hidden md:inline <%= navCls %>">Log in</a>
+                <a href="/register" class="hidden md:inline-block bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-4 py-2 rounded-lg text-sm font-bold">Register</a>
+            <% } %>
+            <button type="button" class="md:hidden w-10 h-10 rounded-full bg-[#1e1613] text-[#f4ece3] flex items-center justify-center" data-toggle-panel="header-search-panel" aria-controls="header-search-panel" aria-expanded="false" aria-label="Search films">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+            <button type="button" class="md:hidden w-10 h-10 rounded-full bg-[#1e1613] text-[#f4ece3] flex items-center justify-center" data-toggle-panel="header-menu-panel" aria-controls="header-menu-panel" aria-expanded="false" aria-label="Menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
         </div>
     </div>
-    <div class="flex items-center gap-4">
-        <a href="/notifications" class="relative text-[#f4ece3] hover:text-[#fcaa13] transition-colors" title="Notifications">
-            <i class="fa-solid fa-bell"></i>
-            <% if (unreadNotifications > 0) { %>
-                <span class="absolute -top-2 -right-2 bg-[#fb6b10] text-[#f7efe6] text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center"><%= unreadNotifications > 9 ? '9+' : unreadNotifications %></span>
-            <% } %>
-        </a>
-        <a href="/account" class="flex items-center gap-2 mr-4 hover:opacity-80 transition-opacity" title="Manage Account">
-            <div class="w-8 h-8 rounded-full border border-[#fcaa13] bg-[#1e1613]/5 flex items-center justify-center text-[#fcaa13] text-xs font-bold">
-                <%= headerInitials %>
-            </div>
-            <span class="text-[#f4ece3] text-xs hidden sm:inline"><%= currentUser.fullName %></span>
-        </a>
-        <form action="/logout" method="POST">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button type="submit" class="text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium">Logout</button>
+
+    <!-- Phone: search panel -->
+    <div id="header-search-panel" class="md:hidden border-t border-[#38281f] px-4 py-3" hidden>
+        <form action="/films" method="get" role="search" class="flex items-center gap-2 bg-[#1e1613] border border-[#fcaa13] rounded-full pl-4 pr-1 py-1">
+            <i class="fa-solid fa-magnifying-glass text-[#a99a8b] text-xs" aria-hidden="true"></i>
+            <label for="header-search-mobile" class="sr-only">Search films</label>
+            <input id="header-search-mobile" type="search" name="q" value="<%= headerQuery %>" maxlength="100" placeholder="Search films, cultures…" autocomplete="off"
+                class="flex-1 min-w-0 bg-transparent border-0 text-base text-[#f7efe6] placeholder-[#a99a8b]/70 focus:outline-none py-2">
+            <button type="submit" class="bg-[#fb6b10] text-[#f4ece3] text-sm font-bold px-4 py-2 rounded-full">Search</button>
         </form>
     </div>
+
+    <!-- Phone: menu panel -->
+    <div id="header-menu-panel" class="md:hidden border-t border-[#38281f] px-4 py-3" hidden>
+        <% if (isLoggedIn) { %>
+            <p class="px-4 pb-2 text-xs text-[#a99a8b]">Signed in as <span class="text-[#f7efe6] font-bold"><%= currentUser.fullName %></span></p>
+            <a href="/" class="<%= mobileLinkCls %>"><i class="fa-solid fa-house w-5 text-center text-[#fcaa13]"></i>Home</a>
+            <a href="/films" class="<%= mobileLinkCls %>"><i class="fa-solid fa-film w-5 text-center text-[#fcaa13]"></i>Browse films</a>
+            <a href="/library" class="<%= mobileLinkCls %>"><i class="fa-solid fa-bookmark w-5 text-center text-[#fcaa13]"></i>My Library</a>
+            <a href="/recap" class="<%= mobileLinkCls %>"><i class="fa-solid fa-chart-simple w-5 text-center text-[#fcaa13]"></i>My Recap</a>
+            <a href="/notifications" class="<%= mobileLinkCls %>"><i class="fa-solid fa-bell w-5 text-center text-[#fcaa13]"></i>Notifications<%= unreadNotifications > 0 ? ' (' + unreadNotifications + ')' : '' %></a>
+            <a href="/account" class="<%= mobileLinkCls %>"><i class="fa-solid fa-user w-5 text-center text-[#fcaa13]"></i>My Account</a>
+            <form action="/logout" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" class="<%= mobileLinkCls %> w-full text-left"><i class="fa-solid fa-right-from-bracket w-5 text-center text-[#fcaa13]"></i>Log out</button>
+            </form>
+        <% } else { %>
+            <a href="/films" class="<%= mobileLinkCls %>"><i class="fa-solid fa-film w-5 text-center text-[#fcaa13]"></i>Browse films</a>
+            <a href="/about" class="<%= mobileLinkCls %>"><i class="fa-solid fa-circle-info w-5 text-center text-[#fcaa13]"></i>About</a>
+            <a href="/login" class="<%= mobileLinkCls %>"><i class="fa-solid fa-right-to-bracket w-5 text-center text-[#fcaa13]"></i>Log in</a>
+            <a href="/register" class="block mt-2 text-center bg-[#fb6b10] text-[#f4ece3] px-4 py-3 rounded-xl font-bold">Create a free account</a>
+        <% } %>
+    </div>
 </nav>
+<script>
+    // Phone header panels: each button opens its panel and closes the other.
+    (function () {
+        var buttons = document.querySelectorAll('#header [data-toggle-panel]');
+        buttons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var target = document.getElementById(btn.getAttribute('data-toggle-panel'));
+                var opening = target.hidden;
+                buttons.forEach(function (other) {
+                    document.getElementById(other.getAttribute('data-toggle-panel')).hidden = true;
+                    other.setAttribute('aria-expanded', 'false');
+                });
+                target.hidden = !opening;
+                btn.setAttribute('aria-expanded', String(opening));
+                if (opening) {
+                    var input = target.querySelector('input[type=search]');
+                    if (input) input.focus();
+                }
+            });
+        });
+    })();
+</script>

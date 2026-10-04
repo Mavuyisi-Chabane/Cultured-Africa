@@ -5,7 +5,16 @@
 function createRateLimiter({ windowMs, max, keyFn }) {
   const hits = new Map();
 
-  return function rateLimiter(req, res, next) {
+  // Forget keys whose attempts have all aged out, so the Map can't grow forever.
+  const pruneTimer = setInterval(() => {
+    const cutoff = Date.now() - windowMs;
+    for (const [key, times] of hits) {
+      if (!times.some(t => t > cutoff)) hits.delete(key);
+    }
+  }, windowMs);
+  pruneTimer.unref();
+
+  function rateLimiter(req, res, next) {
     const key = keyFn(req);
     const now = Date.now();
     const recent = (hits.get(key) || []).filter(t => now - t < windowMs);
@@ -18,7 +27,12 @@ function createRateLimiter({ windowMs, max, keyFn }) {
     recent.push(now);
     hits.set(key, recent);
     next();
-  };
+  }
+
+  // Clears the count for this request's key, e.g. after a successful login, so only
+  // failed attempts add up towards the limit.
+  rateLimiter.reset = req => hits.delete(keyFn(req));
+  return rateLimiter;
 }
 
 module.exports = { createRateLimiter };

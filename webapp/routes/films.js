@@ -38,6 +38,7 @@ function mapContent(row) {
     trailerUrl: row.trailer_url,
     // Uploaded with only a trailer: shown and previewable, but not yet buyable or playable.
     comingSoon: !row.file_url,
+    isAvailable: Boolean(row.is_available),
     ageRatingCode: row.age_rating || '',
     advisoryCodes: String(row.content_advisories || '').split(',').filter(Boolean),
     classification: describeRating(row.age_rating, row.content_advisories),
@@ -107,7 +108,7 @@ function getFilmDetailContext(film, userId) {
     user: { fullName: r.user_full_name }
   }));
 
-  if (film.comingSoon) return { filmReviews, owned: false, access: null, canReview: false };
+  if (film.comingSoon || !userId) return { filmReviews, owned: false, access: null, canReview: false };
 
   const access = film.price === 0 ? null : getAccess(userId, film.id);
   const owned = film.price === 0 || Boolean(access && access.active);
@@ -148,7 +149,32 @@ router.get('/', redirectAdminAway, (req, res) => {
     return res.render('landing', { featuredFilms });
   }
 
-  const userId = req.session.user.id;
+  renderCatalogue(req, res, '/');
+});
+
+// The public catalogue: anyone can browse, filter, search and watch trailers here.
+// Buying or watching a full film asks visitors to sign in first (see film-detail).
+router.get('/films', redirectAdminAway, (req, res) => {
+  renderCatalogue(req, res, '/films');
+});
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
+// Description as safe HTML with each searched word wrapped in <mark>. Escaping happens
+// first, so the only markup in the result is the <mark> tags added here.
+function highlightMatches(text, words) {
+  let html = escapeHtml(text);
+  words.forEach(word => {
+    const escapedWord = escapeHtml(word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    html = html.replace(new RegExp(`(${escapedWord})(?![^<]*>)`, 'gi'), '<mark>$1</mark>');
+  });
+  return html;
+}
+
+function renderCatalogue(req, res, basePath) {
+  const userId = req.session.user ? req.session.user.id : null;
   const cultures = db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
 
   // Every filter is validated against a fixed list, so anything unexpected in the URL
@@ -187,22 +213,25 @@ router.get('/', redirectAdminAway, (req, res) => {
     ORDER BY ${HOME_SORTS[filters.sort][1]}
   `).all(...params);
 
-  const activeAccess = getActiveAccessMap(userId);
+  const activeAccess = userId ? getActiveAccessMap(userId) : new Map();
+  const searchWords = filters.q.split(/\s+/).filter(Boolean);
 
   const films = rows.map(row => {
     const film = mapContent(row);
-    film.owned = !film.comingSoon && (film.price === 0 || activeAccess.has(film.id));
+    film.owned = Boolean(userId) && !film.comingSoon && (film.price === 0 || activeAccess.has(film.id));
     film.accessExpiresAt = activeAccess.get(film.id) || null;
     film.watchCount = row.watch_count;
+    film.descriptionHtml = highlightMatches(film.description, searchWords);
     return film;
   });
 
   res.render('home', {
-    films, cultures, filters,
+    films, cultures, filters, basePath,
+    isGuest: !userId,
     sortOptions: Object.entries(HOME_SORTS).map(([value, [label]]) => ({ value, label })),
     priceOptions: Object.entries(HOME_PRICES).map(([value, label]) => ({ value, label }))
   });
-});
+}
 
 router.get('/library', redirectAdminAway, requireLogin, (req, res) => {
   const userId = req.session.user.id;
@@ -315,11 +344,13 @@ router.get('/film/:id/stream', redirectAdminAway, requireLogin, (req, res) => {
   });
 });
 
-router.get('/film/:id', redirectAdminAway, requireLogin, (req, res) => {
+router.get('/film/:id', redirectAdminAway, (req, res) => {
   const film = getContent(req.params.id);
   if (!film) return renderNotFound(res);
 
-  const { filmReviews, owned, access, canReview } = getFilmDetailContext(film, req.session.user.id);
+  const userId = req.session.user ? req.session.user.id : null;
+  const { filmReviews, owned, access, canReview } = getFilmDetailContext(film, userId);
+  if (!film.isAvailable && !owned) return renderNotFound(res);
 
   let viewId = null;
   let resumeSeconds = 0;

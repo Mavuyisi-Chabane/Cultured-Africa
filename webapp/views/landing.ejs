@@ -82,15 +82,42 @@
         <div class="flex items-center">
             <a href="/" class="font-serif text-2xl tracking-tight text-[#fcaa13] flex items-center gap-2"><img src="/images/brand/sun.png" alt="" class="h-8 w-8">Cultured Africa</a>
         </div>
+        <form action="/films" method="get" role="search" class="hidden lg:flex items-center gap-2 bg-[#1e1613] border border-[#38281f] rounded-full pl-4 pr-1 py-1 focus-within:border-[#fcaa13] w-72">
+            <i class="fas fa-search text-[#a99a8b] text-xs" aria-hidden="true"></i>
+            <label for="landing-search" class="sr-only">Search films</label>
+            <input id="landing-search" type="search" name="q" maxlength="100" placeholder="Search films, cultures…" class="flex-1 min-w-0 bg-transparent border-0 text-sm text-[#f7efe6] placeholder-[#a99a8b]/70 focus:outline-none py-1.5">
+            <button type="submit" class="bg-[#fb6b10] text-[#f4ece3] text-xs font-bold px-4 py-2 rounded-full">Search</button>
+        </form>
         <nav class="hidden md:flex gap-4">
-            <a href="#" class="px-4 py-2 text-sm font-bold text-[#fcaa13] link-underline">Home</a>
+            <a href="/" class="px-4 py-2 text-sm font-bold text-[#fcaa13] link-underline">Home</a>
             <a href="/about" class="px-4 py-2 text-sm font-medium text-[#f4ece3] hover:text-[#fcaa13] transition-colors link-underline">About</a>
-            <a href="#" class="px-4 py-2 text-sm font-medium text-[#f4ece3] hover:text-[#fcaa13] transition-colors link-underline">Films</a>
+            <a href="/films" class="px-4 py-2 text-sm font-medium text-[#f4ece3] hover:text-[#fcaa13] transition-colors link-underline">Films</a>
             <a href="/login" class="px-4 py-2 text-sm font-medium text-[#f4ece3] hover:text-[#fcaa13] transition-colors link-underline">Login</a>
             <a href="/register" class="px-4 py-2 text-sm font-medium text-[#f4ece3] hover:text-[#fcaa13] transition-colors link-underline">Register</a>
         </nav>
-        <button class="md:hidden text-[#f4ece3] text-xl"><i class="fas fa-bars"></i></button>
+        <button type="button" id="landing-menu-btn" class="md:hidden text-[#f4ece3] text-xl w-10 h-10" aria-controls="landing-menu" aria-expanded="false" aria-label="Menu"><i class="fas fa-bars"></i></button>
     </header>
+    <div id="landing-menu" class="md:hidden fixed top-[72px] left-0 right-0 z-40 bg-[#0f0a08] border-b border-borderdark px-6 py-4 space-y-1" hidden>
+        <form action="/films" method="get" role="search" class="flex items-center gap-2 bg-[#1e1613] border border-[#fcaa13] rounded-full pl-4 pr-1 py-1 mb-3">
+            <label for="landing-search-mobile" class="sr-only">Search films</label>
+            <input id="landing-search-mobile" type="search" name="q" maxlength="100" placeholder="Search films, cultures…" class="flex-1 min-w-0 bg-transparent border-0 text-base text-[#f7efe6] placeholder-[#a99a8b]/70 focus:outline-none py-2">
+            <button type="submit" class="bg-[#fb6b10] text-[#f4ece3] text-sm font-bold px-4 py-2 rounded-full">Search</button>
+        </form>
+        <a href="/films" class="block px-4 py-3 rounded-xl text-[#f4ece3] hover:bg-[#1e1613]">Browse films</a>
+        <a href="/about" class="block px-4 py-3 rounded-xl text-[#f4ece3] hover:bg-[#1e1613]">About</a>
+        <a href="/login" class="block px-4 py-3 rounded-xl text-[#f4ece3] hover:bg-[#1e1613]">Log in</a>
+        <a href="/register" class="block mt-2 text-center bg-[#fb6b10] text-[#f4ece3] px-4 py-3 rounded-xl font-bold">Create a free account</a>
+    </div>
+    <script>
+        (function () {
+            var btn = document.getElementById('landing-menu-btn');
+            var menu = document.getElementById('landing-menu');
+            btn.addEventListener('click', function () {
+                menu.hidden = !menu.hidden;
+                btn.setAttribute('aria-expanded', String(!menu.hidden));
+            });
+        })();
+    </script>
 
     <main>
         <!-- Hero Section -->
@@ -108,7 +135,7 @@
                     Watch award-winning short films that explore the practices, traditions, and beliefs of South African cultures.
                 </p>
                 <div class="flex flex-col md:flex-row gap-6 justify-center items-center">
-                    <a href="#films" class="px-12 py-4 bg-[#fb6b10] text-[#f4ece3] rounded-full font-bold hover:bg-[#ef420f] transition-all shadow-lg">
+                    <a href="/films" class="px-12 py-4 bg-[#fb6b10] text-[#f4ece3] rounded-full font-bold hover:bg-[#ef420f] transition-all shadow-lg">
                         Explore Films
                     </a>
                     <a href="#about" class="px-12 py-4 border-2 border-[#fcaa13] text-[#fcaa13] rounded-full font-bold hover:bg-[#fb6b10] hover:text-[#f4ece3] transition-all">
@@ -259,7 +286,7 @@
         <section class="py-32 px-6 bg-accent text-center">
             <div class="max-w-4xl mx-auto">
                 <h2 class="font-serif text-6xl md:text-8xl tracking-tighter mb-12 text-[#140d0a]">OUR STORIES, OUR HERITAGE</h2>
-                <a href="#" class="inline-flex items-center gap-4 bg-[#0f0a08] text-[#f4ece3] px-10 py-5 rounded-full font-medium hover:bg-[#fcaa13] hover:text-[#140d0a] transition-all group">
+                <a href="/films" class="inline-flex items-center gap-4 bg-[#0f0a08] text-[#f4ece3] px-10 py-5 rounded-full font-medium hover:bg-[#fcaa13] hover:text-[#140d0a] transition-all group">
                     START STREAMING
                     <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
                 </a>
@@ -279,7 +306,7 @@
             <div>
                 <h4 class="text-xs uppercase tracking-widest font-bold mb-8">Explore</h4>
                 <ul class="space-y-4 text-sm text-[#f4ece3]/50">
-                    <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">All Films</a></li>
+                    <li><a href="/films" class="hover:text-[#f4ece3] transition-colors link-underline">All Films</a></li>
                     <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Documentaries</a></li>
                     <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Behind the Scenes</a></li>
                     <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Filmmakers</a></li>
@@ -288,7 +315,7 @@
             <div>
                 <h4 class="text-xs uppercase tracking-widest font-bold mb-8">Company</h4>
                 <ul class="space-y-4 text-sm text-[#f4ece3]/50">
-                    <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">About Us</a></li>
+                    <li><a href="/about" class="hover:text-[#f4ece3] transition-colors link-underline">About Us</a></li>
                     <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Careers</a></li>
                     <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Press</a></li>
                     <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Contact</a></li>

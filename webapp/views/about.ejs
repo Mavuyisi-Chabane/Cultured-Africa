@@ -33,21 +33,7 @@
     </style>
 </head>
 <body class="min-h-screen">
-    <!-- Top Navigation -->
-    <nav id="header" class="bg-[#0f0a08] px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg">
-        <div class="flex items-center gap-8">
-            <a href="/" class="display-font text-2xl font-bold text-[#fcaa13] tracking-tight flex items-center gap-2"><img src="/images/brand/sun.png" alt="" class="h-8 w-8">Cultured Africa</a>
-            <div class="hidden md:flex items-center gap-6">
-                <a href="/" class="text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium">Home</a>
-                <a href="/about" class="text-[#fcaa13] text-sm font-bold border-b-2 border-[#fcaa13] pb-1">About</a>
-                <a href="#" class="text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium">Films</a>
-            </div>
-        </div>
-        <div class="flex items-center gap-6">
-            <a href="/login" class="text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium">Login</a>
-            <a href="/register" class="bg-[#fb6b10] text-[#f4ece3] px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#ef420f] transition-all">Register</a>
-        </div>
-    </nav>
+    <%- include('partials/header') %>
 
     <!-- Main Content -->
     <main class="relative overflow-hidden">

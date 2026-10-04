@@ -9,7 +9,7 @@
 <main class="max-w-5xl mx-auto px-6 py-10 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
-    <a href="/" class="text-[#a99a8b] hover:text-[#fcaa13] text-sm font-medium mb-6 inline-flex items-center gap-2"><i class="fa-solid fa-arrow-left text-xs"></i> Back to browsing</a>
+    <a href="<%= currentUser ? '/' : '/films' %>" class="text-[#a99a8b] hover:text-[#fcaa13] text-sm font-medium mb-6 inline-flex items-center gap-2"><i class="fa-solid fa-arrow-left text-xs"></i> Back to browsing</a>
 
     <% if (error) { %>
         <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ef420f] text-sm font-medium"><%= error %></div>
@@ -86,7 +86,12 @@
                 <img class="w-full h-full object-cover opacity-40 blur-sm" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>">
                 <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-[#f4ece3]">
                     <i class="fa-solid fa-lock text-3xl"></i>
-                    <p class="text-sm font-medium"><%= access ? 'Your ' + accessMonths + '-month access has ended — buy again to keep watching' : 'Buy this film to unlock playback' %></p>
+                    <% if (!currentUser) { %>
+                        <p class="text-sm font-medium"><%= film.price === 0 ? 'This film is free. Log in or create a free account to watch it.' : 'Log in to buy and watch this film.' %></p>
+                        <a href="/login?next=/film/<%= film.id %>" class="mt-1 bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-6 py-3 rounded-xl font-bold text-sm shadow-md"><%= film.price === 0 ? 'Log in to watch free' : 'Log in to buy' %></a>
+                    <% } else { %>
+                        <p class="text-sm font-medium"><%= access ? 'Your ' + accessMonths + '-month access has ended — buy again to keep watching' : 'Buy this film to unlock playback' %></p>
+                    <% } %>
                 </div>
             <% } %>
         </div>
@@ -118,6 +123,16 @@
                             <p class="text-xs mt-2 <%= daysLeft <= 14 ? 'text-[#fcaa13] font-bold' : 'text-[#a99a8b]' %>">
                                 <i class="fa-regular fa-clock mr-1"></i>Access until <%= formatAccessDate(access.expiresAt) %><%= daysLeft <= 14 ? ' — ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' left' : '' %>
                             </p>
+                        <% } %>
+                    </div>
+                <% } else if (!currentUser) { %>
+                    <div class="text-right">
+                        <a href="/login?next=/film/<%= film.id %>" class="inline-flex items-center gap-2 bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-8 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">
+                            <i class="fa-solid fa-right-to-bracket text-xs"></i> <%= film.price === 0 ? 'Log in to watch free' : 'Log in to buy R' + film.price.toFixed(0) %>
+                        </a>
+                        <p class="text-xs text-[#a99a8b] mt-2">New here? <a href="/register?next=/film/<%= film.id %>" class="text-[#fcaa13] font-bold underline">Create a free account</a>. We'll bring you back to this film.</p>
+                        <% if (film.price > 0) { %>
+                            <p class="text-[11px] text-[#a99a8b] mt-2">Once-off R<%= film.price.toFixed(0) %> · <%= accessMonths %> months' access · <a href="/purchase-terms" target="_blank" rel="noopener" class="underline">Pricing &amp; refunds</a></p>
                         <% } %>
                     </div>
                 <% } else if (paystackPublicKey) { %>
@@ -207,7 +222,7 @@
         <% } else { %>
             <div class="bg-[#271c17]/50 border border-[#38281f] rounded-xl px-6 py-8 text-center">
                 <i class="fa-solid fa-lock text-[#a99a8b] text-xl mb-3"></i>
-                <p class="text-[#f7efe6] text-sm font-medium">Buy this film to leave a review.</p>
+                <p class="text-[#f7efe6] text-sm font-medium"><%= currentUser ? 'Buy this film to leave a review.' : 'Log in and buy this film to leave a review.' %></p>
                 <p class="text-[#a99a8b] text-xs mt-1">Reviews are only open to viewers who have bought the film.</p>
             </div>
         <% } %>

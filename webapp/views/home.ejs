@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<%- include('partials/head', { title: 'Cultured Africa — Home' }) %>
+<%- include('partials/head', { title: isGuest ? 'Cultured Africa — Browse Films' : 'Cultured Africa — Home' }) %>
+<style>
+    #film-grid mark { background: rgba(252, 170, 19, 0.28); color: #f7efe6; padding: 0 2px; border-radius: 2px; }
+</style>
 </head>
 <body class="min-h-screen">
 <%- include('partials/header') %>
@@ -10,8 +13,13 @@
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="mb-8">
-        <h1 class="text-2xl md:text-3xl font-bold text-[#f7efe6] mb-1">Welcome back, <%= currentUser.fullName %></h1>
-        <p class="text-[#a99a8b] text-sm">Continue exploring the rich heritage of Cultured Africa.</p>
+        <% if (isGuest) { %>
+            <h1 class="text-2xl md:text-3xl font-bold text-[#f7efe6] mb-1">Browse our films</h1>
+            <p class="text-[#a99a8b] text-sm">Watch any trailer for free. <a href="/register?next=<%= encodeURIComponent(basePath) %>" class="text-[#fcaa13] font-bold hover:underline">Create a free account</a> to watch free films or buy a film.</p>
+        <% } else { %>
+            <h1 class="text-2xl md:text-3xl font-bold text-[#f7efe6] mb-1">Welcome back, <%= currentUser.fullName %></h1>
+            <p class="text-[#a99a8b] text-sm">Continue exploring the rich heritage of Cultured Africa.</p>
+        <% } %>
     </div>
 
     <%
@@ -23,13 +31,13 @@
         const params = new URLSearchParams();
         Object.keys(defaults).forEach(k => { if (merged[k] !== defaults[k]) params.set(k, merged[k]); });
         const qs = params.toString();
-        return qs ? '/?' + qs : '/';
+        return qs ? basePath + '?' + qs : basePath;
       };
       const isFiltered = filters.q || filters.culture !== 'All' || filters.price !== 'all';
       const selectCls = 'bg-[#1e1613] border border-[#38281f] rounded-full px-4 py-2.5 text-sm font-bold text-[#f7efe6] cursor-pointer focus:border-[#fcaa13]';
     %>
 
-    <form method="get" action="/" id="film-filters" role="search" class="mb-6 flex flex-col md:flex-row gap-3 md:items-center">
+    <form method="get" action="<%= basePath %>" id="film-filters" role="search" class="mb-6 flex flex-col md:flex-row gap-3 md:items-center">
         <div class="relative flex-1">
             <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-[#a99a8b] text-sm pointer-events-none"></i>
             <input type="search" name="q" value="<%= filters.q %>" maxlength="100" autocomplete="off"
@@ -78,10 +86,18 @@
     <div id="film-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <% if (films.length === 0) { %>
             <div class="col-span-full text-center py-16">
-                <i class="fa-solid fa-film text-3xl text-[#38281f] mb-4"></i>
-                <p class="text-[#f7efe6] font-bold mb-1"><%= isFiltered ? 'No films match your search.' : 'No films available yet.' %></p>
+                <i class="fa-solid fa-magnifying-glass text-3xl text-[#fcaa13] mb-4"></i>
+                <p class="text-[#f7efe6] text-xl font-bold mb-2">
+                    <% if (filters.q) { %>No films match “<%= filters.q %>”<% } else { %><%= isFiltered ? 'No films match these filters.' : 'No films available yet.' %><% } %>
+                </p>
                 <% if (isFiltered) { %>
-                    <p class="text-[#a99a8b] text-sm">Try a different word, another culture, or <a href="/" class="text-[#fcaa13] font-bold hover:underline">browse all films</a>.</p>
+                    <p class="text-[#a99a8b] text-sm mb-5">Our catalogue is growing. Try a different word, or browse by culture:</p>
+                    <div class="flex flex-wrap justify-center gap-2 mb-6">
+                        <% cultures.forEach(culture => { %>
+                            <a href="<%= homeUrl({ q: '', culture, price: 'all' }) %>" class="px-4 py-2 rounded-full text-sm border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]"><%= culture %></a>
+                        <% }) %>
+                    </div>
+                    <a href="<%= basePath %>" class="inline-block bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-6 py-3 rounded-xl font-bold text-sm">See all films</a>
                 <% } %>
             </div>
         <% } %>
@@ -98,7 +114,8 @@
                 </div>
                 <div class="p-6">
                     <h3 class="text-xl font-bold text-[#f7efe6] mb-1"><%= film.title %></h3>
-                    <p class="text-[#a99a8b] text-xs font-medium mb-4 italic"><%= film.culture %> Heritage · <%= film.genre %></p>
+                    <p class="text-[#a99a8b] text-xs font-medium mb-2 italic"><%= film.culture %> Heritage · <%= film.genre %></p>
+                    <p class="text-[#a99a8b] text-sm mb-4 line-clamp-2"><%- film.descriptionHtml %></p>
 
                     <div class="flex items-center gap-1 mb-4 text-[#fcaa13]">
                         <% const full = Math.floor(film.rating); const half = film.rating - full >= 0.5; %>
@@ -123,7 +140,7 @@
                             <% } %>
                         </span>
                         <span class="bg-[#fb6b10] group-hover:bg-[#ef420f] text-[#f4ece3] px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">
-                            <%= film.comingSoon ? 'Watch trailer' : (film.owned ? 'Watch' : 'Buy R' + film.price.toFixed(0)) %>
+                            <%= film.comingSoon ? 'Watch trailer' : (film.owned ? 'Watch' : (isGuest ? (film.trailerUrl ? 'Trailer & details' : 'View film') : 'Buy R' + film.price.toFixed(0))) %>
                         </span>
                     </div>
                 </div>

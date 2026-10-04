@@ -3,6 +3,8 @@ const { createRateLimiter } = require('../middleware/rateLimit');
 // Issues a brand-new session ID at login (then copies in who's logged in), so a session
 // ID planted or seen before login is worthless afterwards (session fixation).
 function startLoggedInSession(req, values, done) {
+  // A successful login wipes this account's failed-attempt count.
+  perAccount.reset(req);
   req.session.regenerate(err => {
     if (err) return done(err);
     Object.assign(req.session, values);

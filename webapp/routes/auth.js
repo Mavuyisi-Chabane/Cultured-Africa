@@ -9,6 +9,7 @@ const { createRateLimiter } = require('../middleware/rateLimit');
 const { PRIVACY_POLICY_VERSION } = require('../config/privacy');
 const business = require('../config/business');
 const { startLoggedInSession, loginRateLimit, TOO_MANY_ATTEMPTS } = require('../utils/loginSession');
+const { safeReturnPath } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -31,6 +32,8 @@ const verifyEmailLimiter = createRateLimiter({
 
 router.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/');
+  const next = safeReturnPath(req.query.next);
+  if (next) req.session.returnTo = next;
   const notice = req.query.consent === 'declined'
     ? "You've been logged out because you didn't agree to the Privacy Policy. Your account has not been deleted — log in again to review the policy, or delete your account from the Account page."
     : null;
@@ -75,16 +78,20 @@ router.post('/login', loginRateLimit, (req, res, next) => {
     });
   }
 
+  // Read before the session is regenerated, which clears it.
+  const returnTo = safeReturnPath(req.session.returnTo) || '/';
   startLoggedInSession(req, {
     user: {
       id: user.user_id, fullName: user.full_name, email: user.email, role: user.role,
       avatar: user.avatar, sessionVersion: user.session_version
     }
-  }, err => (err ? next(err) : res.redirect('/')));
+  }, err => (err ? next(err) : res.redirect(returnTo)));
 });
 
 router.get('/register', (req, res) => {
   if (req.session.user) return res.redirect('/');
+  const next = safeReturnPath(req.query.next);
+  if (next) req.session.returnTo = next;
   res.render('register', { error: null, values: {} });
 });
 

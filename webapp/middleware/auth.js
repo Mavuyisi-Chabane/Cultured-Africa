@@ -1,5 +1,13 @@
+// Only same-site paths are ever stored or followed, so a crafted ?next= can't send
+// someone to another website after they log in.
+function safeReturnPath(value) {
+  const path = String(value || '');
+  return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\') && path.length <= 300 ? path : null;
+}
+
 function requireLogin(req, res, next) {
   if (!req.session.user) {
+    if (req.method === 'GET') req.session.returnTo = safeReturnPath(req.originalUrl);
     return res.redirect('/login');
   }
   res.locals.currentUser = req.session.user;
@@ -37,4 +45,4 @@ function redirectAdminAway(req, res, next) {
   next();
 }
 
-module.exports = { requireLogin, requireAdmin, requireSuperAdmin, redirectAdminAway };
+module.exports = { requireLogin, requireAdmin, requireSuperAdmin, redirectAdminAway, safeReturnPath };

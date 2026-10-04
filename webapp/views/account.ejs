@@ -82,6 +82,20 @@
         <% } %>
     </div>
 
+    <!-- Privacy & consent -->
+    <div class="bg-[#1e1613] rounded-[24px] border border-[#38281f] p-8 shadow-sm z-10 relative mb-8">
+        <h2 class="text-sm font-bold uppercase tracking-widest text-[#f7efe6] mb-1">Privacy &amp; Consent</h2>
+        <% if (consentAt) { %>
+            <p class="text-[#a99a8b] text-sm mb-3">
+                You agreed to our <a href="/privacy" class="text-[#fcaa13] font-bold underline">Privacy Policy</a> on
+                <span class="text-[#f7efe6] font-medium"><%= consentAt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>.
+            </p>
+        <% } else { %>
+            <p class="text-[#a99a8b] text-sm mb-3">You haven't agreed to our <a href="/privacy" class="text-[#fcaa13] font-bold underline">Privacy Policy</a> yet. <a href="/consent" class="text-[#fcaa13] font-bold underline">Review it now</a>.</p>
+        <% } %>
+        <p class="text-[#a99a8b] text-sm">To withdraw your consent, delete your account below. This stops all use of your information and removes it from our systems. For any other privacy request, email <a href="mailto:info@culturedafrica.co.za" class="text-[#fcaa13] underline">info@culturedafrica.co.za</a>.</p>
+    </div>
+
     <!-- Danger zone -->
     <div class="bg-[#1e1613] rounded-[24px] border border-[#b62319]/30 p-8 shadow-sm z-10 relative">
         <h2 class="text-sm font-bold uppercase tracking-widest text-[#ef420f] mb-1">Danger Zone</h2>

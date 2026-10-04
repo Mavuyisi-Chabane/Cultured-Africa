@@ -1,4 +1,5 @@
 const express = require('express');
+const { describeRating } = require('../config/ageRatings');
 const { db, logActivity, customerActor, notify } = require('../db');
 const { requireLogin, redirectAdminAway } = require('../middleware/auth');
 const paystack = require('../config/paystack');
@@ -25,6 +26,9 @@ function mapContent(row) {
     videoUrl: row.file_url,
     thumbnailUrl: row.thumbnail_url,
     trailerUrl: row.trailer_url,
+    ageRatingCode: row.age_rating || '',
+    advisoryCodes: String(row.content_advisories || '').split(',').filter(Boolean),
+    classification: describeRating(row.age_rating, row.content_advisories),
     description: row.description,
     uploadedAt: new Date(row.upload_date)
   };
@@ -109,6 +113,7 @@ const HOME_SORTS = {
 };
 const HOME_PRICES = { all: 'All prices', free: 'Free', paid: 'Paid' };
 const MAX_SEARCH_LENGTH = 100;
+const MAX_FEATURED_TRAILERS = 6;
 
 // Escapes LIKE wildcards so a search for "100%" matches literally ('!' is the ESCAPE
 // character used in the query below).
@@ -118,7 +123,15 @@ function likePattern(term) {
 
 router.get('/', redirectAdminAway, (req, res) => {
   if (!req.session.user) {
-    return res.render('landing');
+    // The public landing page's "Featured Films" are whichever available films have a
+    // trailer uploaded through the admin portal — trailers are free to watch, no login.
+    const featuredFilms = db.prepare(`
+      ${CONTENT_SELECT}
+      WHERE c.is_available = 1 AND c.trailer_url IS NOT NULL AND c.trailer_url != ''
+      ORDER BY c.upload_date DESC
+      LIMIT ?
+    `).all(MAX_FEATURED_TRAILERS).map(mapContent);
+    return res.render('landing', { featuredFilms });
   }
 
   const userId = req.session.user.id;

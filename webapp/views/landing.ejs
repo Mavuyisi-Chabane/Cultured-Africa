@@ -8,6 +8,8 @@
       </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <meta charset="utf-8">
+    <link rel="icon" type="image/png" href="/images/brand/sun.png">
+    <link rel="apple-touch-icon" href="/images/brand/sun.png">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Cultured Africa | South African Cinema &amp; Culture</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -78,7 +80,7 @@
     <!-- Header -->
     <header class="fixed top-0 left-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-[#0f0a08] border-b border-borderdark">
         <div class="flex items-center">
-            <a href="#" class="font-serif text-2xl tracking-tight text-[#fcaa13]">Cultured Africa</a>
+            <a href="/" class="font-serif text-2xl tracking-tight text-[#fcaa13] flex items-center gap-2"><img src="/images/brand/sun.png" alt="" class="h-8 w-8">Cultured Africa</a>
         </div>
         <nav class="hidden md:flex gap-4">
             <a href="#" class="px-4 py-2 text-sm font-bold text-[#fcaa13] link-underline">Home</a>
@@ -162,59 +164,43 @@
                         <h2 class="font-serif text-5xl md:text-7xl tracking-tighter">Local Masterpieces</h2>
                     </div>
                     <p class="text-muted max-w-md text-sm leading-relaxed">
-                        Three landmark productions from South African filmmakers, each honoring a different thread of our shared heritage.
+                        Productions from South African filmmakers, each honoring a different thread of our shared heritage. Watch the trailers — no account needed.
                     </p>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Film Card 1 -->
-                    <article class="group cursor-pointer">
-                        <div class="relative aspect-[4/5] rounded-jumbo overflow-hidden shadow-2xl mb-6">
-                            <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-105" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_cfe14998fa_c23df9512dcade88.png" alt="cinematic film still of a regal Zulu queen in traditional attire, dramatic side lighting, historical" />
-                            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
-                            <div class="absolute bottom-6 left-6 right-6">
-                                <span class="text-[10px] uppercase tracking-widest text-[#fcaa13] border border-[#fcaa13] px-2 py-1 rounded-full bg-black/40">Zululand Heritage</span>
+                <% if (featuredFilms.length > 0) { %>
+                <div class="flex flex-wrap justify-center gap-8">
+                    <% featuredFilms.forEach(function (film) { %>
+                    <article class="group w-full md:w-[calc((100%-4rem)/3)]">
+                        <button type="button" class="block w-full text-left" data-trailer-src="<%= film.trailerUrl %>" data-trailer-title="<%= film.title %>" aria-label="Watch the trailer for <%= film.title %>">
+                            <div class="relative aspect-[4/5] rounded-jumbo overflow-hidden shadow-2xl mb-6">
+                                <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-105" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>" loading="lazy" />
+                                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
+                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span class="w-16 h-16 rounded-full bg-[#fb6b10]/90 flex items-center justify-center shadow-lg"><i class="fas fa-play text-[#f4ece3] text-xl ml-1"></i></span>
+                                </div>
+                                <div class="absolute top-5 right-5"><%- include('partials/age-rating', { classification: film.classification }) %></div>
+                                <div class="absolute bottom-6 left-6 right-6">
+                                    <span class="text-[10px] uppercase tracking-widest text-[#fcaa13] border border-[#fcaa13] px-2 py-1 rounded-full bg-black/40"><%= film.culture %></span>
+                                </div>
                             </div>
-                        </div>
-                        <h3 class="font-serif text-3xl mb-2 group-hover:text-[#fcaa13] transition-colors">Nandi</h3>
-                        <p class="text-muted text-sm mb-6">A sweeping historical drama following the matriarch who shaped a nation.</p>
-                        <a href="#" class="inline-flex items-center gap-2 bg-[#fb6b10] text-[#f4ece3] px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#ef420f] transition-all">
+                        </button>
+                        <h3 class="font-serif text-3xl mb-2 group-hover:text-[#fcaa13] transition-colors"><%= film.title %></h3>
+                        <p class="text-muted text-sm mb-6 line-clamp-3"><%= film.description %></p>
+                        <button type="button" data-trailer-src="<%= film.trailerUrl %>" data-trailer-title="<%= film.title %>" class="inline-flex items-center gap-2 bg-[#fb6b10] text-[#f4ece3] px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#ef420f] transition-all">
                             Watch Trailer <i class="fas fa-play text-[8px]"></i>
-                        </a>
+                        </button>
                     </article>
-
-                    <!-- Film Card 2 -->
-                    <article class="group cursor-pointer">
-                        <div class="relative aspect-[4/5] rounded-jumbo overflow-hidden shadow-2xl mb-6">
-                            <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-105" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_d13d1c028b_e36c0bf82619e33c.png" alt="cinematic film still of a young musician in a Johannesburg township, neon and sunset light, contempo" />
-                            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
-                            <div class="absolute bottom-6 left-6 right-6">
-                                <span class="text-[10px] uppercase tracking-widest text-[#fcaa13] border border-[#fcaa13] px-2 py-1 rounded-full bg-black/40">Xhosa Culture</span>
-                            </div>
-                        </div>
-                        <h3 class="font-serif text-3xl mb-2 group-hover:text-[#fcaa13] transition-colors">Yanga</h3>
-                        <p class="text-muted text-sm mb-6">An intimate portrait of rhythm, resistance, and reinvention in the city.</p>
-                        <a href="#" class="inline-flex items-center gap-2 bg-[#fb6b10] text-[#f4ece3] px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#ef420f] transition-all">
-                            Watch Trailer <i class="fas fa-play text-[8px]"></i>
-                        </a>
-                    </article>
-
-                    <!-- Film Card 3 -->
-                    <article class="group cursor-pointer">
-                        <div class="relative aspect-[4/5] rounded-jumbo overflow-hidden shadow-2xl mb-6">
-                            <img class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 scale-100 group-hover:scale-105" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_459ff37a48_3e2a4463be3856d3.png" alt="cinematic film still of an elder telling stories under a baobab tree at dusk, warm amber glow, docum" />
-                            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors"></div>
-                            <div class="absolute bottom-6 left-6 right-6">
-                                <span class="text-[10px] uppercase tracking-widest text-[#fcaa13] border border-[#fcaa13] px-2 py-1 rounded-full bg-black/40">Sotho Traditions</span>
-                            </div>
-                        </div>
-                        <h3 class="font-serif text-3xl mb-2 group-hover:text-[#fcaa13] transition-colors">Malome</h3>
-                        <p class="text-muted text-sm mb-6">A tender family epic passed down through generations of oral memory.</p>
-                        <a href="#" class="inline-flex items-center gap-2 bg-[#fb6b10] text-[#f4ece3] px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#ef420f] transition-all">
-                            Watch Trailer <i class="fas fa-play text-[8px]"></i>
-                        </a>
-                    </article>
+                    <% }); %>
                 </div>
+                <% } else { %>
+                <div class="rounded-jumbo border border-borderdark bg-[#0f0a08] px-8 py-16 text-center">
+                    <i class="fas fa-film text-3xl text-[#fcaa13] mb-4"></i>
+                    <p class="font-serif text-2xl mb-2">Trailers coming soon</p>
+                    <p class="text-muted text-sm mb-6">Create a free account to browse our full catalogue of films.</p>
+                    <a href="/register" class="inline-flex items-center gap-2 bg-[#fb6b10] text-[#f4ece3] px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#ef420f] transition-all">Join Cultured Africa</a>
+                </div>
+                <% } %>
             </div>
         </section>
 
@@ -284,7 +270,7 @@
     <footer class="bg-[#0f0a08] text-[#f4ece3] pt-24 pb-12 px-6 md:px-12 border-t border-borderdark">
         <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
             <div class="col-span-1 md:col-span-2">
-                <a href="#" class="font-serif text-3xl tracking-tight text-[#f4ece3] mb-8 inline-block">Cultured<span class="text-accent">.</span>Africa</a>
+                <a href="/" class="font-serif text-3xl tracking-tight text-[#f4ece3] mb-8 inline-flex items-center gap-3"><img src="/images/brand/sun.png" alt="" class="h-10 w-10">Cultured<span class="text-accent">.</span>Africa</a>
                 <p class="text-[#f4ece3]/50 max-w-sm leading-relaxed">
                     Celebrating the spirit of South African storytelling, one frame at a time. A tribute to our past, present, and future.
                 </p>
@@ -313,7 +299,7 @@
             <div class="flex gap-8 text-xs uppercase tracking-widest font-bold text-[#f4ece3]/40">
                 <a href="#" class="hover:text-[#f4ece3] transition-colors">Legal</a>
                 <a href="#" class="hover:text-[#f4ece3] transition-colors">Terms</a>
-                <a href="#" class="hover:text-[#f4ece3] transition-colors">Privacy</a>
+                <a href="/privacy" class="hover:text-[#f4ece3] transition-colors">Privacy</a>
             </div>
             <div class="flex gap-6">
                 <a href="#" class="text-[#f4ece3]/40 hover:text-accent transition-colors"><i class="fab fa-instagram"></i></a>
@@ -329,11 +315,63 @@
         <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-borderdark flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest text-[#f4ece3]/30">
             <p>&copy; 2026 Cultured Africa. All rights reserved.</p>
             <div class="flex gap-8">
-                <a href="#" class="hover:text-[#f4ece3] transition-colors">Privacy Policy</a>
+                <a href="/privacy" class="hover:text-[#f4ece3] transition-colors">Privacy Policy</a>
                 <span>Site by <a href="#" class="hover:text-[#f4ece3] transition-colors">Veld Design</a></span>
             </div>
         </div>
     </footer>
 
+    <!-- Trailer player (opened by any [data-trailer-src] button) -->
+    <div id="trailer-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/85 p-4" role="dialog" aria-modal="true" aria-labelledby="trailer-modal-title">
+        <div class="w-full max-w-4xl">
+            <div class="flex items-center justify-between mb-3">
+                <h3 id="trailer-modal-title" class="font-serif text-2xl text-[#f4ece3]"></h3>
+                <button type="button" id="trailer-modal-close" class="w-10 h-10 rounded-full bg-[#1e1613] text-[#f4ece3] hover:text-[#fcaa13] flex items-center justify-center" aria-label="Close trailer">
+                    <i class="fas fa-xmark"></i>
+                </button>
+            </div>
+            <video id="trailer-modal-video" class="w-full max-h-[75vh] rounded-2xl bg-black" controls playsinline preload="none"></video>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var modal = document.getElementById('trailer-modal');
+            var video = document.getElementById('trailer-modal-video');
+            var title = document.getElementById('trailer-modal-title');
+            var closeBtn = document.getElementById('trailer-modal-close');
+            var lastTrigger = null;
+
+            function open(trigger) {
+                lastTrigger = trigger;
+                title.textContent = trigger.getAttribute('data-trailer-title') + ' — Trailer';
+                video.src = trigger.getAttribute('data-trailer-src');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+                closeBtn.focus();
+                var playing = video.play();
+                if (playing && playing.catch) playing.catch(function () {});
+            }
+
+            function close() {
+                video.pause();
+                video.removeAttribute('src');
+                video.load();
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = '';
+                if (lastTrigger) lastTrigger.focus();
+            }
+
+            document.querySelectorAll('[data-trailer-src]').forEach(function (btn) {
+                btn.addEventListener('click', function () { open(btn); });
+            });
+            closeBtn.addEventListener('click', close);
+            modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
+            });
+        })();
+    </script>
 </body>
 </html>

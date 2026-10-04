@@ -79,11 +79,44 @@
                         <span class="text-sm font-medium text-[#f7efe6]">This film is free</span>
                     </div>
 
+                    <%
+                        // On a re-render after a validation error, `editing` is the submitted form
+                        // (ageRating / advisories); when opening the edit page, it's the saved film.
+                        const selectedRating = editing ? (editing.ageRating !== undefined ? editing.ageRating : editing.ageRatingCode) : '';
+                        const selectedAdvisories = editing ? [].concat(editing.advisories !== undefined ? editing.advisories : (editing.advisoryCodes || [])) : [];
+                    %>
+                    <div>
+                        <label for="ageRating" class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Age Rating <span class="text-[#fcaa13]">*</span></label>
+                        <select name="ageRating" id="ageRating" required
+                            class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all appearance-none cursor-pointer">
+                            <option value="" <%= selectedRating ? '' : 'selected' %> disabled>Choose a rating…</option>
+                            <% ageRatings.forEach(r => { %>
+                                <option value="<%= r.code %>" data-description="<%= r.description %>" <%= selectedRating === r.code ? 'selected' : '' %>><%= r.code %> — <%= r.label %></option>
+                            <% }) %>
+                        </select>
+                        <p id="ageRatingHelp" class="text-[11px] text-[#a99a8b] mt-2">South African Film and Publication Board (FPB) classification. Shown to viewers on every film card and film page.</p>
+                    </div>
+
+                    <fieldset>
+                        <legend class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Consumer Advice (Optional)</legend>
+                        <div class="flex flex-wrap gap-2">
+                            <% contentAdvisories.forEach(a => { %>
+                                <label class="cursor-pointer">
+                                    <input type="checkbox" name="advisories" value="<%= a.code %>" class="peer sr-only" <%= selectedAdvisories.includes(a.code) ? 'checked' : '' %>>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#38281f] bg-[#271c17]/50 text-xs font-bold text-[#a99a8b] transition-all peer-checked:border-[#fcaa13] peer-checked:text-[#fcaa13] peer-focus-visible:ring-2 peer-focus-visible:ring-[#fcaa13]">
+                                        <span class="font-mono"><%= a.code %></span> <%= a.label %>
+                                    </span>
+                                </label>
+                            <% }) %>
+                        </div>
+                        <p class="text-[11px] text-[#a99a8b] mt-2">Tick anything viewers should be warned about.</p>
+                    </fieldset>
+
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">
                             Video File <% if (!(editing && editing.videoUrl)) { %><span class="text-[#fcaa13]">*</span><% } %>
                         </label>
-                        <input type="file" name="videoFile" accept="video/*" <%= (editing && editing.videoUrl) ? '' : 'required' %>
+                        <input type="file" name="videoFile" id="videoInput" accept="video/*" <%= (editing && editing.videoUrl) ? '' : 'required' %>
                             class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#fb6b10] file:text-[#f4ece3] hover:file:bg-[#ef420f] file:cursor-pointer cursor-pointer">
                         <p class="text-[11px] text-[#a99a8b] mt-2">Supported formats: MP4, MOV, WebM, AVI, MKV</p>
                         <% if (editing && editing.videoUrl) { %>
@@ -91,23 +124,62 @@
                         <% } %>
                     </div>
 
-                    <div>
+                    <%
+                        // A thumbnail can be grabbed from the film's current video only if it's a real
+                        // uploaded video file (the seeded demo films point at placeholder images instead).
+                        const currentVideoUsable = Boolean(editing && editing.id && editing.videoUrl &&
+                            editing.videoUrl.startsWith('/uploads/') && /\.(mp4|webm|mov|m4v|ogv)$/i.test(editing.videoUrl));
+                    %>
+                    <div class="md:col-span-2">
                         <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">
                             Thumbnail Image <% if (!(editing && editing.thumbnailUrl)) { %><span class="text-[#fcaa13]">*</span><% } %>
                         </label>
-                        <input type="file" name="thumbnailFile" accept="image/*" <%= (editing && editing.thumbnailUrl) ? '' : 'required' %>
+                        <input type="file" name="thumbnailFile" id="thumbnailInput" accept="image/*" <%= (editing && editing.thumbnailUrl) ? '' : 'required' %>
                             class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#fb6b10] file:text-[#f4ece3] hover:file:bg-[#ef420f] file:cursor-pointer cursor-pointer">
-                        <p class="text-[11px] text-[#a99a8b] mt-2">Supported formats: JPG, PNG, WebP, GIF</p>
+                        <p class="text-[11px] text-[#a99a8b] mt-2">
+                            Supported formats: JPG, PNG, WebP, GIF.
+                            <% if (editing && editing.id) { %>
+                                Or pick a frame from the video below.
+                            <% } else { %>
+                                No image? Leave this empty — once you choose the video file, a frame from it is used automatically.
+                            <% } %>
+                        </p>
                         <% if (editing && editing.thumbnailUrl) { %>
                             <img src="<%= editing.thumbnailUrl %>" class="mt-3 w-24 h-16 object-cover rounded-lg border border-[#38281f]" alt="Current thumbnail">
                         <% } %>
+                        <% if (editing && editing.id) { %>
+                            <button type="button" id="thumbFromVideoBtn" data-current-video="<%= currentVideoUsable ? editing.videoUrl : '' %>"
+                                class="<%= currentVideoUsable ? '' : 'hidden' %> mt-3 inline-flex items-center gap-2 text-xs font-bold text-[#fcaa13] hover:underline">
+                                <i class="fa-solid fa-film"></i> Pick a frame from the video
+                            </button>
+                        <% } %>
+
+                        <div id="thumbPicker" class="hidden mt-4 rounded-xl border border-[#38281f] bg-[#271c17]/30 p-4">
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <div class="w-full sm:w-64 aspect-video rounded-lg bg-black overflow-hidden flex-shrink-0">
+                                    <img id="thumbPreview" class="w-full h-full object-contain hidden" alt="Thumbnail preview">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p id="thumbStatus" class="text-xs text-[#f7efe6] leading-relaxed"></p>
+                                    <div id="thumbControls" class="hidden">
+                                        <input type="range" id="thumbSlider" min="0" max="1" step="0.1" value="0" class="w-full mt-3 accent-[#fb6b10] cursor-pointer" aria-label="Choose the moment in the video to use as the thumbnail">
+                                        <div class="flex justify-between text-[10px] text-[#a99a8b]"><span id="thumbTime">0:00</span><span id="thumbDuration">0:00</span></div>
+                                        <div class="mt-3 flex flex-wrap gap-4">
+                                            <button type="button" id="thumbUseFrameBtn" class="hidden text-xs font-bold text-[#fcaa13] hover:underline">Use this frame instead</button>
+                                            <button type="button" id="thumbCancelBtn" class="hidden text-xs font-bold text-[#a99a8b] hover:text-[#f7efe6]">Keep the current thumbnail</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
+                    <div class="md:col-span-2">
                         <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Trailer File (Optional)</label>
                         <input type="file" name="trailerFile" accept="video/*"
                             class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#271c17] file:text-[#f7efe6] hover:file:bg-[#38281f] file:cursor-pointer cursor-pointer">
                         <p class="text-[11px] text-[#a99a8b] mt-2">Supported formats: MP4, MOV, WebM, AVI, MKV</p>
+                        <p class="text-[11px] text-[#fcaa13] mt-1">Films with a trailer are featured on the public home page, where anyone can watch the trailer without logging in. MP4 plays in every browser.</p>
                         <% if (editing && editing.trailerUrl) { %>
                             <p class="text-[11px] text-[#a99a8b] mt-2">Current file: <span class="font-medium"><%= editing.trailerUrl.split('/').pop() %></span></p>
                         <% } %>
@@ -143,6 +215,207 @@
             input.disabled = !isOther;
             input.required = isOther;
             if (isOther) input.focus();
+        });
+    })();
+
+    // Explain the chosen age rating under the select.
+    (function () {
+        const select = document.getElementById('ageRating');
+        const help = document.getElementById('ageRatingHelp');
+        const defaultHelp = help.textContent;
+        function update() {
+            const opt = select.options[select.selectedIndex];
+            help.textContent = opt && opt.dataset.description ? opt.dataset.description : defaultHelp;
+        }
+        select.addEventListener('change', update);
+        update();
+    })();
+
+    // Thumbnail from video: draws a frame of the chosen video onto a canvas in the browser and
+    // puts it into the thumbnail file input as a JPEG, exactly as if the admin had picked an
+    // image file — so the server needs no video tooling. An image the admin picks themselves
+    // always wins until they choose a frame again.
+    (function () {
+        const videoInput = document.getElementById('videoInput');
+        const thumbInput = document.getElementById('thumbnailInput');
+        const picker = document.getElementById('thumbPicker');
+        const preview = document.getElementById('thumbPreview');
+        const status = document.getElementById('thumbStatus');
+        const controls = document.getElementById('thumbControls');
+        const slider = document.getElementById('thumbSlider');
+        const timeLabel = document.getElementById('thumbTime');
+        const durationLabel = document.getElementById('thumbDuration');
+        const useFrameBtn = document.getElementById('thumbUseFrameBtn');
+        const cancelBtn = document.getElementById('thumbCancelBtn');
+        const fromVideoBtn = document.getElementById('thumbFromVideoBtn');
+        const isEditing = Boolean(fromVideoBtn);
+        if (!videoInput || !thumbInput || !window.DataTransfer || !HTMLCanvasElement.prototype.toBlob) return;
+
+        const MAX_WIDTH = 1280;
+        const DARK_LUMA = 25; // average brightness (0-255) below which a frame counts as "too dark"
+        const probe = document.createElement('video');
+        probe.muted = true;
+        probe.playsInline = true;
+        probe.preload = 'auto';
+
+        let sourceUrl = null;
+        let ownsSourceUrl = false;
+        let previewUrl = null;
+        let manualImage = false;   // the admin picked their own image file
+        let autoApply = false;     // apply captured frames to the thumbnail input
+        let candidates = [];       // seek positions still to try when skipping dark frames
+        let seekTimer = null;
+
+        function formatTime(seconds) {
+            const s = Math.max(0, Math.floor(seconds));
+            const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+            const mm = h ? String(m).padStart(2, '0') : String(m);
+            return (h ? h + ':' : '') + mm + ':' + String(sec).padStart(2, '0');
+        }
+
+        function setStatus(text) { status.textContent = text; }
+
+        function setThumbnailFile(file) {
+            const dt = new DataTransfer();
+            if (file) dt.items.add(file);
+            thumbInput.files = dt.files;
+        }
+
+        function showPreview(blob) {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+            previewUrl = URL.createObjectURL(blob);
+            preview.src = previewUrl;
+            preview.classList.remove('hidden');
+        }
+
+        function loadSource(url, owned) {
+            if (sourceUrl && ownsSourceUrl) URL.revokeObjectURL(sourceUrl);
+            sourceUrl = url;
+            ownsSourceUrl = owned;
+            candidates = [];
+            picker.classList.remove('hidden');
+            controls.classList.add('hidden');
+            preview.classList.add('hidden');
+            setStatus('Reading the video…');
+            probe.src = url;
+            probe.load();
+        }
+
+        function frameLuma(ctx, w, h) {
+            const data = ctx.getImageData(0, 0, w, h).data;
+            let total = 0, count = 0;
+            for (let i = 0; i < data.length; i += 4 * 16) { // sample every 16th pixel
+                total += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                count++;
+            }
+            return count ? total / count : 0;
+        }
+
+        function captureFrame() {
+            const scale = Math.min(1, MAX_WIDTH / probe.videoWidth);
+            const w = Math.round(probe.videoWidth * scale), h = Math.round(probe.videoHeight * scale);
+            if (!w || !h) return setStatus('This video has no picture to take a thumbnail from. Please upload a thumbnail image.');
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(probe, 0, 0, w, h);
+
+            // Still hunting for a non-black opening frame? Try the next candidate position.
+            if (candidates.length && frameLuma(ctx, w, h) < DARK_LUMA) {
+                probe.currentTime = candidates.shift();
+                return;
+            }
+            candidates = [];
+
+            canvas.toBlob(blob => {
+                if (!blob) return setStatus('Could not create a thumbnail from this video. Please upload a thumbnail image.');
+                showPreview(blob);
+                slider.value = probe.currentTime;
+                timeLabel.textContent = formatTime(probe.currentTime);
+                controls.classList.remove('hidden');
+
+                if (manualImage) {
+                    useFrameBtn.classList.remove('hidden');
+                    setStatus('Using the image you uploaded. Drag the slider and click "Use this frame instead" to use a moment from the video.');
+                    return;
+                }
+                if (!autoApply) return;
+                setThumbnailFile(new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' }));
+                useFrameBtn.classList.add('hidden');
+                if (cancelBtn) cancelBtn.classList.toggle('hidden', !isEditing);
+                setStatus('Thumbnail taken from the video at ' + formatTime(probe.currentTime) + '. Drag the slider to choose a different moment.' +
+                    (isEditing ? ' It will replace the current thumbnail when you save.' : ''));
+            }, 'image/jpeg', 0.85);
+        }
+
+        probe.addEventListener('loadedmetadata', () => {
+            const d = probe.duration;
+            if (!isFinite(d) || d <= 0) return setStatus('Could not read this video\'s length. Please upload a thumbnail image.');
+            slider.max = d;
+            durationLabel.textContent = formatTime(d);
+            // Start ~10% in (skips black leaders and title fades), then step further in if dark.
+            candidates = [0.25, 0.4, 0.6].map(f => f * d);
+            probe.currentTime = Math.min(d * 0.1, Math.max(0, d - 0.1));
+        });
+        probe.addEventListener('seeked', captureFrame);
+        probe.addEventListener('error', () => {
+            controls.classList.add('hidden');
+            setStatus('Your browser can\'t read frames from this video format, so a thumbnail can\'t be made automatically. Please upload a thumbnail image (MP4 videos work best).');
+        });
+
+        slider.addEventListener('input', () => {
+            timeLabel.textContent = formatTime(Number(slider.value));
+            clearTimeout(seekTimer);
+            seekTimer = setTimeout(() => {
+                candidates = [];
+                if (!manualImage) autoApply = true;
+                probe.currentTime = Number(slider.value);
+            }, 120);
+        });
+
+        useFrameBtn.addEventListener('click', () => {
+            manualImage = false;
+            autoApply = true;
+            captureFrame();
+        });
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                autoApply = false;
+                setThumbnailFile(null);
+                picker.classList.add('hidden');
+            });
+        }
+
+        videoInput.addEventListener('change', () => {
+            const file = videoInput.files && videoInput.files[0];
+            if (!file) return;
+            // New uploads fill the thumbnail automatically; edits only after "Pick a frame".
+            autoApply = isEditing ? autoApply : !manualImage;
+            if (fromVideoBtn) fromVideoBtn.classList.remove('hidden');
+            if (isEditing && picker.classList.contains('hidden')) return;
+            loadSource(URL.createObjectURL(file), true);
+        });
+
+        if (fromVideoBtn) {
+            fromVideoBtn.addEventListener('click', () => {
+                const file = videoInput.files && videoInput.files[0];
+                manualImage = false;
+                autoApply = true;
+                if (file) loadSource(URL.createObjectURL(file), true);
+                else if (fromVideoBtn.dataset.currentVideo) loadSource(fromVideoBtn.dataset.currentVideo, false);
+            });
+        }
+
+        thumbInput.addEventListener('change', event => {
+            if (!event.isTrusted) return;
+            manualImage = Boolean(thumbInput.files && thumbInput.files.length);
+            if (manualImage && !picker.classList.contains('hidden')) {
+                useFrameBtn.classList.remove('hidden');
+                if (cancelBtn) cancelBtn.classList.add('hidden');
+                setStatus('Using the image you uploaded. Drag the slider and click "Use this frame instead" to use a moment from the video.');
+            }
         });
     })();
 </script>

@@ -24,6 +24,24 @@ const usersColumns = db.prepare('PRAGMA table_info(users)').all().map(c => c.nam
 if (!usersColumns.includes('session_version')) {
   db.exec('ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 1');
 }
+// Migration: age classification. Films uploaded before this start unrated (NULL) and
+// show "Not yet rated" until an admin sets one on the edit form.
+const contentColumns = db.prepare('PRAGMA table_info(content)').all().map(c => c.name);
+if (!contentColumns.includes('age_rating')) {
+  db.exec(`
+    ALTER TABLE content ADD COLUMN age_rating TEXT;
+    ALTER TABLE content ADD COLUMN content_advisories TEXT NOT NULL DEFAULT '';
+  `);
+}
+
+// Migration: POPIA consent tracking. Existing customers start with NULL (no consent on
+// record), so they are asked to agree on their next visit rather than assumed to have.
+if (!usersColumns.includes('privacy_consent_at')) {
+  db.exec(`
+    ALTER TABLE users ADD COLUMN privacy_consent_at TEXT;
+    ALTER TABLE users ADD COLUMN privacy_policy_version TEXT;
+  `);
+}
 
 // Migration: relax feedback.rating and feedback.comment from NOT NULL to nullable
 // (a review can now be a rating only, a comment only, or both). SQLite can't drop a

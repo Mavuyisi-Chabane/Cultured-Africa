@@ -28,6 +28,7 @@
                 <a href="/film/<%= film.id %>" class="bg-[#1e1613] rounded-[16px] shadow-sm border border-[#38281f] overflow-hidden group hover:shadow-xl transition-all duration-300">
                     <div class="h-56 overflow-hidden relative">
                         <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>" />
+                        <div class="absolute top-4 left-4"><%- include('partials/age-rating', { classification: film.classification }) %></div>
                         <div class="absolute top-4 right-4 bg-[#1e1613]/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-[#f7efe6] uppercase tracking-widest">
                             <%= film.price > 0 ? 'Purchased' : 'Free' %>
                         </div>
@@ -80,6 +81,7 @@
                 <a href="/film/<%= film.id %>" class="bg-[#1e1613] rounded-[16px] shadow-sm border border-[#38281f] overflow-hidden group hover:shadow-xl transition-all duration-300">
                     <div class="h-40 overflow-hidden relative">
                         <img class="w-full h-full object-cover opacity-50 grayscale group-hover:opacity-70 transition-all duration-500" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>" />
+                        <div class="absolute top-4 left-4"><%- include('partials/age-rating', { classification: film.classification }) %></div>
                         <div class="absolute top-4 right-4 bg-[#1e1613]/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-[#fcaa13] uppercase tracking-widest">Expired</div>
                     </div>
                     <div class="p-6 flex items-center justify-between gap-4">

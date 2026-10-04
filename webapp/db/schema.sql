@@ -9,7 +9,11 @@ CREATE TABLE IF NOT EXISTS users (
   role              TEXT NOT NULL CHECK (role IN ('customer', 'admin')),
   avatar            TEXT,
   session_version   INTEGER NOT NULL DEFAULT 1,
-  registration_date TEXT NOT NULL DEFAULT (datetime('now'))
+  registration_date TEXT NOT NULL DEFAULT (datetime('now')),
+  -- POPIA consent: when this customer agreed to the privacy policy, and which version
+  -- (config/privacy.js). NULL = never agreed; they're asked before using the site.
+  privacy_consent_at      TEXT,
+  privacy_policy_version  TEXT
 );
 
 CREATE TABLE IF NOT EXISTS cultures (
@@ -33,7 +37,10 @@ CREATE TABLE IF NOT EXISTS content (
   trailer_url       TEXT,
   duration_seconds  INTEGER NOT NULL DEFAULT 0,
   upload_date       TEXT NOT NULL DEFAULT (datetime('now')),
-  is_available      INTEGER NOT NULL DEFAULT 1
+  is_available      INTEGER NOT NULL DEFAULT 1,
+  -- FPB age classification (config/ageRatings.js); NULL = not yet rated.
+  age_rating         TEXT,
+  content_advisories TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS purchases (

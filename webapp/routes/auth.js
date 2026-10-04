@@ -6,6 +6,7 @@ const { issuePasswordResetToken } = require('../utils/passwordReset');
 const { getPasswordRequirementFailures } = require('../utils/password');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/email');
 const { createRateLimiter } = require('../middleware/rateLimit');
+const { PRIVACY_POLICY_VERSION } = require('../config/privacy');
 
 const router = express.Router();
 
@@ -28,7 +29,10 @@ const verifyEmailLimiter = createRateLimiter({
 
 router.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/');
-  res.render('login', { error: null, showResend: false, resendEmail: '' });
+  const notice = req.query.consent === 'declined'
+    ? "You've been logged out because you didn't agree to the Privacy Policy. Your account has not been deleted — log in again to review the policy, or delete your account from the Account page."
+    : null;
+  res.render('login', { error: null, notice, showResend: false, resendEmail: '' });
 });
 
 router.post('/login', (req, res) => {
@@ -76,6 +80,10 @@ router.post('/register', async (req, res) => {
   if (!fullName || !email || !password) {
     return res.render('register', { error: 'All fields are required.', values: req.body });
   }
+  // POPIA: explicit, opt-in consent before any personal information is stored.
+  if (req.body.privacyConsent !== 'yes') {
+    return res.render('register', { error: 'Please agree to the Privacy Policy to create an account.', values: req.body });
+  }
   if (password !== confirm) {
     return res.render('register', { error: 'Passwords do not match.', values: req.body });
   }
@@ -91,9 +99,9 @@ router.post('/register', async (req, res) => {
   const avatar = 'https://storage.googleapis.com/uxpilot-auth.appspot.com/avatars/avatar-4.jpg';
   const passwordHash = bcrypt.hashSync(password, 10);
   const userId = db.prepare(`
-    INSERT INTO users (full_name, email, password_hash, is_verified, role, avatar)
-    VALUES (?, ?, ?, 0, 'customer', ?)
-  `).run(fullName, email, passwordHash, avatar).lastInsertRowid;
+    INSERT INTO users (full_name, email, password_hash, is_verified, role, avatar, privacy_consent_at, privacy_policy_version)
+    VALUES (?, ?, ?, 0, 'customer', ?, datetime('now'), ?)
+  `).run(fullName, email, passwordHash, avatar, PRIVACY_POLICY_VERSION).lastInsertRowid;
 
   logActivity('New user registered', fullName, customerActor(fullName));
 

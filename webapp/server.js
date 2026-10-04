@@ -4,6 +4,7 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const paystack = require('./config/paystack');
+const { PRIVACY_POLICY_VERSION } = require('./config/privacy');
 const { db } = require('./db');
 const handleUploads = require('./middleware/upload');
 
@@ -13,10 +14,15 @@ const filmRoutes = require('./routes/films');
 const adminAuthRoutes = require('./routes/adminAuth');
 const adminRoutes = require('./routes/admin');
 const notificationRoutes = require('./routes/notifications');
+const privacyRoutes = require('./routes/privacy');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+// Pages a logged-in customer can still reach before agreeing to the privacy policy:
+// the consent screen itself, the policy, logging out, and deleting their account.
+const CONSENT_EXEMPT_PATHS = new Set(['/consent', '/privacy', '/logout', '/account', '/account/delete', '/about']);
 
 if (IS_PRODUCTION && !process.env.SESSION_SECRET) {
   console.warn('SESSION_SECRET is not set — using an insecure default. Set it in your host\'s environment variables.');
@@ -33,6 +39,7 @@ app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/uploads', express.static(handleUploads.UPLOAD_DIR));
+app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'culturedafrica-dev-secret',
   resave: false,
@@ -48,9 +55,13 @@ app.use((req, res, next) => {
   // intact for the rest of this request, since every downstream route assumes
   // req.session always exists.
   if (req.session.user) {
-    const current = db.prepare('SELECT session_version FROM users WHERE user_id = ?').get(req.session.user.id);
+    const current = db.prepare('SELECT session_version, privacy_policy_version FROM users WHERE user_id = ?').get(req.session.user.id);
     if (!current || current.session_version !== req.session.user.sessionVersion) {
       req.session.user = null;
+    } else if (current.privacy_policy_version !== PRIVACY_POLICY_VERSION && !CONSENT_EXEMPT_PATHS.has(req.path)) {
+      // POPIA: no further processing of a customer's data (browsing, purchases, watch
+      // tracking) until they have agreed to the current privacy policy.
+      return req.method === 'GET' ? res.redirect('/consent') : res.status(403).send('Please accept the privacy policy first.');
     }
   }
 
@@ -80,6 +91,7 @@ app.get('/about', (req, res) => {
   res.render('about');
 });
 
+app.use('/', privacyRoutes);
 app.use('/', authRoutes);
 app.use('/', accountRoutes);
 app.use('/', filmRoutes);

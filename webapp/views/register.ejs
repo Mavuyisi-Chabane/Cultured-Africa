@@ -13,6 +13,7 @@
 
     <div id="registration-card" class="w-full max-w-[450px] bg-[#1e1613] rounded-[16px] shadow-xl p-8 md:p-10 z-10">
         <div class="text-center mb-10">
+            <img src="/images/brand/sun.png" alt="" class="h-16 w-16 mx-auto mb-3">
             <h1 class="display-font text-3xl font-bold text-[#fcaa13] mb-2">Cultured Africa</h1>
             <p class="text-[#a99a8b] text-sm">Join the home of Cultured Africa</p>
         </div>
@@ -101,6 +102,20 @@
                 <p id="confirm-password-error" class="mt-2 text-xs text-[#ef420f] hidden">
                     <i class="fa-solid fa-circle-exclamation"></i> Passwords do not match.
                 </p>
+            </div>
+
+            <div id="field-consent" class="rounded-xl border border-[#38281f] bg-[#271c17]/40 p-4">
+                <label for="privacyConsent" class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" id="privacyConsent" name="privacyConsent" value="yes" required
+                        <%= values.privacyConsent === 'yes' ? 'checked' : '' %>
+                        class="mt-1 h-5 w-5 flex-shrink-0 accent-[#fb6b10] cursor-pointer">
+                    <span class="text-sm text-[#f7efe6] leading-relaxed">
+                        I have read the <a href="/privacy" target="_blank" rel="noopener" class="text-[#fcaa13] font-bold underline">Privacy Policy</a>
+                        and agree that Cultured Africa may collect and use my personal information (my name, email address,
+                        purchases, viewing activity and reviews) to run my account, as described in it.
+                    </span>
+                </label>
+                <p class="text-[11px] text-[#a99a8b] mt-2 ml-8">You can withdraw this consent at any time by deleting your account.</p>
             </div>
 
             <button type="submit"

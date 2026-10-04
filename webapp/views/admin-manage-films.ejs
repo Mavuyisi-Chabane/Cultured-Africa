@@ -42,7 +42,10 @@
                             <td class="px-8 py-5">
                                 <div class="flex items-center gap-3">
                                     <img src="<%= film.thumbnailUrl %>" class="w-12 h-12 rounded-lg object-cover" alt="<%= film.title %>">
-                                    <span class="text-sm font-bold text-[#f7efe6]"><%= film.title %></span>
+                                    <div class="flex flex-col items-start gap-1">
+                                        <span class="text-sm font-bold text-[#f7efe6]"><%= film.title %></span>
+                                        <%- include('partials/age-rating', { classification: film.classification }) %>
+                                    </div>
                                 </div>
                             </td>
                             <td class="px-8 py-5"><span class="text-sm text-[#f7efe6]"><%= film.culture %></span></td>

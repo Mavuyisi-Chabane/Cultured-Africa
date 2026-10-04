@@ -8,7 +8,8 @@ const CULTURES = [
   { name: 'Venda', description: 'Stories of Venda craft, myth, and ancestral heritage.', region: 'Limpopo' },
   { name: 'Sotho', description: 'Stories of Basotho mountain life and tradition.', region: 'Free State / Lesotho border' },
   { name: 'Tsonga', description: 'Stories of Tsonga music, dance, and festival culture.', region: 'Limpopo / Mpumalanga' },
-  { name: 'Multi-Culture', description: 'Stories that weave together multiple South African cultures.', region: 'National' }
+  { name: 'Multi-Culture', description: 'Stories that weave together multiple South African cultures.', region: 'National' },
+  { name: 'Ndebele', description: 'Stories of Ndebele art, colour, and tradition.', region: 'Mpumalanga / Limpopo' }
 ];
 
 const FILMS = [
@@ -65,6 +66,25 @@ const FILMS = [
     thumbnailUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_7dc1ce2205_a1cbb076ce11651c.png',
     videoUrl: 'https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_7dc1ce2205_a1cbb076ce11651c.png',
     description: 'An urban drama set against the Johannesburg skyline, weaving together stories from across South Africa’s cultures.'
+  },
+  // These two are real uploads shipped in public/uploads/ rather than placeholder images.
+  {
+    title: 'Fulan Fehan Festival',
+    culture: 'Multi-Culture',
+    contentType: 'Uncategorized',
+    price: 60,
+    thumbnailUrl: '/uploads/1787673389289-11b292b98e53f2de.webp',
+    videoUrl: '/uploads/1787673388659-d6947303f1163fc7.mov',
+    description: 'A vibrant cultural performance from the Fulan Fehan festival, held in Indonesia. The festival celebrates the rich cultural heritage of the Belu community through traditional music, dance, clothing and collective performances.'
+  },
+  {
+    title: 'Ukudweba',
+    culture: 'Ndebele',
+    contentType: 'Uncategorized',
+    price: 50,
+    thumbnailUrl: '/uploads/1790622665408-59f98e81b6f99727.jpeg',
+    videoUrl: '/uploads/1790622657410-6772523cfd8b5e72.mp4',
+    description: 'Enjoy the film that showcases the Ndebele culture.'
   }
 ];
 

@@ -1,4 +1,5 @@
 const express = require('express');
+const { describeRating, parseRatingInput, AGE_RATINGS, CONTENT_ADVISORIES } = require('../config/ageRatings');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
@@ -17,6 +18,13 @@ const { sendAdminInviteEmail } = require('../services/email');
 const router = express.Router();
 
 router.use(requireAdmin);
+
+// The upload/edit form's age rating options (FPB classifications).
+router.use((req, res, next) => {
+  res.locals.ageRatings = AGE_RATINGS;
+  res.locals.contentAdvisories = CONTENT_ADVISORIES;
+  next();
+});
 
 const CONTENT_SELECT = `
   SELECT c.*, cu.name AS culture_name,
@@ -48,6 +56,9 @@ function mapContent(row) {
     videoUrl: row.file_url,
     thumbnailUrl: row.thumbnail_url,
     trailerUrl: row.trailer_url,
+    ageRatingCode: row.age_rating || '',
+    advisoryCodes: String(row.content_advisories || '').split(',').filter(Boolean),
+    classification: describeRating(row.age_rating, row.content_advisories),
     description: row.description,
     isAvailable: Boolean(row.is_available),
     uploadedAt: new Date(row.upload_date)
@@ -167,10 +178,12 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
 
   const rejectEdit = error => {
     [videoFile, thumbnailFile, trailerFile].forEach(f => { if (f) deleteUploadedFile(`/uploads/${f.filename}`); });
-    res.render('admin-upload', { editing: { ...film, ...req.body }, cultures: listCultures(), error, success: false });
+    res.render('admin-upload', { editing: { ...film, ...req.body, advisories: req.body.advisories || [] }, cultures: listCultures(), error, success: false });
   };
 
   if (!title || !description) return rejectEdit('Please fill in all required fields.');
+  const ratingResult = parseRatingInput(req.body);
+  if (ratingResult.error) return rejectEdit(ratingResult.error);
   const cultureResult = resolveCulture(req.body, req.session.admin);
   if (cultureResult.error) return rejectEdit(cultureResult.error);
 
@@ -192,9 +205,11 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
   }
 
   db.prepare(`
-    UPDATE content SET title = ?, description = ?, culture_id = ?, price = ?, file_url = ?, thumbnail_url = ?, trailer_url = ?
+    UPDATE content SET title = ?, description = ?, culture_id = ?, price = ?, file_url = ?, thumbnail_url = ?, trailer_url = ?,
+      age_rating = ?, content_advisories = ?
     WHERE content_id = ?
-  `).run(title, description, cultureResult.id, isFree ? 0 : Number(price) || 0, videoUrl, thumbnailUrl, trailerUrl, film.id);
+  `).run(title, description, cultureResult.id, isFree ? 0 : Number(price) || 0, videoUrl, thumbnailUrl, trailerUrl,
+    ratingResult.code, ratingResult.advisoriesCsv, film.id);
   logActivity('Film updated', title, adminActor(req.session.admin));
 
   res.redirect('/admin/films');
@@ -218,16 +233,19 @@ router.post('/upload', handleUploads, (req, res) => {
   if (!title || !description || !videoFile || !thumbnailFile) {
     return rejectUpload('Please fill in all required fields, including a video file and a thumbnail image.');
   }
+  const ratingResult = parseRatingInput(req.body);
+  if (ratingResult.error) return rejectUpload(ratingResult.error);
   const cultureResult = resolveCulture(req.body, req.session.admin);
   if (cultureResult.error) return rejectUpload(cultureResult.error);
 
   db.prepare(`
-    INSERT INTO content (culture_id, uploaded_by, title, description, content_type, price, file_url, thumbnail_url, trailer_url)
-    VALUES (?, ?, ?, ?, 'Uncategorized', ?, ?, ?, ?)
+    INSERT INTO content (culture_id, uploaded_by, title, description, content_type, price, file_url, thumbnail_url, trailer_url, age_rating, content_advisories)
+    VALUES (?, ?, ?, ?, 'Uncategorized', ?, ?, ?, ?, ?, ?)
   `).run(
     cultureResult.id, ensureShadowUserForAdmin(req.session.admin), title, description, isFree ? 0 : Number(price) || 0,
     `/uploads/${videoFile.filename}`, `/uploads/${thumbnailFile.filename}`,
-    trailerFile ? `/uploads/${trailerFile.filename}` : ''
+    trailerFile ? `/uploads/${trailerFile.filename}` : '',
+    ratingResult.code, ratingResult.advisoriesCsv
   );
   logActivity('Film uploaded', title, adminActor(req.session.admin));
 

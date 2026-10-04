@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Privacy Policy' }) %>
+<style>
+    .policy h2 { font-family: 'Cinzel', serif; font-size: 1.25rem; font-weight: 700; color: #fcaa13; margin-bottom: 0.75rem; }
+    .policy p { margin-bottom: 0.75rem; }
+    .policy ul { list-style: disc; padding-left: 1.5rem; }
+    .policy li + li { margin-top: 0.375rem; }
+    .policy a { color: #fcaa13; text-decoration: underline; }
+</style>
+</head>
+<body class="min-h-screen">
+<%- include('partials/simple-header') %>
+
+<main class="max-w-3xl mx-auto px-6 py-12 relative">
+    <h1 class="display-font text-3xl md:text-4xl font-bold text-[#f7efe6] mb-2">Privacy Policy</h1>
+    <p class="text-[#a99a8b] text-sm mb-10">Last updated: <%= policyUpdated %></p>
+
+    <div class="policy space-y-10 text-[#f7efe6] text-lg leading-relaxed">
+
+        <section>
+            <p>Cultured Africa respects your privacy. This policy explains what personal information we collect when you use this website, why we collect it, who we share it with, and the rights you have under South Africa's Protection of Personal Information Act (POPIA). We only collect and use your information after you have agreed to this policy.</p>
+        </section>
+
+        <section>
+            <h2>1. Who we are</h2>
+            <p>Cultured Africa ([REGISTERED COMPANY NAME AND REGISTRATION NUMBER]) is the responsible party for your personal information. We are based at Wits Ehub, The Matrix Shop 3, Wits University, Johannesburg.</p>
+            <p>Our Information Officer is [INFORMATION OFFICER NAME], who you can reach at <a href="mailto:info@culturedafrica.co.za">info@culturedafrica.co.za</a>.</p>
+        </section>
+
+        <section>
+            <h2>2. What we collect</h2>
+            <ul>
+                <li><strong>Account details:</strong> your full name and email address. Your password is stored only in a scrambled (hashed) form that we cannot read.</li>
+                <li><strong>Purchases:</strong> which films you bought, the amount, the date and the payment reference. We never see or store your card details. Payments are handled by Paystack.</li>
+                <li><strong>Viewing activity:</strong> which films you open, how far you watched, and whether you finished them.</li>
+                <li><strong>Reviews:</strong> star ratings and comments you choose to post.</li>
+                <li><strong>Messages to you:</strong> in-site notifications, such as purchase confirmations and replies to your reviews.</li>
+                <li><strong>Technical information:</strong> a single cookie that keeps you logged in. Your IP address is used briefly, in memory only, to block repeated failed login and code attempts. It is not stored.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>3. Why we use it</h2>
+            <ul>
+                <li>To create, verify and secure your account, and to let you reset your password.</li>
+                <li>To process your purchases and give you access to the films you paid for.</li>
+                <li>To let you resume a film where you stopped and to show you your viewing recap.</li>
+                <li>To publish your reviews and let our team reply to them.</li>
+                <li>To send you emails about your account, such as verification codes, password resets and purchase confirmations.</li>
+                <li>To understand, in combined statistics, which films and cultures are popular, so we can decide what to produce next.</li>
+            </ul>
+            <p>We do not sell your personal information, and we do not send you marketing messages unless you separately ask us to.</p>
+        </section>
+
+        <section>
+            <h2>4. Who we share it with</h2>
+            <ul>
+                <li><strong>Paystack</strong> processes card payments. Paystack may process information outside South Africa, under its own privacy policy and with protections required by POPIA.</li>
+                <li><strong>Our email provider</strong> delivers account emails on our behalf.</li>
+                <li><strong>Our hosting provider</strong> stores the website and its database.</li>
+                <li><strong>Other customers</strong> can see your name next to any review you post.</li>
+            </ul>
+            <p>We share only what each provider needs to do its job, and we may disclose information where the law requires it.</p>
+        </section>
+
+        <section>
+            <h2>5. Cookies</h2>
+            <p>We use one essential cookie to keep you logged in. We do not use advertising or tracking cookies.</p>
+        </section>
+
+        <section>
+            <h2>6. How long we keep it</h2>
+            <p>We keep your information for as long as you have an account. When you delete your account, we immediately delete your profile, purchases, viewing history, reviews and notifications from our systems. Paystack keeps its own records of payments, as financial law requires.</p>
+        </section>
+
+        <section>
+            <h2>7. How we protect it</h2>
+            <p>Passwords and one-time codes are stored only in hashed form, the site uses an encrypted (HTTPS) connection, and only authorised Cultured Africa staff can open the admin portal.</p>
+        </section>
+
+        <section>
+            <h2>8. Your rights</h2>
+            <p>Under POPIA, you have the right to:</p>
+            <ul>
+                <li><strong>Access</strong> the personal information we hold about you.</li>
+                <li><strong>Correct</strong> it. You can change your email address on your Account page, or ask us to correct anything else.</li>
+                <li><strong>Delete</strong> it. You can delete your account at any time from your Account page.</li>
+                <li><strong>Withdraw your consent or object</strong> to how we use your information. Deleting your account withdraws consent and stops all processing.</li>
+                <li><strong>Complain</strong> to the Information Regulator of South Africa (<a href="https://inforegulator.org.za" target="_blank" rel="noopener">inforegulator.org.za</a>) if you believe we have mishandled your information.</li>
+            </ul>
+            <p>To make a request, email <a href="mailto:info@culturedafrica.co.za">info@culturedafrica.co.za</a>.</p>
+        </section>
+
+        <section>
+            <h2>9. Children</h2>
+            <p>If you are under 18, a parent or guardian must agree to this policy on your behalf before you create an account.</p>
+        </section>
+
+        <section>
+            <h2>10. Changes to this policy</h2>
+            <p>If we change this policy in a way that affects you, we will update the date above and ask you to agree to the new version the next time you log in.</p>
+        </section>
+    </div>
+</main>
+</body>
+</html>

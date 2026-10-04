@@ -13,12 +13,17 @@
 
     <div id="login-card" class="w-full max-w-[450px] bg-[#1e1613] rounded-[16px] shadow-xl p-8 md:p-10 z-10">
         <div class="text-center mb-10">
+            <img src="/images/brand/sun.png" alt="" class="h-16 w-16 mx-auto mb-3">
             <h1 class="display-font text-3xl font-bold text-[#fcaa13] mb-2">Cultured Africa</h1>
             <p class="text-[#a99a8b] text-sm">Welcome back to Cultured Africa</p>
         </div>
 
         <% if (error) { %>
             <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ef420f] text-sm font-medium"><%= error %></div>
+        <% } %>
+
+        <% if (typeof notice !== 'undefined' && notice) { %>
+            <div class="mb-6 px-4 py-3 rounded-xl bg-[#271c17] text-[#f7efe6] text-sm font-medium border border-[#38281f]"><%= notice %></div>
         <% } %>
 
         <% if (showResend) { %>

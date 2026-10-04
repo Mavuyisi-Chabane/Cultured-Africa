@@ -1,0 +1,33 @@
+<%#
+  FPB age rating badge. Params:
+    classification — film.classification ({ rating, advisories }, see config/ageRatings.js)
+    detailed       — true on the film page: adds the rating's meaning and full advice labels
+%>
+<% const ar = classification.rating; const adv = classification.advisories; %>
+<% if (typeof detailed !== 'undefined' && detailed) { %>
+    <div class="flex items-start gap-3">
+        <% if (ar) { %>
+            <span class="inline-flex items-center justify-center min-w-[3rem] h-10 px-2 rounded-lg text-white font-bold text-sm shadow-md flex-shrink-0" style="background-color: <%= ar.color %>" aria-hidden="true"><%= ar.code %></span>
+            <div>
+                <p class="text-sm font-bold text-[#f7efe6]">Age rating: <%= ar.label %></p>
+                <p class="text-xs text-[#a99a8b]"><%= ar.description %></p>
+                <% if (adv.length) { %>
+                    <p class="text-xs text-[#f7efe6] mt-1">Contains: <%= adv.map(a => a.label.toLowerCase()).join(', ') %></p>
+                <% } %>
+            </div>
+        <% } else { %>
+            <span class="inline-flex items-center justify-center h-10 px-3 rounded-lg bg-[#38281f] text-[#f7efe6] font-bold text-xs flex-shrink-0">NR</span>
+            <div>
+                <p class="text-sm font-bold text-[#f7efe6]">Not yet rated</p>
+                <p class="text-xs text-[#a99a8b]">This film's age rating hasn't been set yet.</p>
+            </div>
+        <% } %>
+    </div>
+<% } else if (ar) { %>
+    <span class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-white text-[11px] font-bold shadow" style="background-color: <%= ar.color %>"
+        title="Age rating: <%= ar.label %><%= adv.length ? ' · Contains ' + adv.map(a => a.label.toLowerCase()).join(', ') : '' %>">
+        <span class="sr-only">Age rating </span><%= ar.code %><% if (adv.length) { %><span class="font-normal opacity-90" aria-hidden="true"> <%= adv.map(a => a.code).join(' ') %></span><span class="sr-only">, contains <%= adv.map(a => a.label.toLowerCase()).join(', ') %></span><% } %>
+    </span>
+<% } else { %>
+    <span class="inline-flex items-center rounded-md px-1.5 py-0.5 bg-[#38281f] text-[#f7efe6] text-[11px] font-bold" title="Not yet rated"><span class="sr-only">Age rating: </span>NR</span>
+<% } %>

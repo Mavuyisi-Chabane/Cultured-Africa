@@ -83,6 +83,7 @@
                 <div>
                     <h1 class="display-font text-3xl font-bold text-[#f7efe6] mb-1"><%= film.title %></h1>
                     <p class="text-[#a99a8b] text-sm italic"><%= film.culture %> Heritage · <%= film.genre %></p>
+                    <div class="mt-4"><%- include('partials/age-rating', { classification: film.classification, detailed: true }) %></div>
                 </div>
                 <% const formatAccessDate = d => d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }); %>
                 <% if (owned) { %>

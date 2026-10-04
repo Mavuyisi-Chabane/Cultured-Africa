@@ -22,7 +22,9 @@ CREATE TABLE IF NOT EXISTS users (
   -- One device at a time: the playback token of the browser tab currently allowed to
   -- stream for this account (any film). Pressing Play elsewhere replaces it.
   active_playback_token TEXT,
-  active_playback_at    TEXT
+  active_playback_at    TEXT,
+  -- When the customer confirmed they are 18 or older (needed for 18-rated films).
+  adult_confirmed_at    TEXT
 );
 
 CREATE TABLE IF NOT EXISTS cultures (

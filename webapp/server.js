@@ -77,11 +77,16 @@ app.use((req, res, next) => {
   // intact for the rest of this request, since every downstream route assumes
   // req.session always exists.
   if (req.session.user) {
-    const current = db.prepare('SELECT session_version, privacy_policy_version, status FROM users WHERE user_id = ?').get(req.session.user.id);
+    const current = db.prepare('SELECT session_version, privacy_policy_version, status, adult_confirmed_at FROM users WHERE user_id = ?').get(req.session.user.id);
     // A suspension (Admin > Customers) takes effect on the customer's very next request.
     if (!current || current.session_version !== req.session.user.sessionVersion || current.status === 'suspended') {
       req.session.user = null;
-    } else if (current.privacy_policy_version !== PRIVACY_POLICY_VERSION && !CONSENT_EXEMPT_PATHS.has(req.path)) {
+    } else {
+      // Kept current from the database, so the 18+ confirmation applies on every device.
+      req.session.user.adultConfirmed = Boolean(current.adult_confirmed_at);
+    }
+
+    if (req.session.user && current.privacy_policy_version !== PRIVACY_POLICY_VERSION && !CONSENT_EXEMPT_PATHS.has(req.path)) {
       // POPIA: no further processing of a customer's data (browsing, purchases, watch
       // tracking) until they have agreed to the current privacy policy.
       if (req.method === 'GET') return res.redirect('/consent');

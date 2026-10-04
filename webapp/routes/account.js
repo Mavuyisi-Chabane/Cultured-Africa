@@ -32,10 +32,11 @@ const verifyEmailChangeLimiter = createRateLimiter({
 
 function renderAccount(req, res, state) {
   const pending = req.session.pendingEmailChange;
-  const consent = db.prepare('SELECT privacy_consent_at FROM users WHERE user_id = ?').get(req.session.user.id);
+  const consent = db.prepare('SELECT privacy_consent_at, adult_confirmed_at FROM users WHERE user_id = ?').get(req.session.user.id);
   res.render('account', {
     user: req.session.user,
     consentAt: consent && consent.privacy_consent_at ? new Date(consent.privacy_consent_at.replace(' ', 'T') + 'Z') : null,
+    adultConfirmedAt: consent && consent.adult_confirmed_at ? new Date(consent.adult_confirmed_at.replace(' ', 'T') + 'Z') : null,
     purchases: listPurchases(req.session.user.id),
     pendingEmail: pending ? pending.newEmail : null,
     error: null,

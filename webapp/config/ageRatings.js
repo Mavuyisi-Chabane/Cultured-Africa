@@ -22,6 +22,10 @@ const CONTENT_ADVISORIES = [
   { code: 'H', label: 'Horror' }
 ];
 
+// Ratings a customer must confirm they're old enough for before buying or watching
+// (a one-time "I am 18 or older" per account; no date of birth is collected).
+const AGE_CONFIRMATION_RATINGS = new Set(['18']);
+
 const RATINGS_BY_CODE = new Map(AGE_RATINGS.map(r => [r.code, r]));
 const ADVISORIES_BY_CODE = new Map(CONTENT_ADVISORIES.map(a => [a.code, a]));
 
@@ -42,4 +46,4 @@ function parseRatingInput(body) {
   return { code: rating.code, advisoriesCsv };
 }
 
-module.exports = { AGE_RATINGS, CONTENT_ADVISORIES, describeRating, parseRatingInput };
+module.exports = { AGE_RATINGS, CONTENT_ADVISORIES, AGE_CONFIRMATION_RATINGS, describeRating, parseRatingInput };

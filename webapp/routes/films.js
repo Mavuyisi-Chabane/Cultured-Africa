@@ -2,7 +2,7 @@ const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
 const { UPLOAD_DIR } = require('../middleware/upload');
-const { describeRating } = require('../config/ageRatings');
+const { describeRating, AGE_CONFIRMATION_RATINGS } = require('../config/ageRatings');
 const { db, logActivity, customerActor, notify } = require('../db');
 const { requireLogin, redirectAdminAway } = require('../middleware/auth');
 const paystack = require('../config/paystack');
@@ -40,6 +40,7 @@ function mapContent(row) {
     // Uploaded with only a trailer: shown and previewable, but not yet buyable or playable.
     comingSoon: !row.file_url,
     isAvailable: Boolean(row.is_available),
+    ageRestricted: AGE_CONFIRMATION_RATINGS.has(row.age_rating),
     ageRatingCode: row.age_rating || '',
     advisoryCodes: String(row.content_advisories || '').split(',').filter(Boolean),
     classification: describeRating(row.age_rating, row.content_advisories),
@@ -384,6 +385,19 @@ router.get('/film/:id', redirectAdminAway, (req, res) => {
   res.render('film-detail', { film, owned, filmReviews, access, canReview, viewId, resumeSeconds, resumeCompleted, playbackToken, error: null });
 });
 
+// One-time "I am 18 or older" for this account, asked on the first 18-rated film.
+router.post('/film/:id/confirm-age', redirectAdminAway, requireLogin, (req, res) => {
+  const film = getContent(req.params.id);
+  if (!film) return renderNotFound(res);
+  if (req.body.ageConfirm === 'yes') {
+    db.prepare("UPDATE users SET adult_confirmed_at = datetime('now') WHERE user_id = ? AND adult_confirmed_at IS NULL")
+      .run(req.session.user.id);
+    req.session.user.adultConfirmed = true;
+    logActivity('Age confirmed (18+)', req.session.user.fullName, customerActor(req.session.user.fullName));
+  }
+  res.redirect(`/film/${film.id}`);
+});
+
 const PLAYBACK_TOKEN_FORMAT = /^[a-f0-9]{32}$/;
 
 // Pressing Play: this tab becomes the account's one active device, taking over from
@@ -394,6 +408,7 @@ router.post('/film/:id/playback/claim', redirectAdminAway, requireLogin, (req, r
   const { owned } = getFilmDetailContext(film, req.session.user.id);
   const token = String(req.body.playbackToken || '');
   if (!owned || !PLAYBACK_TOKEN_FORMAT.test(token)) return res.status(403).json({ ok: false });
+  if (film.ageRestricted && !req.session.user.adultConfirmed) return res.status(403).json({ ok: false, reason: 'age' });
 
   db.prepare("UPDATE users SET active_playback_token = ?, active_playback_at = datetime('now') WHERE user_id = ?")
     .run(token, req.session.user.id);
@@ -453,6 +468,9 @@ router.post('/film/:id/buy', redirectAdminAway, requireLogin, async (req, res) =
 
   if (film.comingSoon) {
     return renderError("This film isn't available yet. Watch the trailer, and check back soon.");
+  }
+  if (film.ageRestricted && !req.session.user.adultConfirmed) {
+    return renderError('This film is rated 18. Please confirm you are 18 or older before buying it.');
   }
 
   if (!paystack.isConfigured) {

@@ -23,6 +23,7 @@
         <% } %>
 
         <form class="space-y-6" method="POST" action="/register">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <div id="field-fullname">
                 <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="fullName">Full Name</label>
                 <div class="relative">

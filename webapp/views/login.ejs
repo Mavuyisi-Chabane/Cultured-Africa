@@ -28,6 +28,7 @@
 
         <% if (showResend) { %>
             <form action="/resend-verification" method="POST" class="mb-6">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <input type="hidden" name="email" value="<%= resendEmail %>">
                 <button type="submit" class="w-full bg-[#0f0a08] hover:bg-[#0a0605] text-[#fcaa13] font-bold py-3 rounded-xl transition-all border border-[#fcaa13]/30">
                     Resend Verification Code
@@ -36,6 +37,7 @@
         <% } %>
 
         <form class="space-y-6" method="POST" action="/login">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="email">Email Address</label>
                 <div class="relative">

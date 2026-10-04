@@ -5,3 +5,5 @@ public/uploads/*
 db/*.sqlite
 db/*.sqlite-journal
 db/dev-inbox/
+.env.*
+!.env.example

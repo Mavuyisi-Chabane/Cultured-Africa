@@ -34,6 +34,7 @@
         <% } %>
 
         <form id="verify-email-form" class="space-y-6" method="POST" action="/verify-email">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="email">Email Address</label>
                 <div class="relative">
@@ -65,6 +66,7 @@
         <div class="mt-8 pt-6 border-t border-[#38281f] text-center">
             <p class="text-[#a99a8b] text-xs mb-3">Didn't get a code, or it expired?</p>
             <form action="/resend-verification" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <input type="hidden" name="email" value="<%= email %>">
                 <button type="submit" class="text-[#fcaa13] font-bold text-sm hover:underline">Resend verification code</button>
             </form>

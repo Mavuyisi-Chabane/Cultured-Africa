@@ -11,11 +11,16 @@ const mockReports = require('../data/mockReports');
 const { buildScreenshotPdf } = require('../utils/screenshotPdf');
 const { THRESHOLDS, flagLevel } = require('../utils/reportThresholds');
 const { containsProfanity } = require('../utils/profanityFilter');
+const { validateCultureName } = require('../utils/cultureNames');
 const { nextAdminId } = require('../utils/adminId');
 const { generateInviteCode, hashInviteCode, INVITE_TTL_MS, MAX_INVITE_ATTEMPTS } = require('../utils/adminInvites');
 const { sendAdminInviteEmail } = require('../services/email');
 
 const router = express.Router();
+
+function renderAdminError(res, status, title, message) {
+  return res.status(status).render('error', { status, title, message });
+}
 
 router.use(requireAdmin);
 
@@ -34,6 +39,9 @@ const CONTENT_SELECT = `
 `;
 
 const FEEDBACK_PAGE_SIZE = 15;
+
+// Used when a film is uploaded without a thumbnail; a real one can be added later via Edit.
+const PLACEHOLDER_THUMBNAIL = '/images/brand/film-placeholder.jpg';
 
 function appendQueryParam(url, key, value) {
   return `${url}${url.includes('?') ? '&' : '?'}${key}=${encodeURIComponent(value)}`;
@@ -56,6 +64,7 @@ function mapContent(row) {
     videoUrl: row.file_url,
     thumbnailUrl: row.thumbnail_url,
     trailerUrl: row.trailer_url,
+    comingSoon: !row.file_url,
     ageRatingCode: row.age_rating || '',
     advisoryCodes: String(row.content_advisories || '').split(',').filter(Boolean),
     classification: describeRating(row.age_rating, row.content_advisories),
@@ -77,7 +86,6 @@ function verifyOwnPassword(req, password) {
 
 // Value of the "Other (type a new culture)" option in admin-upload.ejs's culture select.
 const OTHER_CULTURE = '__other__';
-const MAX_CULTURE_NAME_LENGTH = 50;
 
 function listCultures() {
   return db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
@@ -93,15 +101,9 @@ function resolveCulture(body, admin) {
     return row ? { id: row.culture_id } : { error: 'Please choose a culture category.' };
   }
 
-  const name = (body.newCulture || '').trim().replace(/\s+/g, ' ');
-  if (!name) return { error: 'Please type the name of the new culture.' };
-  if (name.length > MAX_CULTURE_NAME_LENGTH) {
-    return { error: `Culture names must be ${MAX_CULTURE_NAME_LENGTH} characters or fewer.` };
-  }
-  if (!/^\p{L}[\p{L}\p{M}' -]*$/u.test(name)) {
-    return { error: 'Culture names may only contain letters, spaces, hyphens and apostrophes.' };
-  }
-  if (containsProfanity(name)) return { error: 'Please choose a different culture name.' };
+  const checked = validateCultureName(body.newCulture);
+  if (checked.error) return { error: checked.error };
+  const { name } = checked;
 
   const existing = db.prepare('SELECT culture_id FROM cultures WHERE lower(name) = lower(?)').get(name);
   if (existing) return { id: existing.culture_id };
@@ -163,13 +165,13 @@ router.post('/films/:id/toggle-availability', (req, res) => {
 
 router.get('/films/:id/edit', (req, res) => {
   const film = getContent(req.params.id);
-  if (!film) return res.status(404).send('Film not found.');
-  res.render('admin-upload', { editing: film, cultures: listCultures(), error: null, success: false });
+  if (!film) return renderAdminError(res, 404, 'Film not found', 'That film no longer exists.');
+  res.render('admin-upload', { editing: { ...film, usesPlaceholderThumbnail: film.thumbnailUrl === PLACEHOLDER_THUMBNAIL }, cultures: listCultures(), error: null, success: false });
 });
 
 router.post('/films/:id/edit', handleUploads, (req, res) => {
   const film = getContent(req.params.id);
-  if (!film) return res.status(404).send('Film not found.');
+  if (!film) return renderAdminError(res, 404, 'Film not found', 'That film no longer exists.');
 
   const { title, description, price, isFree } = req.body;
   const videoFile = req.files && req.files.videoFile && req.files.videoFile[0];
@@ -181,6 +183,7 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
     res.render('admin-upload', { editing: { ...film, ...req.body, advisories: req.body.advisories || [] }, cultures: listCultures(), error, success: false });
   };
 
+  if (req.uploadError) return rejectEdit(req.uploadError);
   if (!title || !description) return rejectEdit('Please fill in all required fields.');
   const ratingResult = parseRatingInput(req.body);
   if (ratingResult.error) return rejectEdit(ratingResult.error);
@@ -194,6 +197,9 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
   if (videoFile) {
     deleteUploadedFile(film.videoUrl);
     videoUrl = `/uploads/${videoFile.filename}`;
+  }
+  if (!videoUrl && !trailerUrl && !trailerFile) {
+    return rejectEdit('A "Coming soon" film needs a trailer until its full video is added.');
   }
   if (thumbnailFile) {
     deleteUploadedFile(film.thumbnailUrl);
@@ -210,7 +216,7 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
     WHERE content_id = ?
   `).run(title, description, cultureResult.id, isFree ? 0 : Number(price) || 0, videoUrl, thumbnailUrl, trailerUrl,
     ratingResult.code, ratingResult.advisoriesCsv, film.id);
-  logActivity('Film updated', title, adminActor(req.session.admin));
+  logActivity(film.comingSoon && videoFile ? 'Film released' : 'Film updated', title, adminActor(req.session.admin));
 
   res.redirect('/admin/films');
 });
@@ -230,8 +236,16 @@ router.post('/upload', handleUploads, (req, res) => {
     res.render('admin-upload', { editing: req.body, cultures: listCultures(), error, success: false });
   };
 
-  if (!title || !description || !videoFile || !thumbnailFile) {
-    return rejectUpload('Please fill in all required fields, including a video file and a thumbnail image.');
+  if (req.uploadError) return rejectUpload(req.uploadError);
+  const comingSoon = req.body.comingSoon === 'yes';
+  if (!title || !description) {
+    return rejectUpload('Please fill in all required fields.');
+  }
+  if (!videoFile && !comingSoon) {
+    return rejectUpload('Please choose the film\'s video file, or tick "Coming soon" if you only have the trailer for now.');
+  }
+  if (!videoFile && !trailerFile) {
+    return rejectUpload('A "Coming soon" film needs a trailer, so customers have something to watch until the full film is added.');
   }
   const ratingResult = parseRatingInput(req.body);
   if (ratingResult.error) return rejectUpload(ratingResult.error);
@@ -243,7 +257,7 @@ router.post('/upload', handleUploads, (req, res) => {
     VALUES (?, ?, ?, ?, 'Uncategorized', ?, ?, ?, ?, ?, ?)
   `).run(
     cultureResult.id, ensureShadowUserForAdmin(req.session.admin), title, description, isFree ? 0 : Number(price) || 0,
-    `/uploads/${videoFile.filename}`, `/uploads/${thumbnailFile.filename}`,
+    videoFile ? `/uploads/${videoFile.filename}` : '', thumbnailFile ? `/uploads/${thumbnailFile.filename}` : PLACEHOLDER_THUMBNAIL,
     trailerFile ? `/uploads/${trailerFile.filename}` : '',
     ratingResult.code, ratingResult.advisoriesCsv
   );
@@ -645,13 +659,13 @@ router.get('/engagement', withReportFilters, (req, res) => {
 
 router.get('/reports/film/:slug', withReportFilters, (req, res) => {
   const detail = mockReports.buildFilmDetail(req.params.slug, res.locals.reportFilters);
-  if (!detail) return res.status(404).send('Film not found.');
+  if (!detail) return renderAdminError(res, 404, 'Film not found', 'There is no report for that film.');
   res.render('admin-report-detail', detail);
 });
 
 router.get('/reports/culture/:slug', withReportFilters, (req, res) => {
   const detail = mockReports.buildCultureDetail(req.params.slug, res.locals.reportFilters);
-  if (!detail) return res.status(404).send('Culture not found.');
+  if (!detail) return renderAdminError(res, 404, 'Culture not found', 'There is no report for that culture.');
   res.render('admin-report-detail', detail);
 });
 
@@ -668,7 +682,7 @@ router.get('/reports/pdf', withReportFilters, async (req, res) => {
   const requested = [].concat(req.query.r || Object.keys(PDF_REPORTS));
   const selected = Object.keys(PDF_REPORTS).filter(key => requested.includes(key));
   if (selected.length === 0) {
-    return res.status(400).send('Select at least one report to download.');
+    return renderAdminError(res, 400, 'No report selected', 'Select at least one report to download.');
   }
 
   const filename = selected.length === Object.keys(PDF_REPORTS).length
@@ -689,7 +703,7 @@ router.get('/reports/pdf', withReportFilters, async (req, res) => {
     res.send(pdfBuffer);
   } catch (err) {
     console.error('PDF export failed:', err);
-    res.status(500).send('Could not generate the PDF export. ' + err.message);
+    renderAdminError(res, 500, 'PDF export failed', 'The PDF could not be generated. Please try again, or view the report in the browser.');
   }
 });
 

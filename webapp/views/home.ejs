@@ -90,7 +90,9 @@
                 <div class="h-56 overflow-hidden relative">
                     <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>" />
                     <div class="absolute top-4 left-4"><%- include('partials/age-rating', { classification: film.classification }) %></div>
-                    <% if (film.price > 0) { %>
+                    <% if (film.comingSoon) { %>
+                        <div class="absolute top-4 right-4 bg-[#fcaa13] px-2 py-1 rounded text-[10px] font-bold text-[#140d0a] uppercase tracking-widest">Coming soon</div>
+                    <% } else if (film.price > 0) { %>
                         <div class="absolute top-4 right-4 bg-[#1e1613]/90 backdrop-blur px-2 py-1 rounded text-[10px] font-bold text-[#f7efe6] uppercase tracking-widest">Premium</div>
                     <% } %>
                 </div>
@@ -115,13 +117,13 @@
 
                     <div class="flex items-center justify-between mt-6 pt-4 border-t border-[#38281f]">
                         <span class="<%= film.price > 0 && !film.owned ? 'text-[#9db183]' : 'text-[#fcaa13]' %> font-bold text-lg leading-tight">
-                            <%= film.price === 0 ? 'Free' : (film.owned ? 'Owned' : 'R' + film.price.toFixed(0)) %>
+                            <%= film.comingSoon ? 'Coming soon' : (film.price === 0 ? 'Free' : (film.owned ? 'Owned' : 'R' + film.price.toFixed(0))) %>
                             <% if (film.accessExpiresAt) { %>
                                 <span class="block text-[11px] font-normal text-[#a99a8b]">Until <%= film.accessExpiresAt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
                             <% } %>
                         </span>
                         <span class="bg-[#fb6b10] group-hover:bg-[#ef420f] text-[#f4ece3] px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">
-                            <%= film.owned ? 'Watch' : 'Buy R' + film.price.toFixed(0) %>
+                            <%= film.comingSoon ? 'Watch trailer' : (film.owned ? 'Watch' : 'Buy R' + film.price.toFixed(0)) %>
                         </span>
                     </div>
                 </div>

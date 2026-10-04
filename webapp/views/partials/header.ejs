@@ -23,6 +23,7 @@
             <span class="text-[#f4ece3] text-xs hidden sm:inline"><%= currentUser.fullName %></span>
         </a>
         <form action="/logout" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button type="submit" class="text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium">Logout</button>
         </form>
     </div>

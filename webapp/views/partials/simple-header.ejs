@@ -2,8 +2,9 @@
     where the full customer menu would only redirect back to it. %>
 <nav class="bg-[#0f0a08] px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-lg">
     <a href="/" class="display-font text-2xl font-bold text-[#fcaa13] tracking-tight flex items-center gap-2"><img src="/images/brand/sun.png" alt="" class="h-8 w-8">Cultured Africa</a>
-    <% if (currentUser) { %>
+    <% if (typeof currentUser !== 'undefined' && currentUser) { %>
         <form action="/logout" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button type="submit" class="text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium">Log out</button>
         </form>
     <% } else { %>

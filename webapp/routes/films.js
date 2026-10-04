@@ -1,12 +1,22 @@
 const express = require('express');
+const path = require('path');
+const { UPLOAD_DIR } = require('../middleware/upload');
 const { describeRating } = require('../config/ageRatings');
 const { db, logActivity, customerActor, notify } = require('../db');
 const { requireLogin, redirectAdminAway } = require('../middleware/auth');
 const paystack = require('../config/paystack');
+const { getReceipt } = require('../utils/receipts');
+const { sendPurchaseReceipt } = require('../services/email');
 const { containsProfanity } = require('../utils/profanityFilter');
 const { startOfWeek, toSqlDateTime } = require('../utils/dates');
 
 const router = express.Router();
+
+function renderNotFound(res) {
+  return res.status(404).render('error', {
+    status: 404, title: 'Film not found', message: "This film doesn't exist or is no longer available."
+  });
+}
 
 const CONTENT_SELECT = `
   SELECT c.*, cu.name AS culture_name,
@@ -26,6 +36,8 @@ function mapContent(row) {
     videoUrl: row.file_url,
     thumbnailUrl: row.thumbnail_url,
     trailerUrl: row.trailer_url,
+    // Uploaded with only a trailer: shown and previewable, but not yet buyable or playable.
+    comingSoon: !row.file_url,
     ageRatingCode: row.age_rating || '',
     advisoryCodes: String(row.content_advisories || '').split(',').filter(Boolean),
     classification: describeRating(row.age_rating, row.content_advisories),
@@ -39,14 +51,14 @@ function getContent(id) {
   return row ? mapContent(row) : null;
 }
 
-// A purchase unlocks a paid film for ACCESS_MONTHS months from the purchase date. After
-// that the film can be bought again, which starts a fresh period. Free films never expire.
-const ACCESS_MONTHS = 6;
+const { ACCESS_MONTHS } = require('../config/access');
+const purchaseTerms = require('../config/purchaseTerms');
 const ACCESS_EXPIRES_SQL = `datetime(purchase_date, '+${ACCESS_MONTHS} months')`;
 
 // Lets every customer page describe the access period without hard-coding "6 months".
 router.use((req, res, next) => {
   res.locals.accessMonths = ACCESS_MONTHS;
+  res.locals.purchaseTerms = purchaseTerms;
   next();
 });
 
@@ -94,6 +106,8 @@ function getFilmDetailContext(film, userId) {
     createdAt: new Date(r.submitted_date),
     user: { fullName: r.user_full_name }
   }));
+
+  if (film.comingSoon) return { filmReviews, owned: false, access: null, canReview: false };
 
   const access = film.price === 0 ? null : getAccess(userId, film.id);
   const owned = film.price === 0 || Boolean(access && access.active);
@@ -177,7 +191,7 @@ router.get('/', redirectAdminAway, (req, res) => {
 
   const films = rows.map(row => {
     const film = mapContent(row);
-    film.owned = film.price === 0 || activeAccess.has(film.id);
+    film.owned = !film.comingSoon && (film.price === 0 || activeAccess.has(film.id));
     film.accessExpiresAt = activeAccess.get(film.id) || null;
     film.watchCount = row.watch_count;
     return film;
@@ -205,6 +219,7 @@ router.get('/library', redirectAdminAway, requireLogin, (req, res) => {
   available.forEach(row => {
     const purchase = latestPurchase.get(row.content_id);
     const film = { ...mapContent(row), purchasedAt: purchase ? purchase.purchasedAt : null, accessExpiresAt: purchase ? purchase.expiresAt : null };
+    if (film.comingSoon) return;
     if (film.price === 0) films.push(film);
     else if (purchase && purchase.expiresAt > now) films.push(film);
     else if (purchase) expiredFilms.push(film);
@@ -278,9 +293,31 @@ router.get('/recap', redirectAdminAway, requireLogin, (req, res) => {
   });
 });
 
+// The only way a full film is ever delivered: /uploads refuses film files (see
+// middleware/uploadsAccess.js), so the viewer must be logged in and own the film (or it
+// must be free). res.sendFile handles HTTP Range requests, so seeking still works.
+router.get('/film/:id/stream', redirectAdminAway, requireLogin, (req, res) => {
+  const film = getContent(req.params.id);
+  if (!film || !film.videoUrl || !film.videoUrl.startsWith('/uploads/')) return renderNotFound(res);
+
+  const { owned } = getFilmDetailContext(film, req.session.user.id);
+  if (!owned) {
+    return res.status(403).render('error', {
+      status: 403, title: 'Purchase required', message: 'Buy this film to watch it.'
+    });
+  }
+
+  const filePath = path.join(UPLOAD_DIR, path.basename(film.videoUrl));
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Content-Disposition', 'inline');
+  res.sendFile(filePath, err => {
+    if (err && !res.headersSent) renderNotFound(res);
+  });
+});
+
 router.get('/film/:id', redirectAdminAway, requireLogin, (req, res) => {
   const film = getContent(req.params.id);
-  if (!film) return res.status(404).send('Film not found.');
+  if (!film) return renderNotFound(res);
 
   const { filmReviews, owned, access, canReview } = getFilmDetailContext(film, req.session.user.id);
 
@@ -333,7 +370,7 @@ router.post('/film/:id/track-progress', redirectAdminAway, requireLogin, (req, r
 
 router.post('/film/:id/buy', redirectAdminAway, requireLogin, async (req, res) => {
   const film = getContent(req.params.id);
-  if (!film) return res.status(404).send('Film not found.');
+  if (!film) return renderNotFound(res);
 
   const { reference } = req.body;
   const { filmReviews, owned, access, canReview } = getFilmDetailContext(film, req.session.user.id);
@@ -341,43 +378,78 @@ router.post('/film/:id/buy', redirectAdminAway, requireLogin, async (req, res) =
     return res.redirect(`/film/${film.id}`);
   }
 
-  if (!paystack.isConfigured) {
-    return res.render('film-detail', {
-      film, owned, filmReviews, access, canReview, viewId: null, resumeSeconds: 0, resumeCompleted: false,
-      error: 'Payments are not configured yet. Add PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY to webapp/.env (see .env.example).'
-    });
+  const renderError = error => res.render('film-detail', {
+    film, owned, filmReviews, access, canReview, viewId: null, resumeSeconds: 0, resumeCompleted: false, error
+  });
+
+  if (film.comingSoon) {
+    return renderError("This film isn't available yet. Watch the trailer, and check back soon.");
   }
 
-  if (!reference) {
-    return res.render('film-detail', { film, owned, filmReviews, access, canReview, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'No payment reference received. Please try again.' });
+  if (!paystack.isConfigured) {
+    console.error('Purchase attempted but Paystack keys are not configured (PAYSTACK_PUBLIC_KEY / PAYSTACK_SECRET_KEY).');
+    return renderError('Purchases are temporarily unavailable. Please try again later.');
+  }
+
+  if (!reference || typeof reference !== 'string') {
+    return renderError('No payment reference received. Please try again.');
+  }
+
+  // A Paystack reference can only ever pay for one purchase (also enforced by a unique
+  // index) — otherwise one successful payment could be replayed to unlock other films.
+  if (db.prepare('SELECT 1 FROM purchases WHERE transaction_ref = ?').get(reference)) {
+    return renderError('This payment has already been used for a purchase. If you were charged twice, please contact us.');
   }
 
   try {
     const result = await paystack.verifyTransaction(reference);
     const tx = result && result.data;
     const expectedAmount = Math.round(film.price * 100);
-    const paymentOk = result && result.status && tx && tx.status === 'success' && tx.amount === expectedAmount;
+    const paymentOk = result && result.status && tx
+      && tx.status === 'success'
+      && tx.amount === expectedAmount
+      && String(tx.currency || '').toUpperCase() === paystack.PAYSTACK_CURRENCY.toUpperCase()
+      && tx.customer && String(tx.customer.email || '').toLowerCase() === req.session.user.email.toLowerCase();
 
     if (!paymentOk) {
-      return res.render('film-detail', { film, owned, filmReviews, access, canReview, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'Payment could not be verified. You have not been charged for this film — please try again.' });
+      return renderError('Payment could not be verified. You have not been charged for this film. Please try again.');
     }
 
-    db.prepare(`
-      INSERT INTO purchases (user_id, content_id, amount_paid, payment_status, transaction_ref)
-      VALUES (?, ?, ?, 'completed', ?)
-    `).run(req.session.user.id, film.id, film.price, reference);
+    const auth = tx.authorization || {};
+    let purchaseId;
+    try {
+      purchaseId = db.prepare(`
+        INSERT INTO purchases (user_id, content_id, amount_paid, payment_status, transaction_ref, payment_channel, card_brand, card_last4)
+        VALUES (?, ?, ?, 'completed', ?, ?, ?, ?)
+      `).run(
+        req.session.user.id, film.id, film.price, reference,
+        tx.channel || null, auth.brand || auth.card_type || null,
+        /^\d{4}$/.test(String(auth.last4 || '')) ? String(auth.last4) : null
+      ).lastInsertRowid;
+    } catch (err) {
+      // Two tabs submitting the same reference at once: the unique index catches the second.
+      if (String(err.message).includes('UNIQUE')) {
+        return renderError('This payment has already been used for a purchase.');
+      }
+      throw err;
+    }
     logActivity('Purchase made', film.title, customerActor(req.session.user.fullName));
-    notify(req.session.user.id, 'purchase_confirmation', `Your purchase of "${film.title}" was successful. Enjoy the film!`);
+    notify(req.session.user.id, 'purchase_confirmation', `Your purchase of "${film.title}" was successful. Enjoy the film! Your receipt has been emailed to you and is also on your Account page.`);
+
+    // The purchase is already saved, so a mail problem must never undo it or show an error.
+    const receipt = getReceipt(purchaseId, req.session.user.id);
+    sendPurchaseReceipt(receipt).catch(err => console.error(`Receipt email for purchase ${purchaseId} failed:`, err.message));
 
     res.redirect(`/film/${film.id}`);
   } catch (err) {
-    res.render('film-detail', { film, owned, filmReviews, access, canReview, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'Could not reach Paystack to verify payment. Please try again.' });
+    console.error('Paystack verification failed:', err);
+    renderError('Could not reach Paystack to verify payment. Please try again.');
   }
 });
 
 router.post('/film/:id/review', redirectAdminAway, requireLogin, (req, res) => {
   const film = getContent(req.params.id);
-  if (!film) return res.status(404).send('Film not found.');
+  if (!film) return renderNotFound(res);
 
   const { filmReviews, owned, access, canReview } = getFilmDetailContext(film, req.session.user.id);
 

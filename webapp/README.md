@@ -39,6 +39,24 @@ to `.env` and fill in the values:
   blank, emails are saved as files in `db/dev-inbox/` instead, so the registration and
   password-reset flows still work. Open the file for your address to get the code or link.
 
+## Deploying to production
+
+1. Set `NODE_ENV=production` and a random `SESSION_SECRET` of at least 32 characters
+   (the app will not start without one). Set `APP_BASE_URL` to the site's real address so
+   links in emails work. See `.env.example` for every setting.
+2. Point `DB_PATH` and `UPLOADS_DIR` at persistent storage.
+3. No demo accounts are created in production. Create the first super admin on the server:
+
+   ```bash
+   npm run create-admin
+   ```
+
+   Further admins can then be invited from **Manage Admins** in the admin portal.
+4. `GET /health` returns `{"status":"ok"}` for your host's uptime checks.
+
+Full films are only ever served through `/film/:id/stream` to logged-in customers who own
+them; `/uploads` serves thumbnails and trailers only.
+
 ## Project structure
 
 ```

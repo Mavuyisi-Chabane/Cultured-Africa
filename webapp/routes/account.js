@@ -7,6 +7,7 @@ const { hashToken } = require('../utils/verification');
 const { toSqlDateTime } = require('../utils/dates');
 const { sendEmailChangeVerification } = require('../services/email');
 const { createRateLimiter } = require('../middleware/rateLimit');
+const { getReceipt, listPurchases } = require('../utils/receipts');
 
 const router = express.Router();
 
@@ -35,6 +36,7 @@ function renderAccount(req, res, state) {
   res.render('account', {
     user: req.session.user,
     consentAt: consent && consent.privacy_consent_at ? new Date(consent.privacy_consent_at.replace(' ', 'T') + 'Z') : null,
+    purchases: listPurchases(req.session.user.id),
     pendingEmail: pending ? pending.newEmail : null,
     error: null,
     success: null,
@@ -44,6 +46,15 @@ function renderAccount(req, res, state) {
 
 router.get('/account', redirectAdminAway, requireLogin, (req, res) => {
   renderAccount(req, res, {});
+});
+
+// Proof of purchase for one of the logged-in customer's own purchases.
+router.get('/account/purchases/:id/receipt', redirectAdminAway, requireLogin, (req, res) => {
+  const receipt = getReceipt(Number(req.params.id), req.session.user.id);
+  if (!receipt) {
+    return res.status(404).render('error', { status: 404, title: 'Receipt not found', message: "We couldn't find that receipt in your account." });
+  }
+  res.render('receipt', { receipt });
 });
 
 router.post('/account/email', redirectAdminAway, requireLogin, async (req, res) => {

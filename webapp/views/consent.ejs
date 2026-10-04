@@ -38,6 +38,7 @@
         </div>
 
         <form method="POST" action="/consent" class="space-y-5">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <label for="privacyConsent" class="flex items-start gap-3 cursor-pointer">
                 <input type="checkbox" id="privacyConsent" name="privacyConsent" value="yes"
                     class="mt-1 h-5 w-5 flex-shrink-0 accent-[#fb6b10] cursor-pointer">

@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const { db, logAudit } = require('../db');
 const { getPasswordRequirementFailures } = require('../utils/password');
 const { hashInviteCode, MAX_INVITE_ATTEMPTS } = require('../utils/adminInvites');
+const { startLoggedInSession, loginRateLimit, TOO_MANY_ATTEMPTS } = require('../utils/loginSession');
 
 const router = express.Router();
 
@@ -59,9 +60,12 @@ router.post('/login/continue', (req, res) => {
 
   const admin = findAdminByEmail(email);
 
+  // Unknown emails get the same password step as real admins and fail there with the
+  // generic "Incorrect email or password", so this form can't be used to discover
+  // which email addresses have admin accounts.
   if (!admin) {
     req.session.adminOnboarding = null;
-    return render(res, { step: 'email', email, error: 'No account found with that email address.' });
+    return render(res, { step: 'password', email });
   }
 
   if (admin.password_hash) {
@@ -80,9 +84,12 @@ router.post('/login/continue', (req, res) => {
 });
 
 // Case 1: existing verified admin logging in with a password.
-router.post('/login/password', (req, res) => {
+router.post('/login/password', loginRateLimit, (req, res, next) => {
   const email = (req.body.email || '').trim();
   const password = req.body.password || '';
+  if (req.rateLimitExceeded) {
+    return render(res, { step: 'password', email, error: TOO_MANY_ATTEMPTS });
+  }
   const admin = findAdminByEmail(email);
 
   if (!admin || !admin.password_hash || !bcrypt.compareSync(password, admin.password_hash)) {
@@ -92,9 +99,10 @@ router.post('/login/password', (req, res) => {
     return render(res, { step: 'password', email, error: 'This admin account has been deactivated. Contact a super admin.' });
   }
 
-  req.session.admin = { id: admin.admin_id, name: admin.name, email: admin.email, role: admin.role };
-  req.session.adminOnboarding = null;
-  res.redirect('/admin/dashboard');
+  startLoggedInSession(req, {
+    admin: { id: admin.admin_id, name: admin.name, email: admin.email, role: admin.role },
+    adminOnboarding: null
+  }, err => (err ? next(err) : res.redirect('/admin/dashboard')));
 });
 
 // Case 2, step A: verify the 6-digit invite code.
@@ -134,7 +142,7 @@ router.post('/login/verify-code', (req, res) => {
 });
 
 // Case 2, step B: set a password now that the code has been verified.
-router.post('/login/set-password', (req, res) => {
+router.post('/login/set-password', (req, res, next) => {
   const onboarding = req.session.adminOnboarding;
   if (!onboarding || !onboarding.verified || !onboarding.adminId) {
     return render(res, { step: 'email', error: 'Please verify your email again.' });
@@ -164,10 +172,10 @@ router.post('/login/set-password', (req, res) => {
     .run(passwordHash, onboarding.adminId);
   logAudit(onboarding.adminId, 'admin_onboarded', 'admin', onboarding.adminId, null);
 
-  req.session.admin = { id: admin.admin_id, name: admin.name, email: admin.email, role: admin.role };
-  req.session.adminOnboarding = null;
-
-  res.redirect('/admin/dashboard');
+  startLoggedInSession(req, {
+    admin: { id: admin.admin_id, name: admin.name, email: admin.email, role: admin.role },
+    adminOnboarding: null
+  }, err => (err ? next(err) : res.redirect('/admin/dashboard')));
 });
 
 router.post('/logout', (req, res) => {

@@ -34,6 +34,25 @@ if (!contentColumns.includes('age_rating')) {
   `);
 }
 
+// Migration: payment details shown on receipts (channel, card brand, last 4 digits).
+const purchaseColumns = db.prepare('PRAGMA table_info(purchases)').all().map(c => c.name);
+if (!purchaseColumns.includes('payment_channel')) {
+  db.exec(`
+    ALTER TABLE purchases ADD COLUMN payment_channel TEXT;
+    ALTER TABLE purchases ADD COLUMN card_brand TEXT;
+    ALTER TABLE purchases ADD COLUMN card_last4 TEXT;
+  `);
+}
+
+// Migration: customer suspension (Manage Customers page).
+if (!usersColumns.includes('status')) {
+  db.exec(`
+    ALTER TABLE users ADD COLUMN status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended'));
+    ALTER TABLE users ADD COLUMN suspended_at TEXT;
+    ALTER TABLE users ADD COLUMN suspension_reason TEXT;
+  `);
+}
+
 // Migration: POPIA consent tracking. Existing customers start with NULL (no consent on
 // record), so they are asked to agree on their next visit rather than assumed to have.
 if (!usersColumns.includes('privacy_consent_at')) {
@@ -158,7 +177,26 @@ if (!activityColumns.includes('actor_name')) {
   `);
 }
 
-seed(db);
+// Demo data (sample films, viewers and the admin@culturedafrica.co.za / admin123 login)
+// is for local development only. A production database starts empty: create the first
+// admin with `npm run create-admin`. SEED_DEMO_DATA=true forces it on (e.g. a demo server).
+const SHOULD_SEED = process.env.SEED_DEMO_DATA === 'true'
+  || (process.env.NODE_ENV !== 'production' && process.env.SEED_DEMO_DATA !== 'false');
+if (SHOULD_SEED) seed(db);
+
+// One Paystack payment = one purchase. Without this, the same successful reference could
+// be replayed against every other film at the same price.
+const duplicateRefs = db.prepare(`
+  SELECT COUNT(*) AS n FROM (
+    SELECT transaction_ref FROM purchases WHERE transaction_ref IS NOT NULL
+    GROUP BY transaction_ref HAVING COUNT(*) > 1
+  )
+`).get().n;
+if (duplicateRefs === 0) {
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_purchases_transaction_ref ON purchases(transaction_ref) WHERE transaction_ref IS NOT NULL');
+} else {
+  console.warn(`${duplicateRefs} payment reference(s) are used by more than one purchase — the one-payment-per-purchase index was not created. Review the purchases table.`);
+}
 
 // content.uploaded_by is a NOT NULL FK into users(user_id). Admins created through
 // the new invite system only exist in the `admins` table, so this lazily creates a

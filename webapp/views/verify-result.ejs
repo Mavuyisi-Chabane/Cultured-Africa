@@ -59,6 +59,7 @@
 
         <% if (showResendForm) { %>
             <form action="/resend-verification" method="POST" class="<%= status === 'resend-not-found' ? '' : 'mt-2' %>">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <% if (email) { %>
                     <input type="hidden" name="email" value="<%= email %>">
                     <button type="submit" class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-3 px-8 rounded-xl shadow-lg shadow-[#fb6b10]/20 transition-all">

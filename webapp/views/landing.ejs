@@ -182,6 +182,7 @@
                                 <div class="absolute top-5 right-5"><%- include('partials/age-rating', { classification: film.classification }) %></div>
                                 <div class="absolute bottom-6 left-6 right-6">
                                     <span class="text-[10px] uppercase tracking-widest text-[#fcaa13] border border-[#fcaa13] px-2 py-1 rounded-full bg-black/40"><%= film.culture %></span>
+                                    <% if (film.comingSoon) { %><span class="ml-1 text-[10px] uppercase tracking-widest text-[#140d0a] bg-[#fcaa13] px-2 py-1 rounded-full font-bold">Coming soon</span><% } %>
                                 </div>
                             </div>
                         </button>
@@ -298,7 +299,7 @@
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-12 border-t border-borderdark gap-8">
             <div class="flex gap-8 text-xs uppercase tracking-widest font-bold text-[#f4ece3]/40">
                 <a href="#" class="hover:text-[#f4ece3] transition-colors">Legal</a>
-                <a href="#" class="hover:text-[#f4ece3] transition-colors">Terms</a>
+                <a href="/purchase-terms" class="hover:text-[#f4ece3] transition-colors">Pricing &amp; Refunds</a>
                 <a href="/privacy" class="hover:text-[#f4ece3] transition-colors">Privacy</a>
             </div>
             <div class="flex gap-6">
@@ -321,57 +322,6 @@
         </div>
     </footer>
 
-    <!-- Trailer player (opened by any [data-trailer-src] button) -->
-    <div id="trailer-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/85 p-4" role="dialog" aria-modal="true" aria-labelledby="trailer-modal-title">
-        <div class="w-full max-w-4xl">
-            <div class="flex items-center justify-between mb-3">
-                <h3 id="trailer-modal-title" class="font-serif text-2xl text-[#f4ece3]"></h3>
-                <button type="button" id="trailer-modal-close" class="w-10 h-10 rounded-full bg-[#1e1613] text-[#f4ece3] hover:text-[#fcaa13] flex items-center justify-center" aria-label="Close trailer">
-                    <i class="fas fa-xmark"></i>
-                </button>
-            </div>
-            <video id="trailer-modal-video" class="w-full max-h-[75vh] rounded-2xl bg-black" controls playsinline preload="none"></video>
-        </div>
-    </div>
-    <script>
-        (function () {
-            var modal = document.getElementById('trailer-modal');
-            var video = document.getElementById('trailer-modal-video');
-            var title = document.getElementById('trailer-modal-title');
-            var closeBtn = document.getElementById('trailer-modal-close');
-            var lastTrigger = null;
-
-            function open(trigger) {
-                lastTrigger = trigger;
-                title.textContent = trigger.getAttribute('data-trailer-title') + ' — Trailer';
-                video.src = trigger.getAttribute('data-trailer-src');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                document.body.style.overflow = 'hidden';
-                closeBtn.focus();
-                var playing = video.play();
-                if (playing && playing.catch) playing.catch(function () {});
-            }
-
-            function close() {
-                video.pause();
-                video.removeAttribute('src');
-                video.load();
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                document.body.style.overflow = '';
-                if (lastTrigger) lastTrigger.focus();
-            }
-
-            document.querySelectorAll('[data-trailer-src]').forEach(function (btn) {
-                btn.addEventListener('click', function () { open(btn); });
-            });
-            closeBtn.addEventListener('click', close);
-            modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && !modal.classList.contains('hidden')) close();
-            });
-        })();
-    </script>
+    <%- include('partials/trailer-modal') %>
 </body>
 </html>

@@ -29,7 +29,7 @@
                 <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ef420f] text-sm font-medium"><%= error %></div>
             <% } %>
 
-            <form class="space-y-6" method="POST" enctype="multipart/form-data" action="<%= editing && editing.id ? '/admin/films/' + editing.id + '/edit' : '/admin/upload' %>">
+            <form class="space-y-6" method="POST" enctype="multipart/form-data" action="<%= editing && editing.id ? '/admin/films/' + editing.id + '/edit' : '/admin/upload' %>?_csrf=<%= csrfToken %>">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Film Title <span class="text-[#fcaa13]">*</span></label>
@@ -112,13 +112,34 @@
                         <p class="text-[11px] text-[#a99a8b] mt-2">Tick anything viewers should be warned about.</p>
                     </fieldset>
 
+                    <%
+                        const isEditingFilm = Boolean(editing && editing.id);
+                        const editingComingSoon = isEditingFilm && !editing.videoUrl;
+                        const comingSoonChecked = !isEditingFilm && editing && editing.comingSoon === 'yes';
+                    %>
+                    <% if (isEditingFilm && editingComingSoon) { %>
+                        <div class="md:col-span-2 rounded-xl border border-[#fcaa13]/40 bg-[#271c17]/50 p-4 text-sm text-[#f7efe6]">
+                            <p class="font-bold text-[#fcaa13] mb-1"><i class="fa-solid fa-clock mr-1"></i> This film is "Coming soon"</p>
+                            <p class="text-[#a99a8b]">Customers can watch its trailer but can't buy it yet. Add the full video below and save to release it for sale.</p>
+                        </div>
+                    <% } else if (!isEditingFilm) { %>
+                        <div class="md:col-span-2 flex items-start gap-3 rounded-xl border border-[#38281f] bg-[#271c17]/30 p-4">
+                            <input type="checkbox" id="comingSoon" name="comingSoon" value="yes" <%= comingSoonChecked ? 'checked' : '' %>
+                                class="mt-1 h-5 w-5 flex-shrink-0 accent-[#fb6b10] cursor-pointer">
+                            <label for="comingSoon" class="cursor-pointer">
+                                <span class="block text-sm font-bold text-[#f7efe6]">Coming soon: I only have the trailer for now</span>
+                                <span class="block text-[11px] text-[#a99a8b] mt-1">The film is listed with its trailer and a "Coming soon" label, and can't be bought yet. Add the full video later through Edit to release it.</span>
+                            </label>
+                        </div>
+                    <% } %>
+
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">
-                            Video File <% if (!(editing && editing.videoUrl)) { %><span class="text-[#fcaa13]">*</span><% } %>
+                            Video File <span id="videoRequiredMark" class="text-[#fcaa13] <%= (isEditingFilm || comingSoonChecked) ? 'hidden' : '' %>">*</span>
                         </label>
-                        <input type="file" name="videoFile" id="videoInput" accept="video/*" <%= (editing && editing.videoUrl) ? '' : 'required' %>
+                        <input type="file" name="videoFile" id="videoInput" accept=".mp4,.m4v,.webm,.mov,video/mp4,video/webm,video/quicktime" <%= (isEditingFilm || comingSoonChecked) ? '' : 'required' %>
                             class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#fb6b10] file:text-[#f4ece3] hover:file:bg-[#ef420f] file:cursor-pointer cursor-pointer">
-                        <p class="text-[11px] text-[#a99a8b] mt-2">Supported formats: MP4, MOV, WebM, AVI, MKV</p>
+                        <p class="text-[11px] text-[#a99a8b] mt-2">Supported formats: MP4 (recommended), WebM, MOV. Maximum 9 GB.</p>
                         <% if (editing && editing.videoUrl) { %>
                             <p class="text-[11px] text-[#a99a8b] mt-2">Current file: <span class="font-medium"><%= editing.videoUrl.split('/').pop() %></span> — choose a new file to replace it.</p>
                         <% } %>
@@ -129,27 +150,32 @@
                         // uploaded video file (the seeded demo films point at placeholder images instead).
                         const currentVideoUsable = Boolean(editing && editing.id && editing.videoUrl &&
                             editing.videoUrl.startsWith('/uploads/') && /\.(mp4|webm|mov|m4v|ogv)$/i.test(editing.videoUrl));
+                        const currentTrailerUsable = Boolean(editing && editing.id && editing.trailerUrl &&
+                            editing.trailerUrl.startsWith('/uploads/') && /\.(mp4|webm|mov|m4v|ogv)$/i.test(editing.trailerUrl));
                     %>
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">
-                            Thumbnail Image <% if (!(editing && editing.thumbnailUrl)) { %><span class="text-[#fcaa13]">*</span><% } %>
+                            Thumbnail Image <span class="font-normal normal-case tracking-normal text-[#a99a8b]">(Optional)</span>
                         </label>
-                        <input type="file" name="thumbnailFile" id="thumbnailInput" accept="image/*" <%= (editing && editing.thumbnailUrl) ? '' : 'required' %>
+                        <input type="file" name="thumbnailFile" id="thumbnailInput" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
                             class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#fb6b10] file:text-[#f4ece3] hover:file:bg-[#ef420f] file:cursor-pointer cursor-pointer">
                         <p class="text-[11px] text-[#a99a8b] mt-2">
-                            Supported formats: JPG, PNG, WebP, GIF.
+                            Supported formats: JPG, PNG, WebP, GIF. Maximum 10 MB.
                             <% if (editing && editing.id) { %>
                                 Or pick a frame from the video below.
                             <% } else { %>
-                                No image? Leave this empty — once you choose the video file, a frame from it is used automatically.
+                                No image? Leave this empty. A frame from the video (or trailer) is used automatically, or a Cultured Africa placeholder if no frame can be taken. You can add a real thumbnail later through Edit.
                             <% } %>
                         </p>
                         <% if (editing && editing.thumbnailUrl) { %>
                             <img src="<%= editing.thumbnailUrl %>" class="mt-3 w-24 h-16 object-cover rounded-lg border border-[#38281f]" alt="Current thumbnail">
+                            <% if (editing.usesPlaceholderThumbnail) { %>
+                                <p class="text-[11px] text-[#fcaa13] mt-2">This film is using the Cultured Africa placeholder image. Upload a thumbnail or pick a frame from the video to replace it.</p>
+                            <% } %>
                         <% } %>
                         <% if (editing && editing.id) { %>
-                            <button type="button" id="thumbFromVideoBtn" data-current-video="<%= currentVideoUsable ? editing.videoUrl : '' %>"
-                                class="<%= currentVideoUsable ? '' : 'hidden' %> mt-3 inline-flex items-center gap-2 text-xs font-bold text-[#fcaa13] hover:underline">
+                            <button type="button" id="thumbFromVideoBtn" data-current-video="<%= currentVideoUsable ? editing.videoUrl : (currentTrailerUsable ? editing.trailerUrl : '') %>"
+                                class="<%= (currentVideoUsable || currentTrailerUsable) ? '' : 'hidden' %> mt-3 inline-flex items-center gap-2 text-xs font-bold text-[#fcaa13] hover:underline">
                                 <i class="fa-solid fa-film"></i> Pick a frame from the video
                             </button>
                         <% } %>
@@ -175,10 +201,10 @@
                     </div>
 
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Trailer File (Optional)</label>
-                        <input type="file" name="trailerFile" accept="video/*"
+                        <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Trailer File <span id="trailerOptionalLabel" class="<%= comingSoonChecked ? 'hidden' : '' %>">(Optional)</span><span id="trailerRequiredMark" class="text-[#fcaa13] <%= comingSoonChecked ? '' : 'hidden' %>">*</span></label>
+                        <input type="file" name="trailerFile" id="trailerInput" <%= comingSoonChecked ? 'required' : '' %> accept=".mp4,.m4v,.webm,.mov,video/mp4,video/webm,video/quicktime"
                             class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#271c17] file:text-[#f7efe6] hover:file:bg-[#38281f] file:cursor-pointer cursor-pointer">
-                        <p class="text-[11px] text-[#a99a8b] mt-2">Supported formats: MP4, MOV, WebM, AVI, MKV</p>
+                        <p class="text-[11px] text-[#a99a8b] mt-2">Supported formats: MP4 (recommended), WebM, MOV. Maximum 9 GB.</p>
                         <p class="text-[11px] text-[#fcaa13] mt-1">Films with a trailer are featured on the public home page, where anyone can watch the trailer without logging in. MP4 plays in every browser.</p>
                         <% if (editing && editing.trailerUrl) { %>
                             <p class="text-[11px] text-[#a99a8b] mt-2">Current file: <span class="font-medium"><%= editing.trailerUrl.split('/').pop() %></span></p>
@@ -216,6 +242,23 @@
             input.required = isOther;
             if (isOther) input.focus();
         });
+    })();
+
+    // "Coming soon": the full video becomes optional and the trailer becomes required.
+    (function () {
+        const box = document.getElementById('comingSoon');
+        if (!box) return;
+        const video = document.getElementById('videoInput');
+        const trailer = document.getElementById('trailerInput');
+        function sync() {
+            video.required = !box.checked;
+            trailer.required = box.checked;
+            document.getElementById('videoRequiredMark').classList.toggle('hidden', box.checked);
+            document.getElementById('trailerRequiredMark').classList.toggle('hidden', !box.checked);
+            document.getElementById('trailerOptionalLabel').classList.toggle('hidden', box.checked);
+        }
+        box.addEventListener('change', sync);
+        sync();
     })();
 
     // Explain the chosen age rating under the select.
@@ -388,6 +431,18 @@
             });
         }
 
+        const trailerInput = document.getElementById('trailerInput');
+        if (trailerInput) {
+            trailerInput.addEventListener('change', () => {
+                const file = trailerInput.files && trailerInput.files[0];
+                if (!file || (videoInput.files && videoInput.files.length)) return;
+                autoApply = isEditing ? autoApply : !manualImage;
+                if (fromVideoBtn) fromVideoBtn.classList.remove('hidden');
+                if (isEditing && picker.classList.contains('hidden')) return;
+                loadSource(URL.createObjectURL(file), true);
+            });
+        }
+
         videoInput.addEventListener('change', () => {
             const file = videoInput.files && videoInput.files[0];
             if (!file) return;
@@ -400,7 +455,7 @@
 
         if (fromVideoBtn) {
             fromVideoBtn.addEventListener('click', () => {
-                const file = videoInput.files && videoInput.files[0];
+                const file = (videoInput.files && videoInput.files[0]) || (trailerInput && trailerInput.files && trailerInput.files[0]);
                 manualImage = false;
                 autoApply = true;
                 if (file) loadSource(URL.createObjectURL(file), true);

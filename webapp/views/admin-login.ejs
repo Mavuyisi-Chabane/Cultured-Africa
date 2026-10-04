@@ -21,6 +21,7 @@
 
         <% if (step === 'email') { %>
             <form class="space-y-6" method="POST" action="/admin/login/continue">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="email">Email Address</label>
                     <div class="relative">
@@ -40,6 +41,7 @@
 
         <% if (step === 'password') { %>
             <form class="space-y-6" method="POST" action="/admin/login/password">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <input type="hidden" name="email" value="<%= email %>">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2">Email Address</label>
@@ -79,6 +81,7 @@
                 <% } %>
             </div>
             <form class="space-y-6" method="POST" action="/admin/login/verify-code">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <input type="hidden" name="email" value="<%= email %>">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="code">Verification Code</label>
@@ -105,6 +108,7 @@
                 <p class="text-[#a99a8b] text-sm">Email verified. Set a password for <span class="font-bold text-[#f7efe6]"><%= email %></span> to finish setting up your admin account.</p>
             </div>
             <form class="space-y-6" method="POST" action="/admin/login/set-password">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div id="field-password">
                     <label class="block text-xs font-bold uppercase tracking-wider text-[#f7efe6] mb-2" for="password">New Password</label>
                     <div class="relative">

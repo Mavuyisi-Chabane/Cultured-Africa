@@ -2,6 +2,9 @@ const express = require('express');
 const { db, logActivity, customerActor } = require('../db');
 const { requireLogin, redirectAdminAway } = require('../middleware/auth');
 const { PRIVACY_POLICY_VERSION, PRIVACY_POLICY_UPDATED } = require('../config/privacy');
+const purchaseTerms = require('../config/purchaseTerms');
+const business = require('../config/business');
+const { ACCESS_MONTHS } = require('../config/access');
 
 const router = express.Router();
 
@@ -9,6 +12,10 @@ function recordConsent(userId) {
   db.prepare("UPDATE users SET privacy_consent_at = datetime('now'), privacy_policy_version = ? WHERE user_id = ?")
     .run(PRIVACY_POLICY_VERSION, userId);
 }
+
+router.get('/purchase-terms', (req, res) => {
+  res.render('purchase-terms', { terms: purchaseTerms, business, accessMonths: ACCESS_MONTHS });
+});
 
 router.get('/privacy', (req, res) => {
   res.render('privacy', { policyUpdated: PRIVACY_POLICY_UPDATED });

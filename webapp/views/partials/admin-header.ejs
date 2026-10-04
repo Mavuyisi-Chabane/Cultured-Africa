@@ -16,10 +16,12 @@
             <a href="/admin/dashboard" class="display-font text-2xl font-bold text-[#fcaa13] tracking-tight flex items-center gap-2"><img src="/images/brand/sun.png" alt="" class="h-8 w-8">Cultured Africa</a>
             <span class="text-[#f4ece3]/40 text-xs font-bold uppercase tracking-widest ml-2 border-l border-[#38281f]/20 pl-3">Admin Portal</span>
         </div>
-        <div class="hidden md:flex items-center gap-6">
+        <div class="hidden lg:flex items-center gap-5">
             <%- navLink('/admin/dashboard', 'Dashboard', 'dashboard') %>
             <%- navLink('/admin/activity', 'Recent Activity', 'activity') %>
             <%- navLink('/admin/films', 'Manage Films', 'films') %>
+            <%- navLink('/admin/cultures', 'Cultures', 'cultures') %>
+            <%- navLink('/admin/customers', 'Customers', 'customers') %>
             <%- navLink('/admin/feedback', 'Feedback', 'feedback') %>
             <%- navLink('/admin/reports', 'Reports', reportKeys) %>
             <% if (currentAdmin.role === 'super_admin') { %>
@@ -38,6 +40,7 @@
             </div>
         </div>
         <form action="/admin/logout" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button type="submit" class="text-[#f4ece3]/80 hover:text-[#fcaa13] transition-colors text-sm font-medium">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </button>

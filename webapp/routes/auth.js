@@ -7,6 +7,8 @@ const { getPasswordRequirementFailures } = require('../utils/password');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/email');
 const { createRateLimiter } = require('../middleware/rateLimit');
 const { PRIVACY_POLICY_VERSION } = require('../config/privacy');
+const business = require('../config/business');
+const { startLoggedInSession, loginRateLimit, TOO_MANY_ATTEMPTS } = require('../utils/loginSession');
 
 const router = express.Router();
 
@@ -35,8 +37,11 @@ router.get('/login', (req, res) => {
   res.render('login', { error: null, notice, showResend: false, resendEmail: '' });
 });
 
-router.post('/login', (req, res) => {
+router.post('/login', loginRateLimit, (req, res, next) => {
   const { email, password } = req.body;
+  if (req.rateLimitExceeded) {
+    return res.render('login', { error: TOO_MANY_ATTEMPTS, showResend: false, resendEmail: '' });
+  }
   const user = db.prepare('SELECT * FROM users WHERE lower(email) = lower(?)').get(email || '');
 
   if (!user || !bcrypt.compareSync(password || '', user.password_hash)) {
@@ -54,6 +59,14 @@ router.post('/login', (req, res) => {
     });
   }
 
+  // Checked only after the password, so this message can't reveal which emails exist.
+  if (user.status === 'suspended') {
+    return res.render('login', {
+      error: `This account has been suspended. Please contact ${business.BUSINESS_EMAIL} if you think this is a mistake.`,
+      showResend: false, resendEmail: ''
+    });
+  }
+
   if (!user.is_verified) {
     return res.render('login', {
       error: 'Please verify your email before logging in. Check your inbox for the verification code, or request a new one below.',
@@ -62,11 +75,12 @@ router.post('/login', (req, res) => {
     });
   }
 
-  req.session.user = {
-    id: user.user_id, fullName: user.full_name, email: user.email, role: user.role,
-    avatar: user.avatar, sessionVersion: user.session_version
-  };
-  res.redirect('/');
+  startLoggedInSession(req, {
+    user: {
+      id: user.user_id, fullName: user.full_name, email: user.email, role: user.role,
+      avatar: user.avatar, sessionVersion: user.session_version
+    }
+  }, err => (err ? next(err) : res.redirect('/')));
 });
 
 router.get('/register', (req, res) => {

@@ -13,7 +13,12 @@ CREATE TABLE IF NOT EXISTS users (
   -- POPIA consent: when this customer agreed to the privacy policy, and which version
   -- (config/privacy.js). NULL = never agreed; they're asked before using the site.
   privacy_consent_at      TEXT,
-  privacy_policy_version  TEXT
+  privacy_policy_version  TEXT,
+  -- Set by an admin on the Customers page. A suspended customer is logged out
+  -- everywhere and cannot log in until reactivated.
+  status            TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
+  suspended_at      TEXT,
+  suspension_reason TEXT
 );
 
 CREATE TABLE IF NOT EXISTS cultures (
@@ -50,7 +55,12 @@ CREATE TABLE IF NOT EXISTS purchases (
   amount_paid       REAL NOT NULL,
   payment_status    TEXT NOT NULL DEFAULT 'completed' CHECK (payment_status IN ('pending', 'completed', 'failed')),
   transaction_ref   TEXT,
-  purchase_date     TEXT NOT NULL DEFAULT (datetime('now'))
+  purchase_date     TEXT NOT NULL DEFAULT (datetime('now')),
+  -- From Paystack's verification response, for the customer's receipt. Never the card
+  -- number itself: only the channel (card, eft, ...), the brand and the last 4 digits.
+  payment_channel   TEXT,
+  card_brand        TEXT,
+  card_last4        TEXT
 );
 
 -- One row per (user, film) session-visit — the session log used for analytics

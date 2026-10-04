@@ -13,6 +13,7 @@
         <h1 class="text-2xl md:text-3xl font-bold text-[#f7efe6]">Notifications</h1>
         <% if (notifications.some(n => !n.isRead)) { %>
             <form action="/notifications/mark-all-read" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button type="submit" class="text-[#fcaa13] text-sm font-bold hover:underline">Mark all as read</button>
             </form>
         <% } %>

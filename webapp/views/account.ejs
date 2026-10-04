@@ -54,6 +54,7 @@
                 It expires in <span class="font-bold text-[#f7efe6]">15 minutes</span>.
             </p>
             <form method="POST" action="/account/email/verify" class="flex flex-wrap items-end gap-4 mb-4">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div>
                     <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Verification Code</label>
                     <input type="text" name="code" placeholder="123456" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required
@@ -62,11 +63,13 @@
                 <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold px-5 py-2.5 rounded-xl text-sm transition-all">Confirm Change</button>
             </form>
             <form method="POST" action="/account/email/cancel">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button type="submit" class="text-[#a99a8b] hover:text-[#f7efe6] text-xs font-bold uppercase tracking-wider">Cancel this change</button>
             </form>
         <% } else { %>
             <p class="text-[#a99a8b] text-sm mb-5">Changing your email requires your current password, and a code sent to the new address to confirm you own it.</p>
             <form method="POST" action="/account/email" class="space-y-4">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div>
                     <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">New Email Address</label>
                     <input type="email" name="newEmail" required placeholder="new-email@example.com"
@@ -79,6 +82,30 @@
                 </div>
                 <button type="submit" class="bg-[#0f0a08] hover:bg-[#0a0605] text-[#fcaa13] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#fcaa13]/30">Send Verification Code</button>
             </form>
+        <% } %>
+    </div>
+
+    <!-- Purchases & receipts -->
+    <div class="bg-[#1e1613] rounded-[24px] border border-[#38281f] p-8 shadow-sm z-10 relative mb-8">
+        <h2 class="text-sm font-bold uppercase tracking-widest text-[#f7efe6] mb-1">Purchases &amp; Receipts</h2>
+        <% if (purchases.length === 0) { %>
+            <p class="text-[#a99a8b] text-sm">You haven't bought any films yet. Receipts for your purchases will appear here.</p>
+        <% } else { %>
+            <p class="text-[#a99a8b] text-sm mb-4">Proof of purchase for every film you've bought. Open a receipt to print it or save it as a PDF.</p>
+            <ul class="divide-y divide-[#38281f]">
+                <% purchases.forEach(p => { %>
+                    <li class="py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-[#f7efe6]"><%= p.title %></p>
+                            <p class="text-xs text-[#a99a8b]"><%= p.dateLabel %> · <%= p.number %></p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-sm font-bold text-[#f7efe6] tabular-nums"><%= p.totalLabel %></span>
+                            <a href="/account/purchases/<%= p.id %>/receipt" class="text-xs font-bold text-[#fcaa13] hover:underline">View receipt</a>
+                        </div>
+                    </li>
+                <% }) %>
+            </ul>
         <% } %>
     </div>
 
@@ -117,6 +144,7 @@
         <h3 class="text-xl font-bold text-[#f7efe6] mb-2">Delete your account?</h3>
         <p class="text-sm text-[#a99a8b] mb-4">This permanently deletes your account and everything tied to it. Re-enter your password to confirm.</p>
         <form method="POST" action="/account/delete">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Password</label>
             <input type="password" name="password" required autocomplete="current-password"
                 class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all mb-6">

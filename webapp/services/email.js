@@ -94,4 +94,51 @@ async function sendEmailChangeVerification(target, code) {
   });
 }
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendAdminInviteEmail, sendEmailChangeVerification };
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
+// Proof of purchase, sent as soon as Paystack confirms the payment. `receipt` comes from
+// utils/receipts.js getReceipt(); the same receipt is viewable on the Account page.
+async function sendPurchaseReceipt(receipt) {
+  const b = receipt.business;
+  const receiptUrl = `${config.APP_BASE_URL}/account/purchases/${receipt.id}/receipt`;
+  const e = escapeHtml;
+  const rows = [
+    ['Receipt number', receipt.number],
+    ['Date', receipt.purchasedAtLabel],
+    ['Film', `${receipt.film.title} (${receipt.film.culture})`],
+    ['Access', `Unlimited viewing until ${receipt.accessUntilLabel} (${receipt.accessMonths} months)`],
+    ['Paid with', receipt.paymentMethod],
+    ['Payment reference', receipt.reference]
+  ];
+  const seller = [b.BUSINESS_NAME, b.BUSINESS_REG_NO && `Reg. no. ${b.BUSINESS_REG_NO}`, b.BUSINESS_VAT_NO && `VAT no. ${b.BUSINESS_VAT_NO}`, b.BUSINESS_ADDRESS, b.BUSINESS_EMAIL].filter(Boolean);
+
+  await deliver({
+    from: config.MAIL_FROM,
+    to: receipt.customer.email,
+    subject: `Your Cultured Africa receipt ${receipt.number}: ${receipt.film.title}`,
+    text: [
+      `Hi ${receipt.customer.name},`, '',
+      `Thank you for your purchase. This is your receipt.`, '',
+      ...rows.map(([k, v]) => `${k}: ${v}`),
+      `Total paid: ${receipt.totalLabel} (${receipt.currency})`,
+      ...(receipt.vatLabel ? [`Includes VAT (15%): ${receipt.vatLabel}`] : []), '',
+      `Watch now or view this receipt any time: ${receiptUrl}`, '',
+      seller.join(' · ')
+    ].join('\n'),
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#1f1a16;max-width:560px">
+<p>Hi ${e(receipt.customer.name)},</p>
+<p>Thank you for your purchase. This is your receipt.</p>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:12px 0">
+${rows.map(([k, v]) => `<tr><td style="padding:6px 8px;border-bottom:1px solid #e6ddd2;color:#645a50;width:40%">${e(k)}</td><td style="padding:6px 8px;border-bottom:1px solid #e6ddd2">${e(v)}</td></tr>`).join('')}
+<tr><td style="padding:8px;font-weight:bold">Total paid</td><td style="padding:8px;font-weight:bold;font-size:16px">${e(receipt.totalLabel)} <span style="font-weight:normal;color:#645a50;font-size:12px">${e(receipt.currency)}</span></td></tr>
+${receipt.vatLabel ? `<tr><td style="padding:4px 8px;color:#645a50">Includes VAT (15%)</td><td style="padding:4px 8px">${e(receipt.vatLabel)}</td></tr>` : ''}
+</table>
+<p><a href="${receiptUrl}" style="display:inline-block;background:#c9a84c;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold">View receipt online</a></p>
+<p style="font-size:12px;color:#645a50;margin-top:24px">${seller.map(e).join(' · ')}</p>
+</div>`
+  });
+}
+
+module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendAdminInviteEmail, sendEmailChangeVerification, sendPurchaseReceipt };

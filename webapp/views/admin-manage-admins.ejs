@@ -45,6 +45,7 @@
     <div class="bg-[#1e1613] rounded-2xl border border-[#38281f] p-6 shadow-sm mb-8 z-10 relative">
         <h2 class="text-sm font-bold uppercase tracking-widest text-[#f7efe6] mb-4">Invite a New Admin</h2>
         <form method="POST" action="/admin/manage-admins/invite" class="flex flex-wrap items-end gap-4">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <div class="flex-1 min-w-[200px]">
                 <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Name</label>
                 <input type="text" name="name" required placeholder="Full name"
@@ -104,10 +105,12 @@
                                 <div class="flex items-center gap-3">
                                     <% if (a.pending && a.invite) { %>
                                         <form action="/admin/manage-admins/invites/<%= a.invite.id %>/resend" method="POST">
+                                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                             <button type="submit" class="text-[#a99a8b] hover:text-[#fcaa13] text-xs font-bold uppercase tracking-wider">Resend Invite</button>
                                         </form>
                                         <form action="/admin/manage-admins/<%= a.id %>/cancel-invite" method="POST"
                                             onsubmit="return confirm('Cancel this invite for &quot;<%= a.name %>&quot;? They will no longer be able to accept it, and their reserved admin ID (<%= a.id %>) will be freed up.');">
+                                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                             <button type="submit" class="text-[#a99a8b] hover:text-[#ef420f] text-xs font-bold uppercase tracking-wider">Cancel Invite</button>
                                         </form>
                                     <% } else if (!a.pending && !a.isSelf) { %>
@@ -153,6 +156,7 @@
         <h3 id="reauth-title" class="display-font text-xl font-bold text-[#f7efe6] mb-2">Confirm this action</h3>
         <p id="reauth-description" class="text-sm text-[#a99a8b] mb-4"></p>
         <form id="reauth-form" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="hidden" name="role" id="reauth-role-input">
             <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Re-enter your password to confirm this action</label>
             <input type="password" name="password" required autocomplete="current-password"

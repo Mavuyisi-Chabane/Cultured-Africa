@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Pricing, Billing and Cancellation Policy' }) %>
+<style>
+    .policy h2 { font-family: 'Cinzel', serif; font-size: 1.25rem; font-weight: 700; color: #fcaa13; margin-bottom: 0.75rem; }
+    .policy p { margin-bottom: 0.75rem; }
+    .policy ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+    .policy li + li { margin-top: 0.375rem; }
+    .policy a { color: #fcaa13; text-decoration: underline; }
+</style>
+</head>
+<body class="min-h-screen">
+<%- include('partials/simple-header') %>
+
+<main class="max-w-3xl mx-auto px-6 py-12 relative">
+    <h1 class="display-font text-3xl md:text-4xl font-bold text-[#f7efe6] mb-2">Pricing, Billing and Cancellation Policy</h1>
+    <p class="text-[#a99a8b] text-sm mb-8">Last updated: <%= terms.POLICY_UPDATED %></p>
+
+    <div class="mb-10 rounded-2xl border border-[#38281f] bg-[#1e1613] p-6">
+        <p class="text-xs font-bold uppercase tracking-widest text-[#fcaa13] mb-3">In short</p>
+        <ul class="space-y-2 text-[#f7efe6]">
+            <li><i class="fa-solid fa-ticket text-[#fcaa13] w-5"></i> Pay once per film. No subscription, no recurring charges.</li>
+            <li><i class="fa-regular fa-clock text-[#fcaa13] w-5"></i> Watch as often as you like for <%= accessMonths %> months after buying.</li>
+            <li><i class="fa-solid fa-rotate-left text-[#fcaa13] w-5"></i> Changed your mind? Full refund within <%= terms.REFUND_DAYS %> days if you've watched no more than <%= terms.REFUND_MAX_MINUTES_WATCHED %> minutes.</li>
+            <li><i class="fa-solid fa-lock text-[#fcaa13] w-5"></i> Payments are handled securely by Paystack. We never see your card details.</li>
+        </ul>
+    </div>
+
+    <div class="policy space-y-10 text-[#f7efe6] text-lg leading-relaxed">
+        <section>
+            <p>This policy explains how films are priced on the Cultured Africa website, how you pay, how long you can watch what you buy, and when you can cancel or get a refund. By buying a film you agree to this policy.</p>
+        </section>
+
+        <section>
+            <h2>1. Pricing</h2>
+            <ul>
+                <li>Films are sold individually (pay per film). There is <strong>no subscription and no recurring charge</strong>.</li>
+                <li>The price of each film is shown on the film's page and on its Buy button, in South African rand (ZAR), before you pay. The price shown is the total amount you pay.</li>
+                <li>Some films are <strong>free</strong> and can be watched by anyone with a free Cultured Africa account. These are marked "Free".</li>
+                <li>Films marked <strong>"Coming soon"</strong> can be previewed through their trailer but cannot be bought until they are released.</li>
+                <li>Trailers are always free and can be watched without an account.</li>
+                <li>We may change film prices from time to time. A price change never affects a film you have already bought.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>2. Paying for a film</h2>
+            <ul>
+                <li>Payments are processed securely by <strong>Paystack</strong>, a licensed payment provider. Cultured Africa never sees or stores your card details.</li>
+                <li>You pay the full price once, at the time of purchase. Your purchase is completed only after Paystack confirms the payment.</li>
+                <li>If a payment fails, is declined or times out, you are not charged and the film is not unlocked. You can try again.</li>
+                <li>After a successful payment you see a confirmation on screen and in your notifications, and receive a receipt by email. Every receipt is also kept on your <a href="/account">Account page</a>, where you can print it or save it as a PDF.</li>
+                <li>You need a verified Cultured Africa account to buy a film. Each purchase is for your personal, non-commercial use.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>3. What you get when you buy a film</h2>
+            <ul>
+                <li>Unlimited viewing of that film for <strong><%= accessMonths %> months from the date of purchase</strong>. The date your access ends is shown on the film's page and in My Library.</li>
+                <li>You can watch on any device by logging in to your account, on <%= terms.DEVICES_AT_ONCE === 1 ? 'one device' : terms.DEVICES_AT_ONCE + ' devices' %> at a time.</li>
+                <li>When your access period ends, the film stays in My Library as expired, and you can buy it again at the current price to start a new access period.</li>
+                <li>Films are streamed and cannot be downloaded. Recording, copying or sharing films is not permitted.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>4. Cancelling a purchase</h2>
+            <p>Each film is a single, once-off purchase, so there is nothing to cancel on an ongoing basis: you will never be charged again unless you choose to buy another film. To cancel a purchase you have just made and get your money back, see the refund rules below.</p>
+        </section>
+
+        <section>
+            <h2>5. Refunds</h2>
+            <p><strong>Change of mind.</strong> You can ask for a full refund within <%= terms.REFUND_DAYS %> days of buying a film, as long as you have watched no more than <%= terms.REFUND_MAX_MINUTES_WATCHED %> minutes of it. After that, the purchase is final, because you asked for access to the film to begin immediately when you paid.</p>
+            <p><strong>Problems we will always refund.</strong> Whatever the above, you are entitled to a full refund if:</p>
+            <ul>
+                <li>you were charged more than once for the same film;</li>
+                <li>you were charged but the film was not unlocked in your account; or</li>
+                <li>the film will not play because of a fault on our side that we cannot fix within <%= terms.FAULT_FIX_BUSINESS_DAYS %> business days of you reporting it.</li>
+            </ul>
+            <p><strong>How to ask for a refund.</strong> Email <%= business.BUSINESS_EMAIL %> with your account email address, the film title and the receipt number (shown on your receipt, for example CA-2026-000123). We will reply within <%= terms.REFUND_RESPONSE_BUSINESS_DAYS %> business days. Approved refunds are paid back to the card you paid with, through Paystack; your bank may take a further 5 to 10 business days to show it.</p>
+            <p><strong>After a refund,</strong> your access to that film ends.</p>
+            <p><strong>Chargebacks.</strong> Please contact us before disputing a payment with your bank, so that we can resolve it quickly.</p>
+        </section>
+
+        <section>
+            <h2>6. Your account</h2>
+            <ul>
+                <li>Creating an account is free. You can delete your account at any time from the <a href="/account">Account page</a>.</li>
+                <li>Deleting your account permanently removes your purchases and viewing history, and you lose access to any films you have bought. Deleting your account does not by itself entitle you to a refund: if you qualify under section 5, ask for your refund before deleting your account.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>7. Changes to this policy</h2>
+            <p>If we change this policy, we will update the date at the top of this page. Changes do not apply to purchases made before the change.</p>
+        </section>
+
+        <section>
+            <h2>8. Contact us</h2>
+            <p>
+                <%= business.BUSINESS_NAME %><% if (business.BUSINESS_REG_NO) { %>, registration number <%= business.BUSINESS_REG_NO %><% } %><% if (business.BUSINESS_VAT_NO) { %>, VAT number <%= business.BUSINESS_VAT_NO %><% } %><br>
+                <%= business.BUSINESS_ADDRESS %><br>
+                Email: <%= business.BUSINESS_EMAIL %>
+            </p>
+            <p>This policy does not limit any rights you have under the Consumer Protection Act or the Electronic Communications and Transactions Act. See also our <a href="/privacy">Privacy Policy</a>.</p>
+        </section>
+    </div>
+</main>
+</body>
+</html>

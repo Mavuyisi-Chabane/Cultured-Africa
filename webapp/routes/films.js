@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 const { UPLOAD_DIR } = require('../middleware/upload');
 const { describeRating } = require('../config/ageRatings');
 const { db, logActivity, customerActor, notify } = require('../db');
@@ -155,6 +156,11 @@ router.get('/', redirectAdminAway, (req, res) => {
 // The public catalogue: anyone can browse, filter, search and watch trailers here.
 // Buying or watching a full film asks visitors to sign in first (see film-detail).
 router.get('/films', redirectAdminAway, (req, res) => {
+  // Logged-in customers browse on Home, which is the same catalogue; keep their filters.
+  if (req.session.user) {
+    const qs = new URLSearchParams(req.query).toString();
+    return res.redirect(qs ? `/?${qs}` : '/');
+  }
   renderCatalogue(req, res, '/films');
 });
 
@@ -336,6 +342,13 @@ router.get('/film/:id/stream', redirectAdminAway, requireLogin, (req, res) => {
     });
   }
 
+  // One device at a time: only the browser tab that last pressed Play on this account
+  // (see /playback/claim) gets video. Any other tab's requests are refused straight away.
+  const active = db.prepare('SELECT active_playback_token FROM users WHERE user_id = ?').get(req.session.user.id);
+  if (!req.query.pt || !active || req.query.pt !== active.active_playback_token) {
+    return res.status(409).type('text').send('This account is watching on another device.');
+  }
+
   const filePath = path.join(UPLOAD_DIR, path.basename(film.videoUrl));
   res.setHeader('Cache-Control', 'private, no-store');
   res.setHeader('Content-Disposition', 'inline');
@@ -367,11 +380,36 @@ router.get('/film/:id', redirectAdminAway, (req, res) => {
     }
   }
 
-  res.render('film-detail', { film, owned, filmReviews, access, canReview, viewId, resumeSeconds, resumeCompleted, error: null });
+  const playbackToken = owned ? crypto.randomBytes(16).toString('hex') : null;
+  res.render('film-detail', { film, owned, filmReviews, access, canReview, viewId, resumeSeconds, resumeCompleted, playbackToken, error: null });
+});
+
+const PLAYBACK_TOKEN_FORMAT = /^[a-f0-9]{32}$/;
+
+// Pressing Play: this tab becomes the account's one active device, taking over from
+// any other device (which is told to stop on its next heartbeat).
+router.post('/film/:id/playback/claim', redirectAdminAway, requireLogin, (req, res) => {
+  const film = getContent(req.params.id);
+  if (!film) return res.status(404).json({ ok: false });
+  const { owned } = getFilmDetailContext(film, req.session.user.id);
+  const token = String(req.body.playbackToken || '');
+  if (!owned || !PLAYBACK_TOKEN_FORMAT.test(token)) return res.status(403).json({ ok: false });
+
+  db.prepare("UPDATE users SET active_playback_token = ?, active_playback_at = datetime('now') WHERE user_id = ?")
+    .run(token, req.session.user.id);
+  res.json({ ok: true });
 });
 
 router.post('/film/:id/track-progress', redirectAdminAway, requireLogin, (req, res) => {
   const { viewId, progressSeconds, completed } = req.body;
+  // Heartbeat: tell the player whether it is still the account's active device.
+  const playbackToken = String(req.body.playbackToken || '');
+  const activeRow = db.prepare('SELECT active_playback_token FROM users WHERE user_id = ?').get(req.session.user.id);
+  const stillActive = Boolean(playbackToken) && activeRow && activeRow.active_playback_token === playbackToken;
+  if (stillActive) {
+    db.prepare("UPDATE users SET active_playback_at = datetime('now') WHERE user_id = ?").run(req.session.user.id);
+  }
+
   if (viewId && typeof progressSeconds === 'number' && Number.isFinite(progressSeconds)) {
     const seconds = Math.max(0, Math.round(progressSeconds));
     const isCompleted = completed ? 1 : 0;
@@ -396,7 +434,7 @@ router.post('/film/:id/track-progress', redirectAdminAway, requireLogin, (req, r
         updated_at = datetime('now')
     `).run(userId, contentId, seconds, isCompleted);
   }
-  res.status(204).end();
+  res.json({ active: stillActive });
 });
 
 router.post('/film/:id/buy', redirectAdminAway, requireLogin, async (req, res) => {

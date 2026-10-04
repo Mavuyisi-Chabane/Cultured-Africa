@@ -18,7 +18,11 @@ CREATE TABLE IF NOT EXISTS users (
   -- everywhere and cannot log in until reactivated.
   status            TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
   suspended_at      TEXT,
-  suspension_reason TEXT
+  suspension_reason TEXT,
+  -- One device at a time: the playback token of the browser tab currently allowed to
+  -- stream for this account (any film). Pressing Play elsewhere replaces it.
+  active_playback_token TEXT,
+  active_playback_at    TEXT
 );
 
 CREATE TABLE IF NOT EXISTS cultures (

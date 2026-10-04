@@ -20,9 +20,28 @@
             <% if (owned) { %>
                 <% if (film.videoUrl && film.videoUrl.startsWith('/uploads/')) { %>
                     <%# Streams through the access-checked route, never the raw /uploads file. %>
-                    <video id="filmVideo" class="w-full h-full object-contain" controls controlsList="nodownload" disablePictureInPicture oncontextmenu="return false;" poster="<%= film.thumbnailUrl %>" src="/film/<%= film.id %>/stream">
+                    <%
+                        // One device at a time: the video only loads after this tab claims playback.
+                        const pt = typeof playbackToken !== 'undefined' ? playbackToken : null;
+                    %>
+                    <video id="filmVideo" class="w-full h-full object-contain" controls controlsList="nodownload" disablePictureInPicture oncontextmenu="return false;" preload="none" poster="<%= film.thumbnailUrl %>" data-stream-src="/film/<%= film.id %>/stream?pt=<%= pt || '' %>">
                         Your browser does not support video playback.
                     </video>
+                    <div id="playOverlay" class="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <% if (pt) { %>
+                            <button type="button" id="startPlayback" class="w-20 h-20 rounded-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] shadow-xl flex items-center justify-center" aria-label="Play <%= film.title %>">
+                                <i class="fa-solid fa-play text-2xl ml-1"></i>
+                            </button>
+                        <% } else { %>
+                            <a href="/film/<%= film.id %>" class="w-20 h-20 rounded-full bg-[#fb6b10] text-[#f4ece3] shadow-xl flex items-center justify-center" aria-label="Play <%= film.title %>"><i class="fa-solid fa-play text-2xl ml-1"></i></a>
+                        <% } %>
+                    </div>
+                    <div id="otherDeviceOverlay" class="absolute inset-0 hidden flex-col items-center justify-center gap-4 bg-black/85 text-center px-6" role="alert">
+                        <i class="fa-solid fa-tv text-3xl text-[#fcaa13]"></i>
+                        <p class="text-[#f7efe6] font-bold text-lg">You're watching on another device</p>
+                        <p class="text-[#a99a8b] text-sm max-w-sm">Your account can play films on one device at a time, so playback stopped here when it started somewhere else.</p>
+                        <button type="button" id="watchHere" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-6 py-3 rounded-xl font-bold text-sm">Watch here instead</button>
+                    </div>
                     <script>
                         (function () {
                             var video = document.getElementById('filmVideo');
@@ -31,7 +50,49 @@
                             var resumeCompleted = <%= resumeCompleted ? 'true' : 'false' %>;
                             var maxSeconds = resumeSeconds;
                             var lastSent = 0;
-                            if (!video || !viewId) return;
+                            var playbackToken = <%- JSON.stringify(typeof playbackToken !== 'undefined' ? playbackToken : null) %>;
+                            var csrf = <%- JSON.stringify(csrfToken) %>;
+                            var claimed = false;
+                            var playOverlay = document.getElementById('playOverlay');
+                            var otherOverlay = document.getElementById('otherDeviceOverlay');
+                            if (!video || !viewId || !playbackToken) return;
+
+                            function showOtherDevice() {
+                                claimed = false;
+                                video.pause();
+                                otherOverlay.classList.remove('hidden');
+                                otherOverlay.classList.add('flex');
+                            }
+
+                            // Claim this tab as the account's one active device, then start loading.
+                            function claimAndPlay() {
+                                fetch('/film/<%= film.id %>/playback/claim', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                                    body: JSON.stringify({ playbackToken: playbackToken })
+                                }).then(function (r) { return r.ok ? r.json() : { ok: false }; }).then(function (data) {
+                                    if (!data.ok) return;
+                                    claimed = true;
+                                    playOverlay.classList.add('hidden');
+                                    otherOverlay.classList.add('hidden');
+                                    otherOverlay.classList.remove('flex');
+                                    var at = video.currentTime;
+                                    if (!video.getAttribute('src')) {
+                                        video.src = video.getAttribute('data-stream-src');
+                                    } else {
+                                        // Reload so the browser re-requests the video now that it's allowed.
+                                        video.load();
+                                        if (at > 0) video.addEventListener('loadedmetadata', function () { video.currentTime = at; }, { once: true });
+                                    }
+                                    var playing = video.play();
+                                    if (playing && playing.catch) playing.catch(function () {});
+                                });
+                            }
+                            document.getElementById('startPlayback').addEventListener('click', claimAndPlay);
+                            document.getElementById('watchHere').addEventListener('click', claimAndPlay);
+                            // The stream refuses this tab once another device has taken over.
+                            video.addEventListener('error', function () { if (video.getAttribute('src')) showOtherDevice(); });
+                            video.addEventListener('play', function () { if (!claimed) { video.pause(); claimAndPlay(); } });
 
                             if (!resumeCompleted && resumeSeconds > 5) {
                                 video.addEventListener('loadedmetadata', function () {
@@ -41,13 +102,19 @@
                                 }, { once: true });
                             }
 
-                            function sendProgress(seconds, completed) {
-                                var payload = JSON.stringify({ viewId: viewId, progressSeconds: seconds, completed: !!completed, _csrf: <%- JSON.stringify(csrfToken) %> });
-                                if (navigator.sendBeacon) {
+                            // Saves progress and doubles as the heartbeat that checks this is
+                            // still the account's active device. On leaving the page, a beacon
+                            // (which can't read a reply) just saves the final position.
+                            function sendProgress(seconds, completed, leaving) {
+                                var payload = JSON.stringify({ viewId: viewId, progressSeconds: seconds, completed: !!completed, playbackToken: playbackToken, _csrf: csrf });
+                                if (leaving && navigator.sendBeacon) {
                                     navigator.sendBeacon('/film/<%= film.id %>/track-progress', new Blob([payload], { type: 'application/json' }));
-                                } else {
-                                    fetch('/film/<%= film.id %>/track-progress', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true });
+                                    return;
                                 }
+                                fetch('/film/<%= film.id %>/track-progress', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true })
+                                    .then(function (r) { return r.ok ? r.json() : null; })
+                                    .then(function (data) { if (data && data.active === false && claimed) showOtherDevice(); })
+                                    .catch(function () {});
                             }
 
                             video.addEventListener('timeupdate', function () {
@@ -59,7 +126,7 @@
                                 }
                             });
                             video.addEventListener('ended', function () { sendProgress(maxSeconds, true); });
-                            window.addEventListener('pagehide', function () { sendProgress(maxSeconds, false); });
+                            window.addEventListener('pagehide', function () { sendProgress(maxSeconds, false, true); });
                         })();
                     </script>
                 <% } else { %>

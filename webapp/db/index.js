@@ -53,6 +53,14 @@ if (!usersColumns.includes('status')) {
   `);
 }
 
+// Migration: one device at a time (active playback token per account).
+if (!usersColumns.includes('active_playback_token')) {
+  db.exec(`
+    ALTER TABLE users ADD COLUMN active_playback_token TEXT;
+    ALTER TABLE users ADD COLUMN active_playback_at TEXT;
+  `);
+}
+
 // Migration: POPIA consent tracking. Existing customers start with NULL (no consent on
 // record), so they are asked to agree on their next visit rather than assumed to have.
 if (!usersColumns.includes('privacy_consent_at')) {

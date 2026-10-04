@@ -5,6 +5,8 @@
   const isLoggedIn = typeof currentUser !== 'undefined' && currentUser;
   const headerInitials = isLoggedIn ? currentUser.fullName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase() : '';
   const headerQuery = typeof filters !== 'undefined' && filters && filters.q ? filters.q : '';
+  // Customers browse and search on Home; visitors on the public catalogue at /films.
+  const searchAction = isLoggedIn ? '/' : '/films';
   const navCls = 'text-[#f4ece3] hover:text-[#fcaa13] transition-colors text-sm font-medium';
   const mobileLinkCls = 'flex items-center gap-3 px-4 py-3 rounded-xl text-[#f4ece3] hover:bg-[#1e1613] font-medium';
 %>
@@ -15,7 +17,6 @@
             <div class="hidden md:flex items-center gap-6">
                 <% if (isLoggedIn) { %>
                     <a href="/" class="<%= navCls %>">Home</a>
-                    <a href="/films" class="<%= navCls %>">Browse</a>
                     <a href="/library" class="<%= navCls %>">My Library</a>
                 <% } else { %>
                     <a href="/films" class="<%= navCls %>">Films</a>
@@ -24,7 +25,7 @@
             </div>
         </div>
 
-        <form action="/films" method="get" role="search" class="hidden md:flex flex-1 max-w-sm items-center gap-2 bg-[#1e1613] border border-[#38281f] rounded-full pl-4 pr-1 py-1 focus-within:border-[#fcaa13]">
+        <form action="<%= searchAction %>" method="get" role="search" class="hidden md:flex flex-1 max-w-sm items-center gap-2 bg-[#1e1613] border border-[#38281f] rounded-full pl-4 pr-1 py-1 focus-within:border-[#fcaa13]">
             <i class="fa-solid fa-magnifying-glass text-[#a99a8b] text-xs" aria-hidden="true"></i>
             <label for="header-search" class="sr-only">Search films</label>
             <input id="header-search" type="search" name="q" value="<%= headerQuery %>" maxlength="100" placeholder="Search films, cultures…" autocomplete="off"
@@ -63,7 +64,7 @@
 
     <!-- Phone: search panel -->
     <div id="header-search-panel" class="md:hidden border-t border-[#38281f] px-4 py-3" hidden>
-        <form action="/films" method="get" role="search" class="flex items-center gap-2 bg-[#1e1613] border border-[#fcaa13] rounded-full pl-4 pr-1 py-1">
+        <form action="<%= searchAction %>" method="get" role="search" class="flex items-center gap-2 bg-[#1e1613] border border-[#fcaa13] rounded-full pl-4 pr-1 py-1">
             <i class="fa-solid fa-magnifying-glass text-[#a99a8b] text-xs" aria-hidden="true"></i>
             <label for="header-search-mobile" class="sr-only">Search films</label>
             <input id="header-search-mobile" type="search" name="q" value="<%= headerQuery %>" maxlength="100" placeholder="Search films, cultures…" autocomplete="off"
@@ -77,7 +78,6 @@
         <% if (isLoggedIn) { %>
             <p class="px-4 pb-2 text-xs text-[#a99a8b]">Signed in as <span class="text-[#f7efe6] font-bold"><%= currentUser.fullName %></span></p>
             <a href="/" class="<%= mobileLinkCls %>"><i class="fa-solid fa-house w-5 text-center text-[#fcaa13]"></i>Home</a>
-            <a href="/films" class="<%= mobileLinkCls %>"><i class="fa-solid fa-film w-5 text-center text-[#fcaa13]"></i>Browse films</a>
             <a href="/library" class="<%= mobileLinkCls %>"><i class="fa-solid fa-bookmark w-5 text-center text-[#fcaa13]"></i>My Library</a>
             <a href="/recap" class="<%= mobileLinkCls %>"><i class="fa-solid fa-chart-simple w-5 text-center text-[#fcaa13]"></i>My Recap</a>
             <a href="/notifications" class="<%= mobileLinkCls %>"><i class="fa-solid fa-bell w-5 text-center text-[#fcaa13]"></i>Notifications<%= unreadNotifications > 0 ? ' (' + unreadNotifications + ')' : '' %></a>

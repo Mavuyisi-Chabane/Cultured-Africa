@@ -153,7 +153,28 @@ router.get('/', redirectAdminAway, (req, res) => {
       invalid: { ok: false, text: 'Please enter a valid email address.' },
       busy: { ok: false, text: 'Too many sign-ups from your connection. Please try again in a few minutes.' }
     };
-    return res.render('landing', { featuredFilms, newsletterNotice: NEWSLETTER_NOTICES[req.query.newsletter] || null });
+    // "Voices from our community": real, published customer reviews only (with a comment
+    // and 4+ stars), shown as first name + last initial. Hidden when there are none yet.
+    const communityReviews = db.prepare(`
+      SELECT f.rating, f.comment, u.full_name, c.content_id, c.title
+      FROM feedback f
+      JOIN users u ON u.user_id = f.user_id
+      JOIN content c ON c.content_id = f.content_id
+      WHERE f.status = 'published' AND c.is_available = 1
+        AND f.comment IS NOT NULL AND trim(f.comment) != '' AND f.rating >= 4
+      ORDER BY f.submitted_date DESC
+      LIMIT 3
+    `).all().map(r => {
+      const parts = String(r.full_name).trim().split(/\s+/);
+      return {
+        rating: r.rating,
+        comment: r.comment,
+        name: parts.length > 1 ? `${parts[0]} ${parts[parts.length - 1][0]}.` : parts[0],
+        filmId: r.content_id,
+        filmTitle: r.title
+      };
+    });
+    return res.render('landing', { featuredFilms, communityReviews, newsletterNotice: NEWSLETTER_NOTICES[req.query.newsletter] || null });
   }
 
   renderCatalogue(req, res, '/');

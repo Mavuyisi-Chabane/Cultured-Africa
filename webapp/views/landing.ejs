@@ -132,13 +132,13 @@
                     Preserving South African Heritage Through Cinematic Storytelling
                 </h1>
                 <p class="text-xl md:text-2xl text-[#f4ece3] mb-10 max-w-3xl mx-auto font-medium">
-                    Watch award-winning short films that explore the practices, traditions, and beliefs of South African cultures.
+                    Watch short films that explore the practices, traditions, and beliefs of South African cultures.
                 </p>
                 <div class="flex flex-col md:flex-row gap-6 justify-center items-center">
                     <a href="/films" class="px-12 py-4 bg-[#fb6b10] text-[#f4ece3] rounded-full font-bold hover:bg-[#ef420f] transition-all shadow-lg">
                         Explore Films
                     </a>
-                    <a href="#about" class="px-12 py-4 border-2 border-[#fcaa13] text-[#fcaa13] rounded-full font-bold hover:bg-[#fb6b10] hover:text-[#f4ece3] transition-all">
+                    <a href="/about" class="px-12 py-4 border-2 border-[#fcaa13] text-[#fcaa13] rounded-full font-bold hover:bg-[#fb6b10] hover:text-[#f4ece3] transition-all">
                         Learn More
                     </a>
                 </div>
@@ -233,54 +233,33 @@
         </section>
 
         <!-- Cultural Feedback Section -->
-        <section id="about" class="py-24 bg-surface border-y border-border">
+        <% if (communityReviews.length > 0) { %>
+        <section id="community" class="py-24 bg-surface border-y border-border">
             <div class="px-6 md:px-12 mb-16">
-                <span class="text-accent uppercase tracking-widest text-xs font-bold mb-4 block">Cultural Feedback</span>
+                <span class="text-accent uppercase tracking-widest text-xs font-bold mb-4 block">From our viewers</span>
                 <h2 class="font-serif text-5xl md:text-7xl tracking-tighter max-w-3xl">Voices From Our Community</h2>
             </div>
-
-            <div class="flex overflow-x-auto gap-6 px-6 md:px-12 pb-12 no-scrollbar snap-x">
-                <!-- Review 1 -->
-                <div class="min-w-[300px] md:min-w-[380px] bg-sand p-8 rounded-3xl snap-center border border-border">
-                    <p class="text-lg italic mb-8 font-light">"Cultured Africa gave my grandmother's stories the screen they deserved. Watching Nandi felt like coming home."</p>
-                    <div class="flex items-center gap-4">
-                        <img class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_2df62503ee_7f2ef6b77e81b7a0.png" alt="portrait headshot of an elderly South African woman smiling warmly, neutral studio background" />
-                        <div>
-                            <p class="font-semibold text-sm">Amahle Dlamini</p>
-                            <p class="text-xs text-muted">Viewer, Durban</p>
+            <div class="px-6 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <% communityReviews.forEach(function (review) { %>
+                    <figure class="bg-primary border border-borderdark rounded-jumbo p-8 flex flex-col">
+                        <div class="text-[#fcaa13] mb-4" aria-label="<%= review.rating %> out of 5 stars">
+                            <% for (let i = 0; i < 5; i++) { %><i class="<%= i < review.rating ? 'fas' : 'far' %> fa-star text-sm" aria-hidden="true"></i><% } %>
                         </div>
-                    </div>
-                </div>
-                <!-- Review 2 -->
-                <div class="min-w-[300px] md:min-w-[380px] bg-sand p-8 rounded-3xl snap-center border border-border">
-                    <p class="text-lg italic mb-8 font-light">"The attention to language and ceremony is extraordinary. This is cinema that remembers who we are."</p>
-                    <div class="flex items-center gap-4">
-                        <img class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_eda393df96_308fa19fee928d58.png" alt="portrait headshot of a young South African man with short hair, thoughtful expression, neutral studi" />
-                        <div>
-                            <p class="font-semibold text-sm">Thabo Mokoena</p>
-                            <p class="text-xs text-muted">Film Critic, Johannesburg</p>
-                        </div>
-                    </div>
-                </div>
-                <!-- Review 3 -->
-                <div class="min-w-[300px] md:min-w-[380px] bg-sand p-8 rounded-3xl snap-center border border-border">
-                    <p class="text-lg italic mb-8 font-light">"Finally, a platform that treats our heritage with the reverence it deserves. Every frame is a lesson."</p>
-                    <div class="flex items-center gap-4">
-                        <img class="w-12 h-12 rounded-full object-cover grayscale hover:grayscale-0 transition-all" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_0a2f8df9fe_2cd562b2f01d211f.png" alt="portrait headshot of a middle-aged South African woman academic, glasses, calm expression, neutral s" />
-                        <div>
-                            <p class="font-semibold text-sm">Dr. Nomsa Khumalo</p>
-                            <p class="text-xs text-muted">Cultural Historian, Cape Town</p>
-                        </div>
-                    </div>
-                </div>
+                        <blockquote class="text-lg italic mb-8 font-light flex-1">“<%= review.comment %>”</blockquote>
+                        <figcaption>
+                            <p class="font-semibold text-sm"><%= review.name %></p>
+                            <p class="text-xs text-muted">Reviewed <a href="/film/<%= review.filmId %>" class="underline hover:text-[#fcaa13]"><%= review.filmTitle %></a></p>
+                        </figcaption>
+                    </figure>
+                <% }) %>
             </div>
-
             <div class="px-6 md:px-12 mt-8">
-                <a href="#" class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest link-underline">
-                    Read All Stories <i class="fas fa-arrow-right text-[10px]"></i>
+                <a href="/films" class="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest link-underline">
+                    Browse films and reviews <i class="fas fa-arrow-right text-[10px]"></i>
                 </a>
             </div>
         </section>
+        <% } %>
 
         <!-- CTA Section -->
         <section class="py-32 px-6 bg-accent text-center">
@@ -307,32 +286,26 @@
                 <h4 class="text-xs uppercase tracking-widest font-bold mb-8">Explore</h4>
                 <ul class="space-y-4 text-sm text-[#f4ece3]/50">
                     <li><a href="/films" class="hover:text-[#f4ece3] transition-colors link-underline">All Films</a></li>
-                    <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Documentaries</a></li>
-                    <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Behind the Scenes</a></li>
-                    <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Filmmakers</a></li>
+                    <li><a href="/films?price=free" class="hover:text-[#f4ece3] transition-colors link-underline">Free Films</a></li>
+                    <li><a href="/about#crew" class="hover:text-[#f4ece3] transition-colors link-underline">Meet the Crew</a></li>
+                    <li><a href="/register" class="hover:text-[#f4ece3] transition-colors link-underline">Create an Account</a></li>
                 </ul>
             </div>
             <div>
                 <h4 class="text-xs uppercase tracking-widest font-bold mb-8">Company</h4>
                 <ul class="space-y-4 text-sm text-[#f4ece3]/50">
                     <li><a href="/about" class="hover:text-[#f4ece3] transition-colors link-underline">About Us</a></li>
-                    <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Careers</a></li>
-                    <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Press</a></li>
-                    <li><a href="#" class="hover:text-[#f4ece3] transition-colors link-underline">Contact</a></li>
+                    <li><a href="mailto:info@culturedafrica.co.za" class="hover:text-[#f4ece3] transition-colors link-underline">Contact: info@culturedafrica.co.za</a></li>
+                    <li><a href="/purchase-terms" class="hover:text-[#f4ece3] transition-colors link-underline">Pricing &amp; Refunds</a></li>
+                    <li><a href="/privacy" class="hover:text-[#f4ece3] transition-colors link-underline">Privacy Policy</a></li>
                 </ul>
             </div>
         </div>
 
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-12 border-t border-borderdark gap-8">
             <div class="flex gap-8 text-xs uppercase tracking-widest font-bold text-[#f4ece3]/40">
-                <a href="#" class="hover:text-[#f4ece3] transition-colors">Legal</a>
                 <a href="/purchase-terms" class="hover:text-[#f4ece3] transition-colors">Pricing &amp; Refunds</a>
                 <a href="/privacy" class="hover:text-[#f4ece3] transition-colors">Privacy</a>
-            </div>
-            <div class="flex gap-6">
-                <a href="#" class="text-[#f4ece3]/40 hover:text-accent transition-colors"><i class="fab fa-instagram"></i></a>
-                <a href="#" class="text-[#f4ece3]/40 hover:text-accent transition-colors"><i class="fab fa-twitter"></i></a>
-                <a href="#" class="text-[#f4ece3]/40 hover:text-accent transition-colors"><i class="fab fa-facebook-f"></i></a>
             </div>
             <div id="newsletter" class="max-w-xs">
                 <form method="POST" action="/newsletter" class="flex items-center gap-4">
@@ -351,10 +324,9 @@
         </div>
 
         <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-borderdark flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest text-[#f4ece3]/30">
-            <p>&copy; 2026 Cultured Africa. All rights reserved.</p>
+            <p>&copy; <%= new Date().getFullYear() %> Cultured Africa. All rights reserved.</p>
             <div class="flex gap-8">
                 <a href="/privacy" class="hover:text-[#f4ece3] transition-colors">Privacy Policy</a>
-                <span>Site by <a href="#" class="hover:text-[#f4ece3] transition-colors">Veld Design</a></span>
             </div>
         </div>
     </footer>

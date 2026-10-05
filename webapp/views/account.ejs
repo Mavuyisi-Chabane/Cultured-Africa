@@ -16,12 +16,12 @@
   const initials = user.fullName.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
 %>
 
-<main class="max-w-3xl mx-auto px-6 py-10 relative">
+<main id="main" class="max-w-3xl mx-auto px-6 py-10 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="mb-8 z-10 relative">
         <h1 class="text-2xl md:text-3xl font-bold text-[#f7efe6] mb-1">Manage Account</h1>
-        <p class="text-[#a99a8b] text-sm">Update your email address or delete your account.</p>
+        <p class="text-[#a99a8b] text-sm">Update your name, email address and password, see your receipts, or delete your account.</p>
     </div>
 
     <% if (success) { %>
@@ -30,7 +30,7 @@
         </div>
     <% } %>
     <% if (error) { %>
-        <div class="mb-6 z-10 relative px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ef420f] text-sm font-medium"><%= error %></div>
+        <div class="mb-6 z-10 relative px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ff7a5c] text-sm font-medium"><%= error %></div>
     <% } %>
 
     <!-- Profile -->
@@ -42,6 +42,22 @@
             <p class="text-lg font-bold text-[#f7efe6]"><%= user.fullName %></p>
             <p class="text-[#a99a8b] text-sm"><%= user.email %></p>
         </div>
+    </div>
+
+    <!-- Name -->
+    <div class="bg-[#1e1613] rounded-[24px] border border-[#38281f] p-8 shadow-sm mb-8 z-10 relative">
+        <h2 class="text-sm font-bold uppercase tracking-widest text-[#f7efe6] mb-1">Your Name</h2>
+        <p class="text-[#a99a8b] text-sm mb-5">Shown on your account, your receipts and any reviews you write.</p>
+        <form method="POST" action="/account/name" class="flex flex-col sm:flex-row sm:items-end gap-4">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="flex-1">
+                <label for="fullName" class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Full Name</label>
+                <input type="text" id="fullName" name="fullName" required minlength="2" maxlength="80" autocomplete="name"
+                    value="<%= typeof nameValue !== 'undefined' ? nameValue : user.fullName %>"
+                    class="w-full px-4 py-2.5 bg-[#271c17]/50 border border-[#38281f] rounded-xl text-sm focus:border-[#fcaa13] transition-all">
+            </div>
+            <button type="submit" class="bg-[#0f0a08] hover:bg-[#0a0605] text-[#fcaa13] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#fcaa13]/30">Save Name</button>
+        </form>
     </div>
 
     <!-- Change Email -->
@@ -56,11 +72,11 @@
             <form method="POST" action="/account/email/verify" class="flex flex-wrap items-end gap-4 mb-4">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Verification Code</label>
-                    <input type="text" name="code" placeholder="123456" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required
+                    <label for="emailCode" class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Verification Code</label>
+                    <input type="text" id="emailCode" name="code" placeholder="123456" maxlength="6" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required
                         class="px-4 py-2.5 bg-[#271c17]/50 border border-[#38281f] rounded-xl text-sm focus:border-[#fcaa13] transition-all tracking-[0.3em] font-bold text-center w-40">
                 </div>
-                <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold px-5 py-2.5 rounded-xl text-sm transition-all">Confirm Change</button>
+                <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold px-5 py-2.5 rounded-xl text-sm transition-all">Confirm Change</button>
             </form>
             <form method="POST" action="/account/email/cancel">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -71,18 +87,43 @@
             <form method="POST" action="/account/email" class="space-y-4">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">New Email Address</label>
-                    <input type="email" name="newEmail" required placeholder="new-email@example.com"
+                    <label for="newEmail" class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">New Email Address</label>
+                    <input type="email" id="newEmail" name="newEmail" required placeholder="new-email@example.com"
                         class="w-full px-4 py-2.5 bg-[#271c17]/50 border border-[#38281f] rounded-xl text-sm focus:border-[#fcaa13] transition-all">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Current Password</label>
-                    <input type="password" name="password" required autocomplete="current-password"
+                    <label for="emailChangePassword" class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Current Password</label>
+                    <input type="password" id="emailChangePassword" name="password" required autocomplete="current-password"
                         class="w-full px-4 py-2.5 bg-[#271c17]/50 border border-[#38281f] rounded-xl text-sm focus:border-[#fcaa13] transition-all">
                 </div>
                 <button type="submit" class="bg-[#0f0a08] hover:bg-[#0a0605] text-[#fcaa13] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#fcaa13]/30">Send Verification Code</button>
             </form>
         <% } %>
+    </div>
+
+    <!-- Change password -->
+    <div class="bg-[#1e1613] rounded-[24px] border border-[#38281f] p-8 shadow-sm mb-8 z-10 relative">
+        <h2 class="text-sm font-bold uppercase tracking-widest text-[#f7efe6] mb-1">Password</h2>
+        <p class="text-[#a99a8b] text-sm mb-5">Use at least 8 characters with an uppercase letter, a lowercase letter, a number and a special character. Changing it logs you out on your other devices.</p>
+        <form method="POST" action="/account/password" class="space-y-4">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <% [['currentPassword', 'Current Password', 'current-password'], ['newPassword', 'New Password', 'new-password'], ['confirmPassword', 'Confirm New Password', 'new-password']].forEach(([name, label, ac]) => { %>
+                <div>
+                    <label for="<%= name %>" class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5"><%= label %></label>
+                    <div class="relative">
+                        <input type="password" id="<%= name %>" name="<%= name %>" required autocomplete="<%= ac %>" <%= name === 'currentPassword' ? '' : 'minlength=8' %>
+                            class="w-full pl-4 pr-11 py-2.5 bg-[#271c17]/50 border border-[#38281f] rounded-xl text-sm focus:border-[#fcaa13] transition-all">
+                        <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-[#a99a8b] hover:text-[#fcaa13]" data-toggle-password="<%= name %>" aria-label="Show password">
+                            <i class="fa-solid fa-eye text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            <% }) %>
+            <div class="flex flex-wrap items-center gap-4">
+                <button type="submit" class="bg-[#0f0a08] hover:bg-[#0a0605] text-[#fcaa13] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#fcaa13]/30">Change Password</button>
+                <span class="text-xs text-[#a99a8b]">Forgotten it? Log out and use “Forgot Password?” on the login page.</span>
+            </div>
+        </form>
     </div>
 
     <!-- Purchases & receipts -->
@@ -126,7 +167,7 @@
             <form method="POST" action="/account/newsletter">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <input type="hidden" name="subscribe" value="yes">
-                <button type="submit" class="text-sm font-bold bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-5 py-2.5 rounded-xl"><i class="fa-solid fa-envelope-open-text mr-1"></i> Subscribe to the newsletter</button>
+                <button type="submit" class="text-sm font-bold bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] px-5 py-2.5 rounded-xl"><i class="fa-solid fa-envelope-open-text mr-1"></i> Subscribe to the newsletter</button>
             </form>
         <% } %>
     </div>
@@ -154,28 +195,25 @@
 
     <!-- Danger zone -->
     <div class="bg-[#1e1613] rounded-[24px] border border-[#b62319]/30 p-8 shadow-sm z-10 relative">
-        <h2 class="text-sm font-bold uppercase tracking-widest text-[#ef420f] mb-1">Danger Zone</h2>
+        <h2 class="text-sm font-bold uppercase tracking-widest text-[#ff7a5c] mb-1">Danger Zone</h2>
         <p class="text-[#a99a8b] text-sm mb-5">Deleting your account permanently removes your profile, purchases, watch history, and reviews. This cannot be undone.</p>
-        <button type="button" id="delete-account-trigger" class="bg-[#b62319]/15 hover:bg-[#b62319] hover:text-[#f4ece3] text-[#ef420f] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#b62319]/30">
+        <button type="button" id="delete-account-trigger" class="bg-[#b62319]/15 hover:bg-[#b62319] hover:text-[#f4ece3] text-[#ff7a5c] font-bold px-5 py-2.5 rounded-xl text-sm transition-all border border-[#b62319]/30">
             Delete My Account
         </button>
     </div>
 
-    <footer class="mt-20 py-10 flex flex-col items-center">
-        <span class="text-[10px] uppercase tracking-[0.2em] text-[#a99a8b] font-bold">Cultured Africa</span>
-        <p class="text-[10px] text-[#a99a8b]/60 mt-2">© 2026 Cultured Africa. All rights reserved.</p>
-    </footer>
+    <%- include('partials/footer') %>
 </main>
 
 <!-- Delete account modal -->
-<div id="delete-account-modal" hidden class="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] px-4">
+<div id="delete-account-modal" hidden role="dialog" aria-modal="true" aria-labelledby="delete-account-title" class="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] px-4">
     <div class="bg-[#1e1613] rounded-2xl shadow-2xl max-w-md w-full p-6">
-        <h3 class="text-xl font-bold text-[#f7efe6] mb-2">Delete your account?</h3>
+        <h3 id="delete-account-title" class="text-xl font-bold text-[#f7efe6] mb-2">Delete your account?</h3>
         <p class="text-sm text-[#a99a8b] mb-4">This permanently deletes your account and everything tied to it. Re-enter your password to confirm.</p>
         <form method="POST" action="/account/delete">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Password</label>
-            <input type="password" name="password" required autocomplete="current-password"
+            <label for="deletePassword" class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Password</label>
+            <input type="password" id="deletePassword" name="password" required autocomplete="current-password"
                 class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all mb-6">
             <div class="flex items-center justify-end gap-3">
                 <button type="button" id="delete-account-cancel" class="text-[#a99a8b] hover:text-[#f7efe6] text-sm font-medium px-4 py-2.5">Cancel</button>
@@ -188,11 +226,13 @@
 <script>
 (function () {
     const modal = document.getElementById('delete-account-modal');
-    document.getElementById('delete-account-trigger').addEventListener('click', () => { modal.hidden = false; });
+    const trigger = document.getElementById('delete-account-trigger');
+    trigger.addEventListener('click', () => { modal.hidden = false; document.getElementById('deletePassword').focus(); });
     document.getElementById('delete-account-cancel').addEventListener('click', () => { modal.hidden = true; });
     modal.addEventListener('click', e => { if (e.target === modal) modal.hidden = true; });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') modal.hidden = true; });
 })();
 </script>
+<%- include('partials/password-toggle') %>
 </body>
 </html>

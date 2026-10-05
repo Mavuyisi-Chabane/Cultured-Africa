@@ -19,7 +19,7 @@
         </div>
 
         <% if (error) { %>
-            <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ef420f] text-sm font-medium"><%= error %></div>
+            <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ff7a5c] text-sm font-medium"><%= error %></div>
         <% } %>
 
         <% if (typeof notice !== 'undefined' && notice) { %>
@@ -74,7 +74,7 @@
             </label>
 
             <button type="submit"
-                class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
+                class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
                 Log In
             </button>
         </form>
@@ -86,8 +86,8 @@
             </p>
         </div>
         <div class="mt-4 text-center">
-            <p class="text-[#a99a8b]/70 text-[11px]">Demo member: member@culturedafrica.co.za / member123</p>
-            <p class="text-[#a99a8b]/70 text-[11px] mt-1">Are you an admin? <a href="/admin/login" class="text-[#fcaa13] hover:underline">Go to the Admin Portal</a></p>
+            <% if (!isProduction) { %><p class="text-[#a99a8b] text-[11px]">Demo member (test site only): member@culturedafrica.co.za / member123</p><% } %>
+            <p class="text-[#a99a8b] text-[11px] mt-1">Are you an admin? <a href="/admin/login" class="text-[#fcaa13] hover:underline">Go to the Admin Portal</a></p>
         </div>
     </div>
 

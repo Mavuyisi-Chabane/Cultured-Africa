@@ -111,6 +111,8 @@ function getFilmDetailContext(film, userId) {
     comment: r.comment,
     adminReply: r.admin_reply,
     createdAt: new Date(r.submitted_date),
+    edited: Boolean(r.edited_at),
+    userId: r.user_id,
     user: { fullName: r.user_full_name }
   }));
 
@@ -212,7 +214,9 @@ function highlightMatches(text, words) {
 
 // "Continue watching" on Home: films the customer started but didn't finish, most
 // recent first, using the resume positions the player already saves. Only films they
-// can still play (free, or bought and within the access period) are included.
+// can still play (free, or bought and within the access period) are included. A film
+// counts as started after 10 seconds (when the player starts offering to resume) and
+// drops out once the player marks it finished (90% watched).
 const CONTINUE_WATCHING_LIMIT = 6;
 function getContinueWatching(userId, activeAccess) {
   return db.prepare(`
@@ -221,7 +225,7 @@ function getContinueWatching(userId, activeAccess) {
     FROM content c
     JOIN cultures cu ON cu.culture_id = c.culture_id
     JOIN watch_progress wp ON wp.content_id = c.content_id AND wp.user_id = ?
-    WHERE c.is_available = 1 AND c.file_url != '' AND wp.completed = 0 AND wp.position_seconds >= 30
+    WHERE c.is_available = 1 AND c.file_url != '' AND wp.completed = 0 AND wp.position_seconds >= 10
     ORDER BY wp.updated_at DESC
   `).all(userId).map(row => {
     const film = mapContent(row);
@@ -229,9 +233,8 @@ function getContinueWatching(userId, activeAccess) {
     const duration = film.durationSeconds;
     film.progressPercent = duration ? Math.min(100, Math.round((position / duration) * 100)) : null;
     film.timeLeftLabel = duration ? durationLabel(Math.max(60, duration - position)) : '';
-    film.nearlyDone = duration ? duration - position < 60 : false;
     return film;
-  }).filter(f => !f.nearlyDone && (f.price === 0 || activeAccess.has(f.id)))
+  }).filter(f => f.price === 0 || activeAccess.has(f.id))
     .slice(0, CONTINUE_WATCHING_LIMIT);
 }
 
@@ -597,6 +600,53 @@ router.post('/film/:id/buy', redirectAdminAway, requireLogin, async (req, res) =
   }
 });
 
+// Rating (optional, 1–5) and comment (optional) from a review form, or an error message.
+function parseReviewInput(body) {
+  const ratingRaw = String(body.rating || '').trim();
+  const comment = String(body.comment || '').trim();
+  const rating = ratingRaw ? Number(ratingRaw) : null;
+  if (rating !== null && (!Number.isInteger(rating) || rating < 1 || rating > 5)) return { error: 'Rating must be between 1 and 5.' };
+  if (rating === null && !comment) return { error: 'Please provide a rating, a comment, or both.' };
+  if (comment.length > 2000) return { error: 'Please keep your comment under 2000 characters.' };
+  if (comment && containsProfanity(comment)) return { error: 'Your comment was not published because it contains inappropriate language. Please rephrase it and try again.', profanity: true };
+  return { rating, comment: comment || null };
+}
+
+// The logged-in customer's own published review of this film, or null.
+function getOwnReview(req, film) {
+  return db.prepare("SELECT * FROM feedback WHERE feedback_id = ? AND content_id = ? AND user_id = ? AND status = 'published'")
+    .get(Number(req.params.reviewId), film.id, req.session.user.id) || null;
+}
+
+router.post('/film/:id/review/:reviewId/edit', redirectAdminAway, requireLogin, (req, res) => {
+  const film = getContent(req.params.id);
+  if (!film) return renderNotFound(res);
+  const review = getOwnReview(req, film);
+  if (!review) return renderNotFound(res);
+
+  const input = parseReviewInput(req.body);
+  if (input.error) {
+    if (input.profanity) logActivity('Comment blocked (inappropriate language)', film.title, customerActor(req.session.user.fullName));
+    const ctx = getFilmDetailContext(film, req.session.user.id);
+    return res.render('film-detail', { ...ctx, film, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: input.error, editingReviewId: review.feedback_id });
+  }
+  db.prepare("UPDATE feedback SET rating = ?, comment = ?, edited_at = datetime('now') WHERE feedback_id = ?")
+    .run(input.rating, input.comment, review.feedback_id);
+  logActivity('Review edited', film.title, customerActor(req.session.user.fullName));
+  res.redirect(`/film/${film.id}#review-${review.feedback_id}`);
+});
+
+router.post('/film/:id/review/:reviewId/delete', redirectAdminAway, requireLogin, (req, res) => {
+  const film = getContent(req.params.id);
+  if (!film) return renderNotFound(res);
+  const review = getOwnReview(req, film);
+  if (!review) return renderNotFound(res);
+
+  db.prepare('DELETE FROM feedback WHERE feedback_id = ?').run(review.feedback_id);
+  logActivity('Review deleted by customer', film.title, customerActor(req.session.user.fullName));
+  res.redirect(`/film/${film.id}#reviews`);
+});
+
 router.post('/film/:id/review', redirectAdminAway, requireLogin, (req, res) => {
   const film = getContent(req.params.id);
   if (!film) return renderNotFound(res);
@@ -607,26 +657,14 @@ router.post('/film/:id/review', redirectAdminAway, requireLogin, (req, res) => {
     return res.render('film-detail', { film, owned, filmReviews, access, canReview, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'You can only review films you have bought. Buy this film to leave a review.' });
   }
 
-  const ratingRaw = (req.body.rating || '').trim();
-  const comment = (req.body.comment || '').trim();
-  const rating = ratingRaw ? Number(ratingRaw) : null;
-
-  if (rating !== null && (!Number.isInteger(rating) || rating < 1 || rating > 5)) {
-    return res.render('film-detail', { film, owned, filmReviews, access, canReview, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'Rating must be between 1 and 5.' });
-  }
-  if (rating === null && !comment) {
-    return res.render('film-detail', { film, owned, filmReviews, access, canReview, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: 'Please provide a rating, a comment, or both.' });
-  }
-  if (comment && containsProfanity(comment)) {
-    logActivity('Comment blocked (inappropriate language)', film.title, customerActor(req.session.user.fullName));
-    return res.render('film-detail', {
-      film, owned, filmReviews, access, canReview, viewId: null, resumeSeconds: 0, resumeCompleted: false,
-      error: 'Your comment was not published because it contains inappropriate language. Please rephrase it and try again.'
-    });
+  const input = parseReviewInput(req.body);
+  if (input.error) {
+    if (input.profanity) logActivity('Comment blocked (inappropriate language)', film.title, customerActor(req.session.user.fullName));
+    return res.render('film-detail', { film, owned, filmReviews, access, canReview, viewId: null, resumeSeconds: 0, resumeCompleted: false, error: input.error });
   }
 
   db.prepare('INSERT INTO feedback (content_id, user_id, rating, comment) VALUES (?, ?, ?, ?)')
-    .run(film.id, req.session.user.id, rating, comment || null);
+    .run(film.id, req.session.user.id, input.rating, input.comment);
   logActivity('Review submitted', film.title, customerActor(req.session.user.fullName));
 
   res.redirect(`/film/${film.id}`);

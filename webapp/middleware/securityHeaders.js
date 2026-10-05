@@ -1,13 +1,13 @@
 // Browser security headers — the essentials a package like helmet would set, kept
 // inline so the allowed third-party origins below are easy to read and change.
 //
-// The CSP allows exactly the CDNs the views load from (Tailwind, Font Awesome,
+// The CSP allows exactly the CDNs the views load from (Font Awesome,
 // Chart.js, Google Fonts) and Paystack's checkout. 'unsafe-inline' is needed because
-// the views use inline <script>/<style> blocks and the Tailwind CDN injects styles.
+// the views use inline <script>/<style> blocks.
 // blob: is for the admin upload form's thumbnail-from-video preview.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://js.paystack.co https://*.paystack.co https://*.paystack.com",
+  "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://js.paystack.co https://*.paystack.co https://*.paystack.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://paystack.com https://*.paystack.co https://*.paystack.com",
   "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com",
   "img-src 'self' data: blob: https:",

@@ -6,7 +6,7 @@
 <body class="min-h-screen">
 <%- include('partials/simple-header') %>
 
-<main class="min-h-[80vh] flex items-center justify-center px-4 py-12">
+<main id="main" class="min-h-[80vh] flex items-center justify-center px-4 py-12">
     <div class="w-full max-w-[520px] bg-[#1e1613] rounded-[16px] shadow-xl p-8 md:p-10">
         <div class="text-center mb-8">
             <img src="/images/brand/sun.png" alt="" class="h-14 w-14 mx-auto mb-3">
@@ -23,7 +23,7 @@
         </div>
 
         <% if (error) { %>
-            <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ef420f] text-sm font-medium"><%= error %></div>
+            <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ff7a5c] text-sm font-medium"><%= error %></div>
         <% } %>
 
         <div class="rounded-xl bg-[#271c17]/50 border border-[#38281f] p-5 mb-6 text-sm text-[#f7efe6] leading-relaxed">
@@ -45,7 +45,7 @@
                 <span class="text-sm text-[#f7efe6] leading-relaxed">I have read the Privacy Policy and agree that Cultured Africa may use my personal information as described in it.</span>
             </label>
             <button type="submit" name="decision" value="accept"
-                class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transition-all">
+                class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transition-all">
                 Agree and continue
             </button>
             <button type="submit" name="decision" value="decline" formnovalidate

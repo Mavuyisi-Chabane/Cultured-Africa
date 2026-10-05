@@ -24,7 +24,7 @@
   const currentUrl = '/admin/feedback' + qs({ page: pagination.page });
 %>
 
-<main class="max-w-7xl mx-auto px-6 py-10 relative">
+<main id="main" class="max-w-7xl mx-auto px-6 py-10 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="mb-6 z-10 relative">
@@ -52,7 +52,7 @@
     <form method="GET" action="/admin/feedback" class="z-10 relative bg-[#1e1613] rounded-2xl border border-[#38281f] p-5 mb-6 flex flex-wrap items-end gap-4">
         <div>
             <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Film</label>
-            <select name="film" class="px-3 py-2 bg-[#271c17]/50 border border-[#38281f] rounded-lg text-sm focus:border-[#fcaa13] transition-all min-w-[160px]">
+            <select name="film" aria-label="Filter by film" class="px-3 py-2 bg-[#271c17]/50 border border-[#38281f] rounded-lg text-sm focus:border-[#fcaa13] transition-all min-w-[160px]">
                 <option value="">All films</option>
                 <% films.forEach(f => { %>
                     <option value="<%= f.id %>" <%= String(filters.film) === String(f.id) ? 'selected' : '' %>><%= f.title %></option>
@@ -61,7 +61,7 @@
         </div>
         <div>
             <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Rating</label>
-            <select name="rating" class="px-3 py-2 bg-[#271c17]/50 border border-[#38281f] rounded-lg text-sm focus:border-[#fcaa13] transition-all">
+            <select name="rating" aria-label="Filter by rating" class="px-3 py-2 bg-[#271c17]/50 border border-[#38281f] rounded-lg text-sm focus:border-[#fcaa13] transition-all">
                 <option value="">Any rating</option>
                 <% [5, 4, 3, 2, 1].forEach(n => { %>
                     <option value="<%= n %>" <%= String(filters.rating) === String(n) ? 'selected' : '' %>><%= n %> star<%= n > 1 ? 's' : '' %></option>
@@ -70,7 +70,7 @@
         </div>
         <div>
             <label class="block text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mb-1.5">Status</label>
-            <select name="status" class="px-3 py-2 bg-[#271c17]/50 border border-[#38281f] rounded-lg text-sm focus:border-[#fcaa13] transition-all">
+            <select name="status" aria-label="Filter by status" class="px-3 py-2 bg-[#271c17]/50 border border-[#38281f] rounded-lg text-sm focus:border-[#fcaa13] transition-all">
                 <option value="">All statuses</option>
                 <option value="published" <%= filters.status === 'published' ? 'selected' : '' %>>Published</option>
                 <option value="removed" <%= filters.status === 'removed' ? 'selected' : '' %>>Removed</option>
@@ -113,7 +113,7 @@
         <% feedback.forEach(r => { %>
             <div class="bg-[#1e1613] rounded-2xl border border-[#38281f] p-6 shadow-sm <%= r.status === 'removed' ? 'opacity-60' : '' %>">
                 <div class="flex items-start gap-4">
-                    <input type="checkbox" name="ids" value="<%= r.id %>" form="bulk-delete-form"
+                    <input type="checkbox" name="ids" value="<%= r.id %>" form="bulk-delete-form" aria-label="Select review by <%= r.user ? r.user.fullName : 'unknown user' %>"
                         class="row-checkbox mt-1.5 w-4 h-4 accent-[#fcaa13] flex-shrink-0" <%= r.status === 'removed' ? 'disabled' : '' %>>
 
                     <div class="flex-1 min-w-0">
@@ -125,7 +125,7 @@
                                     <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#271c17] text-[#a99a8b] uppercase tracking-wider">Removed</span>
                                 <% } %>
                                 <% if (r.flagged) { %>
-                                    <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#b62319]/15 text-[#ef420f] uppercase tracking-wider">
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#b62319]/15 text-[#ff7a5c] uppercase tracking-wider">
                                         <i class="fa-solid fa-flag"></i> Auto-flagged
                                     </span>
                                 <% } %>

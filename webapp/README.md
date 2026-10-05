@@ -21,6 +21,19 @@ Then open <http://localhost:3000>.
 On first start the app creates `db/cultured-africa.sqlite` and fills it with demo data
 automatically. To reset to a clean demo state, stop the server, delete that file, and start again.
 
+## Styles (CSS)
+
+Page styles come from `public/css/app.css`, built by Tailwind from the classes used in
+`views/`. After adding or changing classes in a view, rebuild it and commit the result:
+
+```bash
+npm run build:css     # once
+npm run watch:css     # or: rebuild automatically while editing
+```
+
+The theme (brand colours, fonts, animations) is in `tailwind.config.js`; accessibility
+styles (keyboard focus outline, reduced motion) are in `src/styles.css`.
+
 ## Demo logins
 
 | Role | Where | Email | Password |
@@ -52,7 +65,9 @@ to `.env` and fill in the values:
    ```
 
    Further admins can then be invited from **Manage Admins** in the admin portal.
-4. `GET /health` returns `{"status":"ok"}` for your host's uptime checks.
+4. HTTPS is required for "Add to Home screen" (the service worker in `public/pwa/sw.js`)
+   to work on phones.
+5. `GET /health` returns `{"status":"ok"}` for your host's uptime checks.
 
 Full films are only ever served through `/film/:id/stream` to logged-in customers who own
 them; `/uploads` serves thumbnails and trailers only.

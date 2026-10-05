@@ -4,10 +4,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="/images/brand/sun.png">
-<link rel="apple-touch-icon" href="/images/brand/sun.png">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0f0a08">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cultured Africa">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
+    }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><%= typeof title !== 'undefined' ? title : 'Cultured Africa' %></title>
-<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="/css/app.css?v=<%= cssVersion %>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +40,6 @@
         background-image: linear-gradient(rgba(20, 13, 10, 0.92), rgba(20, 13, 10, 0.92)), url('https://www.transparenttextures.com/patterns/az-subtle.png');
     }
     input:focus, textarea:focus, select:focus {
-        outline: none;
         border-color: #fcaa13;
     }
     @media print {

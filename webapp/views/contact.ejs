@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Contact Us' }) %>
+</head>
+<body class="min-h-screen">
+<%- include('partials/simple-header') %>
+
+<main id="main" class="max-w-3xl mx-auto px-6 py-12 relative">
+    <h1 class="display-font text-3xl md:text-4xl font-bold text-[#f7efe6] mb-2">Contact us</h1>
+    <p class="text-[#a99a8b] mb-8">Questions about a purchase, a film that won't play, or a film you'd like to see? Many answers are already in our <a href="/help" class="text-[#fcaa13] font-bold underline">Help &amp; FAQ</a>.</p>
+
+    <div class="grid md:grid-cols-3 gap-8">
+        <div class="md:col-span-2 bg-[#1e1613] rounded-[24px] border border-[#38281f] p-6 md:p-8">
+            <% if (sent) { %>
+                <div role="status" class="text-center py-8">
+                    <i class="fa-solid fa-circle-check text-4xl text-[#9db183] mb-4"></i>
+                    <h2 class="text-xl font-bold text-[#f7efe6] mb-2">Message sent</h2>
+                    <p class="text-[#a99a8b] text-sm">Thank you<%= values.name ? ', ' + values.name.split(' ')[0] : '' %>. We'll reply to <span class="text-[#f7efe6]"><%= values.email %></span> as soon as we can, usually within 5 business days.</p>
+                    <a href="/" class="inline-block mt-6 text-[#fcaa13] font-bold hover:underline">Back to Cultured Africa</a>
+                </div>
+            <% } else { %>
+                <% if (error) { %>
+                    <div role="alert" class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ff7a5c] text-sm font-medium"><%= error %></div>
+                <% } %>
+                <form method="POST" action="/contact" class="space-y-5">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <div class="hidden" aria-hidden="true">
+                        <label for="website">Leave this empty</label>
+                        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-5">
+                        <div>
+                            <label for="name" class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Your name</label>
+                            <input type="text" id="name" name="name" required maxlength="80" autocomplete="name" value="<%= values.name %>"
+                                class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Your email</label>
+                            <input type="email" id="email" name="email" required maxlength="254" autocomplete="email" value="<%= values.email %>"
+                                class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all">
+                        </div>
+                    </div>
+                    <div>
+                        <label for="topic" class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">What's it about?</label>
+                        <select id="topic" name="topic" required class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all">
+                            <option value="" <%= topics.includes(values.topic) ? '' : 'selected' %> disabled>Choose a topic…</option>
+                            <% topics.forEach(t => { %><option value="<%= t %>" <%= values.topic === t ? 'selected' : '' %>><%= t %></option><% }) %>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="message" class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Message</label>
+                        <textarea id="message" name="message" required minlength="10" maxlength="3000" rows="6" aria-describedby="message-hint"
+                            class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all"><%= values.message %></textarea>
+                        <p id="message-hint" class="text-xs text-[#a99a8b] mt-2">For a payment or refund, include your receipt number (e.g. CA-2026-000091). For a playback problem, say which film and which device and browser you're using.</p>
+                    </div>
+                    <p class="text-xs text-[#a99a8b]">We only use your details to reply to this message. See our <a href="/privacy" class="text-[#fcaa13] underline">Privacy Policy</a>.</p>
+                    <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold px-6 py-3 rounded-xl">Send message</button>
+                </form>
+            <% } %>
+        </div>
+
+        <aside class="space-y-6 text-sm" aria-label="Other ways to reach us">
+            <div>
+                <h2 class="text-xs font-bold uppercase tracking-widest text-[#fcaa13] mb-2">Email</h2>
+                <a href="mailto:<%= business.BUSINESS_EMAIL %>" class="text-[#f7efe6] hover:text-[#fcaa13] underline break-all"><%= business.BUSINESS_EMAIL %></a>
+            </div>
+            <div>
+                <h2 class="text-xs font-bold uppercase tracking-widest text-[#fcaa13] mb-2">Visit</h2>
+                <p class="text-[#f7efe6]"><%= business.BUSINESS_NAME %><br><%= business.BUSINESS_ADDRESS %></p>
+            </div>
+            <div>
+                <h2 class="text-xs font-bold uppercase tracking-widest text-[#fcaa13] mb-2">Response time</h2>
+                <p class="text-[#a99a8b]">We reply by email, usually within 5 business days.</p>
+            </div>
+        </aside>
+    </div>
+
+    <%- include('partials/footer') %>
+</main>
+</body>
+</html>

@@ -1,11 +1,12 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { db, logActivity, customerActor } = require('../db');
+const { db, logActivity, customerActor, notify } = require('../db');
 const { requireLogin, redirectAdminAway } = require('../middleware/auth');
 const { hashToken } = require('../utils/verification');
 const { toSqlDateTime } = require('../utils/dates');
-const { sendEmailChangeVerification } = require('../services/email');
+const { sendEmailChangeVerification, sendPasswordChangedEmail } = require('../services/email');
+const { getPasswordRequirementFailures } = require('../utils/password');
 const { createRateLimiter } = require('../middleware/rateLimit');
 const { getReceipt, listPurchases } = require('../utils/receipts');
 
@@ -150,6 +151,68 @@ router.post('/account/email/cancel', redirectAdminAway, requireLogin, (req, res)
   db.prepare('DELETE FROM email_change_requests WHERE user_id = ?').run(req.session.user.id);
   req.session.pendingEmailChange = null;
   res.redirect('/account');
+});
+
+// Display name: 2–80 characters, at least one letter, no angle brackets.
+function validateName(name) {
+  if (name.length < 2 || name.length > 80) return 'Your name must be between 2 and 80 characters.';
+  if (!/\p{L}/u.test(name)) return 'Your name must contain letters.';
+  if (/[<>]/.test(name)) return 'Your name cannot contain < or >.';
+  return null;
+}
+
+router.post('/account/name', redirectAdminAway, requireLogin, (req, res) => {
+  const fullName = String(req.body.fullName || '').trim().replace(/\s+/g, ' ');
+  const error = validateName(fullName);
+  if (error) return renderAccount(req, res, { error, nameValue: fullName });
+  if (fullName === req.session.user.fullName) return renderAccount(req, res, { success: 'Your name is unchanged.' });
+
+  db.prepare('UPDATE users SET full_name = ? WHERE user_id = ?').run(fullName, req.session.user.id);
+  logActivity('Name changed', fullName, customerActor(fullName));
+  req.session.user.fullName = fullName;
+  renderAccount(req, res, { success: 'Your name has been updated.' });
+});
+
+// 8 wrong current-password attempts per 15 minutes per account, so a session left open
+// on a shared computer can't be used to guess the password.
+const changePasswordLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 8,
+  keyFn: req => `change-password:${req.ip}:${req.session.user.id}`
+});
+
+router.post('/account/password', redirectAdminAway, requireLogin, changePasswordLimiter, async (req, res) => {
+  const { currentPassword = '', newPassword = '', confirmPassword = '' } = req.body;
+  const user = db.prepare('SELECT * FROM users WHERE user_id = ?').get(req.session.user.id);
+
+  if (req.rateLimitExceeded) {
+    return renderAccount(req, res, { error: 'Too many attempts. Please wait 15 minutes and try again, or log out and use "Forgot Password?".' });
+  }
+  if (!bcrypt.compareSync(currentPassword, user.password_hash)) {
+    return renderAccount(req, res, { error: 'Your current password is incorrect. Your password was not changed.' });
+  }
+  changePasswordLimiter.reset(req);
+  if (newPassword !== confirmPassword) {
+    return renderAccount(req, res, { error: 'The new passwords do not match.' });
+  }
+  const failures = getPasswordRequirementFailures(newPassword);
+  if (failures.length) {
+    return renderAccount(req, res, { error: `Your new password must include ${failures.join(', ')}.` });
+  }
+  if (bcrypt.compareSync(newPassword, user.password_hash)) {
+    return renderAccount(req, res, { error: 'Your new password must be different from your current one.' });
+  }
+
+  // Bumping session_version logs the account out on every other device; this device
+  // stays logged in by taking the new version into its own session.
+  db.prepare('UPDATE users SET password_hash = ?, session_version = session_version + 1 WHERE user_id = ?')
+    .run(bcrypt.hashSync(newPassword, 10), user.user_id);
+  req.session.user.sessionVersion = user.session_version + 1;
+  logActivity('Password changed', user.full_name, customerActor(user.full_name));
+  notify(user.user_id, 'system', 'Your password was changed. If this wasn\'t you, reset your password and contact us.');
+  sendPasswordChangedEmail(user).catch(err => console.error('Password-changed email failed:', err.message));
+
+  renderAccount(req, res, { success: 'Your password has been changed. You have been logged out on your other devices.' });
 });
 
 router.post('/account/newsletter', redirectAdminAway, requireLogin, (req, res) => {

@@ -9,10 +9,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="/images/brand/sun.png">
-    <link rel="apple-touch-icon" href="/images/brand/sun.png">
+    <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0f0a08">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Cultured Africa">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
+        }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cultured Africa — About</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/app.css?v=<%= cssVersion %>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,7 +47,7 @@
     <%- include('partials/header') %>
 
     <!-- Main Content -->
-    <main class="relative overflow-hidden">
+    <main id="main" class="relative overflow-hidden">
         <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
         <!-- Hero Section -->
@@ -265,6 +276,8 @@
             <p class="text-[#f4ece3]/60 text-sm mb-8">© <%= new Date().getFullYear() %> Cultured Africa. Preserving Heritage Through Cinematic Storytelling.</p>
             <p class="text-[#fcaa13] font-bold tracking-[0.2em] uppercase text-xs">One Film. One Story. One Nation.</p>
             <div class="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs">
+                <a href="/help" class="text-[#f4ece3]/60 hover:text-[#fcaa13] underline">Help &amp; FAQ</a>
+                <a href="/contact" class="text-[#f4ece3]/60 hover:text-[#fcaa13] underline">Contact</a>
                 <a href="/purchase-terms" class="text-[#f4ece3]/60 hover:text-[#fcaa13] underline">Pricing &amp; Refunds</a>
                 <a href="/privacy" class="text-[#f4ece3]/60 hover:text-[#fcaa13] underline">Privacy Policy</a>
             </div>

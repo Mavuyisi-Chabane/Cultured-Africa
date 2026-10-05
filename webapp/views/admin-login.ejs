@@ -16,7 +16,7 @@
         </div>
 
         <% if (error) { %>
-            <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ef420f] text-sm font-medium"><%= error %></div>
+            <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ff7a5c] text-sm font-medium"><%= error %></div>
         <% } %>
 
         <% if (step === 'email') { %>
@@ -33,7 +33,7 @@
                     </div>
                 </div>
                 <button type="submit"
-                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
+                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
                     Continue
                 </button>
             </form>
@@ -64,7 +64,7 @@
                     </div>
                 </div>
                 <button type="submit"
-                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
+                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
                     Log In
                 </button>
             </form>
@@ -77,7 +77,7 @@
                     <span class="font-bold text-[#f7efe6]"><%= email %></span>. It expires in <span class="font-bold text-[#f7efe6]">15 minutes</span>.
                 </p>
                 <% if (attemptsLeft !== null) { %>
-                    <p class="text-[#ef420f] text-xs font-bold mt-2"><%= attemptsLeft %> attempt<%= attemptsLeft === 1 ? '' : 's' %> remaining.</p>
+                    <p class="text-[#ff7a5c] text-xs font-bold mt-2"><%= attemptsLeft %> attempt<%= attemptsLeft === 1 ? '' : 's' %> remaining.</p>
                 <% } %>
             </div>
             <form class="space-y-6" method="POST" action="/admin/login/verify-code">
@@ -94,7 +94,7 @@
                     </div>
                 </div>
                 <button type="submit"
-                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
+                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
                     Verify Code
                 </button>
             </form>
@@ -123,19 +123,19 @@
                     </div>
 
                     <div class="mt-3 space-y-1.5">
-                        <p data-req="length" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
+                        <p data-req="length" class="flex items-center gap-2 text-xs text-[#ff7a5c] transition-colors">
                             <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least 8 characters
                         </p>
-                        <p data-req="upper" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
+                        <p data-req="upper" class="flex items-center gap-2 text-xs text-[#ff7a5c] transition-colors">
                             <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one uppercase letter (A-Z)
                         </p>
-                        <p data-req="lower" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
+                        <p data-req="lower" class="flex items-center gap-2 text-xs text-[#ff7a5c] transition-colors">
                             <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one lowercase letter (a-z)
                         </p>
-                        <p data-req="number" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
+                        <p data-req="number" class="flex items-center gap-2 text-xs text-[#ff7a5c] transition-colors">
                             <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one number (0-9)
                         </p>
-                        <p data-req="special" class="flex items-center gap-2 text-xs text-[#ef420f] transition-colors">
+                        <p data-req="special" class="flex items-center gap-2 text-xs text-[#ff7a5c] transition-colors">
                             <i class="fa-solid fa-circle-xmark text-[10px]"></i> At least one special character (e.g. ! @ # $ %)
                         </p>
                     </div>
@@ -143,7 +143,7 @@
                     <div class="mt-3">
                         <div class="flex items-center justify-between mb-1">
                             <span class="text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]">Password Strength</span>
-                            <span id="password-strength-label" class="text-[10px] font-bold uppercase tracking-widest text-[#ef420f]">Weak</span>
+                            <span id="password-strength-label" class="text-[10px] font-bold uppercase tracking-widest text-[#ff7a5c]">Weak</span>
                         </div>
                         <div class="w-full h-1.5 bg-[#271c17] rounded-full overflow-hidden">
                             <div id="password-strength-bar" class="h-full bg-[#b62319] transition-all duration-300 ease-out" style="width: 0%"></div>
@@ -163,13 +163,13 @@
                             <i class="fa-solid fa-eye text-sm"></i>
                         </button>
                     </div>
-                    <p id="confirm-password-error" class="mt-2 text-xs text-[#ef420f] hidden">
+                    <p id="confirm-password-error" class="mt-2 text-xs text-[#ff7a5c] hidden">
                         <i class="fa-solid fa-circle-exclamation"></i> Passwords do not match.
                     </p>
                 </div>
 
                 <button type="submit"
-                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
+                    class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98]">
                     Set Password &amp; Finish
                 </button>
             </form>

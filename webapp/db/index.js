@@ -118,6 +118,11 @@ if (!feedbackColumns.includes('status')) {
 // couldn't safely index it before this file confirms it exists.
 db.exec('CREATE INDEX IF NOT EXISTS idx_feedback_status ON feedback(status)');
 
+// Migration: customers can edit their own reviews; shown as "(edited)".
+if (!feedbackColumns.includes('edited_at')) {
+  db.exec('ALTER TABLE feedback ADD COLUMN edited_at TEXT');
+}
+
 // One-time migration: admin identity used to just be `users.role = 'admin'`. Move
 // every such row into the new `admins` table (first one as super_admin, so there's
 // always at least one), preserving their existing password hash so nobody gets

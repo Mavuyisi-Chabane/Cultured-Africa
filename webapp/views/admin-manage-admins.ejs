@@ -24,7 +24,7 @@
   };
 %>
 
-<main class="max-w-6xl mx-auto px-6 py-10 relative">
+<main id="main" class="max-w-6xl mx-auto px-6 py-10 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="mb-8 z-10 relative">
@@ -38,7 +38,7 @@
         </div>
     <% } %>
     <% if (error) { %>
-        <div class="mb-6 z-10 relative px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ef420f] text-sm font-medium"><%= error %></div>
+        <div class="mb-6 z-10 relative px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ff7a5c] text-sm font-medium"><%= error %></div>
     <% } %>
 
     <!-- Send Invite -->

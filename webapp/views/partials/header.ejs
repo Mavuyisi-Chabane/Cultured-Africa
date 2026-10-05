@@ -1,3 +1,4 @@
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[200] focus:bg-[#fcaa13] focus:text-[#140d0a] focus:font-bold focus:px-4 focus:py-2 focus:rounded-lg">Skip to main content</a>
 <%
   // Customer header for every customer-facing page, for visitors (not logged in) as well
   // as customers. Desktop: links + search box inline. Phones: a search button and a ☰
@@ -30,7 +31,7 @@
             <label for="header-search" class="sr-only">Search films</label>
             <input id="header-search" type="search" name="q" value="<%= headerQuery %>" maxlength="100" placeholder="Search films, cultures…" autocomplete="off"
                 class="flex-1 min-w-0 bg-transparent border-0 text-sm text-[#f7efe6] placeholder-[#a99a8b]/70 focus:outline-none py-1.5">
-            <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] text-xs font-bold px-4 py-2 rounded-full">Search</button>
+            <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] text-xs font-bold px-4 py-2 rounded-full">Search</button>
         </form>
 
         <div class="flex items-center gap-3 sm:gap-4 flex-shrink-0">
@@ -51,7 +52,7 @@
                 </form>
             <% } else { %>
                 <a href="/login" class="hidden md:inline <%= navCls %>">Log in</a>
-                <a href="/register" class="hidden md:inline-block bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-4 py-2 rounded-lg text-sm font-bold">Register</a>
+                <a href="/register" class="hidden md:inline-block bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] px-4 py-2 rounded-lg text-sm font-bold">Register</a>
             <% } %>
             <button type="button" class="md:hidden w-10 h-10 rounded-full bg-[#1e1613] text-[#f4ece3] flex items-center justify-center" data-toggle-panel="header-search-panel" aria-controls="header-search-panel" aria-expanded="false" aria-label="Search films">
                 <i class="fa-solid fa-magnifying-glass"></i>
@@ -69,7 +70,7 @@
             <label for="header-search-mobile" class="sr-only">Search films</label>
             <input id="header-search-mobile" type="search" name="q" value="<%= headerQuery %>" maxlength="100" placeholder="Search films, cultures…" autocomplete="off"
                 class="flex-1 min-w-0 bg-transparent border-0 text-base text-[#f7efe6] placeholder-[#a99a8b]/70 focus:outline-none py-2">
-            <button type="submit" class="bg-[#fb6b10] text-[#f4ece3] text-sm font-bold px-4 py-2 rounded-full">Search</button>
+            <button type="submit" class="bg-[#fb6b10] text-[#140d0a] text-sm font-bold px-4 py-2 rounded-full">Search</button>
         </form>
     </div>
 
@@ -90,7 +91,7 @@
             <a href="/films" class="<%= mobileLinkCls %>"><i class="fa-solid fa-film w-5 text-center text-[#fcaa13]"></i>Browse films</a>
             <a href="/about" class="<%= mobileLinkCls %>"><i class="fa-solid fa-circle-info w-5 text-center text-[#fcaa13]"></i>About</a>
             <a href="/login" class="<%= mobileLinkCls %>"><i class="fa-solid fa-right-to-bracket w-5 text-center text-[#fcaa13]"></i>Log in</a>
-            <a href="/register" class="block mt-2 text-center bg-[#fb6b10] text-[#f4ece3] px-4 py-3 rounded-xl font-bold">Create a free account</a>
+            <a href="/register" class="block mt-2 text-center bg-[#fb6b10] text-[#140d0a] px-4 py-3 rounded-xl font-bold">Create a free account</a>
         <% } %>
     </div>
 </nav>

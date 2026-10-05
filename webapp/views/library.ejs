@@ -6,7 +6,7 @@
 <body class="min-h-screen">
 <%- include('partials/header') %>
 
-<main class="max-w-7xl mx-auto px-6 py-8 relative">
+<main id="main" class="max-w-7xl mx-auto px-6 py-8 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="mb-8">
@@ -20,7 +20,7 @@
             <i class="fa-solid fa-clapperboard text-3xl text-[#fcaa13] mb-4"></i>
             <p class="text-[#f7efe6] font-medium mb-2">Your library is empty.</p>
             <p class="text-[#a99a8b] text-sm mb-6">Purchase a film or watch something free to add it here.</p>
-            <a href="/" class="inline-block bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-6 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">Browse Films</a>
+            <a href="/" class="inline-block bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] px-6 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">Browse Films</a>
         </div>
     <% } else { %>
         <div id="library-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -63,7 +63,7 @@
                                     Free to watch
                                 <% } %>
                             </span>
-                            <span class="bg-[#fb6b10] group-hover:bg-[#ef420f] text-[#f4ece3] px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">Watch</span>
+                            <span class="bg-[#fb6b10] group-hover:bg-[#ef420f] text-[#140d0a] px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">Watch</span>
                         </div>
                     </div>
                 </a>
@@ -89,7 +89,7 @@
                             <h3 class="text-lg font-bold text-[#f7efe6]"><%= film.title %></h3>
                             <p class="text-[#a99a8b] text-xs mt-1">Expired <%= formatAccessDate(film.accessExpiresAt) %></p>
                         </div>
-                        <span class="shrink-0 bg-[#fb6b10] group-hover:bg-[#ef420f] text-[#f4ece3] px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">Buy again R<%= film.price.toFixed(0) %></span>
+                        <span class="shrink-0 bg-[#fb6b10] group-hover:bg-[#ef420f] text-[#140d0a] px-5 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">Buy again R<%= film.price.toFixed(0) %></span>
                     </div>
                 </a>
             <% }) %>

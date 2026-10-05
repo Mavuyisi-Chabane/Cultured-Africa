@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const fs = require('fs');
 const paystack = require('./config/paystack');
 const { PRIVACY_POLICY_VERSION } = require('./config/privacy');
 const { db } = require('./db');
@@ -21,6 +22,7 @@ const adminManageRoutes = require('./routes/adminManage');
 const notificationRoutes = require('./routes/notifications');
 const privacyRoutes = require('./routes/privacy');
 const newsletterRoutes = require('./routes/newsletter');
+const helpRoutes = require('./routes/help');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,7 +30,7 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Pages a logged-in customer can still reach before agreeing to the privacy policy:
 // the consent screen itself, the policy, logging out, and deleting their account.
-const CONSENT_EXEMPT_PATHS = new Set(['/consent', '/privacy', '/purchase-terms', '/newsletter/confirm', '/newsletter/unsubscribe', '/logout', '/account', '/account/delete', '/about']);
+const CONSENT_EXEMPT_PATHS = new Set(['/consent', '/privacy', '/purchase-terms', '/newsletter/confirm', '/newsletter/unsubscribe', '/logout', '/account', '/account/delete', '/about', '/help', '/contact']);
 
 // Refuse to run in production with a guessable session secret: anyone who knows it can
 // forge a logged-in session cookie for any user or admin.
@@ -53,6 +55,22 @@ app.use(securityHeaders(IS_PRODUCTION));
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 app.use(express.json({ limit: '100kb' }));
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
+// Site stylesheet built by "npm run build:css". The ?v= in the views changes whenever
+// the file is rebuilt, so browsers can cache it for a long time but never keep an old copy.
+app.use('/css', express.static(path.join(__dirname, 'public', 'css'), { maxAge: '30d' }));
+// Add to home screen: the app manifest, the service worker (served from the site root so
+// it covers every page) and the page it shows when offline. Before the session, so these
+// never create or touch a login session.
+const PWA_DIR = path.join(__dirname, 'public', 'pwa');
+app.get('/manifest.webmanifest', (req, res) => {
+  res.type('application/manifest+json').set('Cache-Control', 'public, max-age=86400').sendFile(path.join(PWA_DIR, 'manifest.webmanifest'));
+});
+app.get('/sw.js', (req, res) => {
+  res.type('application/javascript').set('Cache-Control', 'no-cache').sendFile(path.join(PWA_DIR, 'sw.js'));
+});
+app.get('/offline', (req, res) => res.render('offline'));
+app.locals.isProduction = IS_PRODUCTION;
+app.locals.cssVersion = Math.floor(fs.statSync(path.join(__dirname, 'public', 'css', 'app.css')).mtimeMs).toString(36);
 
 // For the host's uptime checks: confirms the app is running and the database answers.
 app.get('/health', (req, res) => {
@@ -131,6 +149,7 @@ app.get('/about', (req, res) => {
 
 app.use('/', privacyRoutes);
 app.use('/', newsletterRoutes);
+app.use('/', helpRoutes);
 app.use('/', authRoutes);
 app.use('/', accountRoutes);
 app.use('/', filmRoutes);

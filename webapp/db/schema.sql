@@ -109,7 +109,8 @@ CREATE TABLE IF NOT EXISTS feedback (
   removed_by        TEXT,
   removed_at        TEXT,
   removal_reason    TEXT,
-  submitted_date    TEXT NOT NULL DEFAULT (datetime('now'))
+  submitted_date    TEXT NOT NULL DEFAULT (datetime('now')),
+  edited_at         TEXT
 );
 
 -- Not part of the ERD; an append-only trail of moderation and admin-management

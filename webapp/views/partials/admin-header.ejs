@@ -1,3 +1,4 @@
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[200] focus:bg-[#fcaa13] focus:text-[#140d0a] focus:font-bold focus:px-4 focus:py-2 focus:rounded-lg">Skip to main content</a>
 <%
   const reportKeys = ['reports', 'analytics', 'engagement'];
   const navLink = (href, label, key) => {
@@ -14,7 +15,7 @@
     <div class="flex items-center gap-8">
         <div class="flex items-center gap-2">
             <a href="/admin/dashboard" class="display-font text-xl sm:text-2xl whitespace-nowrap font-bold text-[#fcaa13] tracking-tight flex items-center gap-2"><img src="/images/brand/sun.png" alt="" class="h-8 w-8">Cultured Africa</a>
-            <span class="hidden sm:inline text-[#f4ece3]/40 text-xs font-bold uppercase tracking-widest ml-2 border-l border-[#38281f]/20 pl-3">Admin Portal</span>
+            <span class="hidden sm:inline text-[#f4ece3]/70 text-xs font-bold uppercase tracking-widest ml-2 border-l border-[#38281f]/20 pl-3">Admin Portal</span>
         </div>
         <div class="hidden lg:flex items-center gap-5">
             <%- navLink('/admin/dashboard', 'Dashboard', 'dashboard') %>
@@ -33,7 +34,7 @@
         <div class="flex items-center gap-3 sm:pr-4 sm:border-r border-[#38281f]/10">
             <div class="text-right hidden sm:block">
                 <p class="text-[#f4ece3] text-xs font-bold"><%= currentAdmin.name %></p>
-                <p class="text-[#f4ece3]/40 text-[10px] uppercase tracking-tighter"><%= currentAdmin.role === 'super_admin' ? 'Super Admin' : 'Admin' %></p>
+                <p class="text-[#f4ece3]/70 text-[10px] uppercase tracking-tighter"><%= currentAdmin.role === 'super_admin' ? 'Super Admin' : 'Admin' %></p>
             </div>
             <div class="w-9 h-9 rounded-full border-2 border-[#fcaa13] bg-[#271c17]/10 flex items-center justify-center text-[#fcaa13] text-xs font-bold">
                 <%= initials %>
@@ -44,7 +45,7 @@
         </button>
         <form action="/admin/logout" method="POST">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button type="submit" class="text-[#f4ece3]/80 hover:text-[#fcaa13] transition-colors text-sm font-medium">
+            <button type="submit" aria-label="Log out" title="Log out" class="text-[#f4ece3]/80 hover:text-[#fcaa13] transition-colors text-sm font-medium">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </button>
         </form>

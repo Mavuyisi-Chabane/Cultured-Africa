@@ -9,52 +9,25 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <meta charset="utf-8">
     <link rel="icon" type="image/png" href="/images/brand/sun.png">
-    <link rel="apple-touch-icon" href="/images/brand/sun.png">
+    <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0f0a08">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Cultured Africa">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
+        }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Cultured Africa | South African Cinema &amp; Culture</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/app.css?v=<%= cssVersion %>">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&family=EB+Garamond:ital,wght@0,400..800;1,400..800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        // Dark cinematic sunset palette (see db/schema-adjacent docs / design brief):
-                        // near-black surfaces throughout, amber/tangerine/ember/rust as the accent ladder.
-                        primary: '#140d0a',   // base page surface (warm near-black)
-                        surface: '#1e1613',    // elevated card / section
-                        sand: '#271c17',       // secondary tile / input surface
-                        ink: '#f7efe6',        // primary text / headings (warm white)
-                        muted: '#a99a8b',      // secondary text
-                        border: '#38281f',     // hairline borders on surfaces
-                        borderdark: '#38281f', // hairline borders on dark surfaces
-                        accent: '#fcaa13',     // amber accent (interactive only)
-                    },
-                    fontFamily: {
-                        sans: ['EB Garamond', 'serif'],
-                        serif: ['Cinzel', 'serif'],
-                    },
-                    keyframes: {
-                        scroll: {
-                            '0%': { transform: 'translateX(0)' },
-                            '100%': { transform: 'translateX(-50%)' },
-                        },
-                        floaty: {
-                            '0%,100%': { transform: 'translateY(0)' },
-                            '50%': { transform: 'translateY(-10px)' },
-                        },
-                    },
-                    animation: {
-                        scroll: 'scroll 30s linear infinite',
-                        floaty: 'floaty 6s ease-in-out infinite',
-                    },
-                },
-            },
-        };
-    </script>
     <style>
         .text-stroke { -webkit-text-stroke: 1px rgba(252,170,19,0.3); color: transparent; }
         .link-underline { position: relative; }
@@ -76,6 +49,7 @@
     </style>
 </head>
 <body class="bg-primary text-[#f4ece3] font-sans antialiased overflow-x-hidden">
+<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[200] focus:bg-[#fcaa13] focus:text-[#140d0a] focus:font-bold focus:px-4 focus:py-2 focus:rounded-lg">Skip to main content</a>
 
     <!-- Header -->
     <header class="fixed top-0 left-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-[#0f0a08] border-b border-borderdark">
@@ -86,7 +60,7 @@
             <i class="fas fa-search text-[#a99a8b] text-xs" aria-hidden="true"></i>
             <label for="landing-search" class="sr-only">Search films</label>
             <input id="landing-search" type="search" name="q" maxlength="100" placeholder="Search films, cultures…" class="flex-1 min-w-0 bg-transparent border-0 text-sm text-[#f7efe6] placeholder-[#a99a8b]/70 focus:outline-none py-1.5">
-            <button type="submit" class="bg-[#fb6b10] text-[#f4ece3] text-xs font-bold px-4 py-2 rounded-full">Search</button>
+            <button type="submit" class="bg-[#fb6b10] text-[#140d0a] text-xs font-bold px-4 py-2 rounded-full">Search</button>
         </form>
         <nav class="hidden md:flex gap-4">
             <a href="/" class="px-4 py-2 text-sm font-bold text-[#fcaa13] link-underline">Home</a>
@@ -101,12 +75,12 @@
         <form action="/films" method="get" role="search" class="flex items-center gap-2 bg-[#1e1613] border border-[#fcaa13] rounded-full pl-4 pr-1 py-1 mb-3">
             <label for="landing-search-mobile" class="sr-only">Search films</label>
             <input id="landing-search-mobile" type="search" name="q" maxlength="100" placeholder="Search films, cultures…" class="flex-1 min-w-0 bg-transparent border-0 text-base text-[#f7efe6] placeholder-[#a99a8b]/70 focus:outline-none py-2">
-            <button type="submit" class="bg-[#fb6b10] text-[#f4ece3] text-sm font-bold px-4 py-2 rounded-full">Search</button>
+            <button type="submit" class="bg-[#fb6b10] text-[#140d0a] text-sm font-bold px-4 py-2 rounded-full">Search</button>
         </form>
         <a href="/films" class="block px-4 py-3 rounded-xl text-[#f4ece3] hover:bg-[#1e1613]">Browse films</a>
         <a href="/about" class="block px-4 py-3 rounded-xl text-[#f4ece3] hover:bg-[#1e1613]">About</a>
         <a href="/login" class="block px-4 py-3 rounded-xl text-[#f4ece3] hover:bg-[#1e1613]">Log in</a>
-        <a href="/register" class="block mt-2 text-center bg-[#fb6b10] text-[#f4ece3] px-4 py-3 rounded-xl font-bold">Create a free account</a>
+        <a href="/register" class="block mt-2 text-center bg-[#fb6b10] text-[#140d0a] px-4 py-3 rounded-xl font-bold">Create a free account</a>
     </div>
     <script>
         (function () {
@@ -119,7 +93,7 @@
         })();
     </script>
 
-    <main>
+    <main id="main">
         <!-- Hero Section -->
         <section class="relative h-[800px] flex items-center justify-center overflow-hidden bg-[#0f0a08]">
             <div class="absolute inset-0 z-0">
@@ -135,7 +109,7 @@
                     Watch short films that explore the practices, traditions, and beliefs of South African cultures.
                 </p>
                 <div class="flex flex-col md:flex-row gap-6 justify-center items-center">
-                    <a href="/films" class="px-12 py-4 bg-[#fb6b10] text-[#f4ece3] rounded-full font-bold hover:bg-[#ef420f] transition-all shadow-lg">
+                    <a href="/films" class="px-12 py-4 bg-[#fb6b10] text-[#140d0a] rounded-full font-bold hover:bg-[#ef420f] transition-all shadow-lg">
                         Explore Films
                     </a>
                     <a href="/about" class="px-12 py-4 border-2 border-[#fcaa13] text-[#fcaa13] rounded-full font-bold hover:bg-[#fb6b10] hover:text-[#f4ece3] transition-all">
@@ -215,7 +189,7 @@
                         </button>
                         <h3 class="font-serif text-3xl mb-2 group-hover:text-[#fcaa13] transition-colors"><%= film.title %></h3>
                         <p class="text-muted text-sm mb-6 line-clamp-3"><%= film.description %></p>
-                        <button type="button" data-trailer-src="<%= film.trailerUrl %>" data-trailer-title="<%= film.title %>" class="inline-flex items-center gap-2 bg-[#fb6b10] text-[#f4ece3] px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#ef420f] transition-all">
+                        <button type="button" data-trailer-src="<%= film.trailerUrl %>" data-trailer-title="<%= film.title %>" class="inline-flex items-center gap-2 bg-[#fb6b10] text-[#140d0a] px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#ef420f] transition-all">
                             Watch Trailer <i class="fas fa-play text-[8px]"></i>
                         </button>
                     </article>
@@ -226,7 +200,7 @@
                     <i class="fas fa-film text-3xl text-[#fcaa13] mb-4"></i>
                     <p class="font-serif text-2xl mb-2">Trailers coming soon</p>
                     <p class="text-muted text-sm mb-6">Create a free account to browse our full catalogue of films.</p>
-                    <a href="/register" class="inline-flex items-center gap-2 bg-[#fb6b10] text-[#f4ece3] px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#ef420f] transition-all">Join Cultured Africa</a>
+                    <a href="/register" class="inline-flex items-center gap-2 bg-[#fb6b10] text-[#140d0a] px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-[#ef420f] transition-all">Join Cultured Africa</a>
                 </div>
                 <% } %>
             </div>
@@ -242,7 +216,7 @@
             <div class="px-6 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <% communityReviews.forEach(function (review) { %>
                     <figure class="bg-primary border border-borderdark rounded-jumbo p-8 flex flex-col">
-                        <div class="text-[#fcaa13] mb-4" aria-label="<%= review.rating %> out of 5 stars">
+                        <div class="text-[#fcaa13] mb-4" role="img" aria-label="<%= review.rating %> out of 5 stars">
                             <% for (let i = 0; i < 5; i++) { %><i class="<%= i < review.rating ? 'fas' : 'far' %> fa-star text-sm" aria-hidden="true"></i><% } %>
                         </div>
                         <blockquote class="text-lg italic mb-8 font-light flex-1">“<%= review.comment %>”</blockquote>
@@ -295,7 +269,8 @@
                 <h4 class="text-xs uppercase tracking-widest font-bold mb-8">Company</h4>
                 <ul class="space-y-4 text-sm text-[#f4ece3]/50">
                     <li><a href="/about" class="hover:text-[#f4ece3] transition-colors link-underline">About Us</a></li>
-                    <li><a href="mailto:info@culturedafrica.co.za" class="hover:text-[#f4ece3] transition-colors link-underline">Contact: info@culturedafrica.co.za</a></li>
+                    <li><a href="/help" class="hover:text-[#f4ece3] transition-colors link-underline">Help &amp; FAQ</a></li>
+                    <li><a href="/contact" class="hover:text-[#f4ece3] transition-colors link-underline">Contact Us</a></li>
                     <li><a href="/purchase-terms" class="hover:text-[#f4ece3] transition-colors link-underline">Pricing &amp; Refunds</a></li>
                     <li><a href="/privacy" class="hover:text-[#f4ece3] transition-colors link-underline">Privacy Policy</a></li>
                 </ul>
@@ -303,7 +278,8 @@
         </div>
 
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center pt-12 border-t border-borderdark gap-8">
-            <div class="flex gap-8 text-xs uppercase tracking-widest font-bold text-[#f4ece3]/40">
+            <div class="flex gap-8 text-xs uppercase tracking-widest font-bold text-[#f4ece3]/70">
+                <a href="/help" class="hover:text-[#f4ece3] transition-colors">Help</a>
                 <a href="/purchase-terms" class="hover:text-[#f4ece3] transition-colors">Pricing &amp; Refunds</a>
                 <a href="/privacy" class="hover:text-[#f4ece3] transition-colors">Privacy</a>
             </div>
@@ -323,7 +299,7 @@
             </div>
         </div>
 
-        <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-borderdark flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest text-[#f4ece3]/30">
+        <div class="max-w-7xl mx-auto mt-12 pt-8 border-t border-borderdark flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest text-[#f4ece3]/70">
             <p>&copy; <%= new Date().getFullYear() %> Cultured Africa. All rights reserved.</p>
             <div class="flex gap-8">
                 <a href="/privacy" class="hover:text-[#f4ece3] transition-colors">Privacy Policy</a>

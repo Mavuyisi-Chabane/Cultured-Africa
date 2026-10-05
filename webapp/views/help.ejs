@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Help & FAQ' }) %>
+<style>
+    .faq details { border-bottom: 1px solid #38281f; }
+    .faq summary { list-style: none; cursor: pointer; padding: 1.1rem 0; display: flex; justify-content: space-between; gap: 1rem; font-weight: 700; color: #f7efe6; }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::after { content: '+'; color: #fcaa13; font-size: 1.4rem; line-height: 1; }
+    .faq details[open] summary::after { content: '−'; }
+    .faq .answer { padding: 0 0 1.25rem; color: #d9cbbd; line-height: 1.7; }
+    .faq .answer p + p, .faq .answer ul { margin-top: 0.6rem; }
+    .faq .answer ul { list-style: disc; padding-left: 1.4rem; }
+    .faq .answer a { color: #fcaa13; text-decoration: underline; }
+</style>
+</head>
+<body class="min-h-screen">
+<%- include('partials/simple-header') %>
+
+<main id="main" class="max-w-3xl mx-auto px-6 py-12 relative">
+    <h1 class="display-font text-3xl md:text-4xl font-bold text-[#f7efe6] mb-2">Help &amp; FAQ</h1>
+    <p class="text-[#a99a8b] mb-8">Answers to common questions. Can't find what you need? <a href="/contact" class="text-[#fcaa13] font-bold underline">Contact us</a> and we'll reply within <%= terms.REFUND_RESPONSE_BUSINESS_DAYS %> business days.</p>
+
+    <nav aria-label="Help topics" class="flex flex-wrap gap-2 mb-10">
+        <% [['buying', 'Buying & refunds'], ['watching', 'Watching'], ['ratings', 'Age ratings'], ['account', 'Your account'], ['privacy', 'Privacy']].forEach(([id, label]) => { %>
+            <a href="#<%= id %>" class="px-4 py-2 rounded-full text-sm border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]"><%= label %></a>
+        <% }) %>
+    </nav>
+
+    <div class="faq space-y-12">
+        <section id="buying" aria-labelledby="buying-h">
+            <h2 id="buying-h" class="display-font text-xl font-bold text-[#fcaa13] mb-2">Buying &amp; refunds</h2>
+            <details><summary>How does paying for a film work?</summary><div class="answer">
+                <p>You pay once per film. There's no subscription and nothing is charged again later. Some films are free: you only need a free account to watch them.</p>
+                <p>After buying, you can watch the film as often as you like for <strong><%= accessMonths %> months</strong>. The date your access ends is shown on the film page and on your receipt.</p>
+            </div></details>
+            <details><summary>How do I pay, and is it safe?</summary><div class="answer">
+                <p>Payments are handled by Paystack, a secure South African payment provider. You can pay by card and other methods Paystack offers. Cultured Africa never sees or stores your card details.</p>
+            </div></details>
+            <details><summary>Where is my receipt?</summary><div class="answer">
+                <p>A receipt is emailed to you straight after payment. All your receipts are also under <strong>Purchases &amp; Receipts</strong> on your <a href="/account">Account page</a>, where you can print them or save them as PDF.</p>
+            </div></details>
+            <details><summary>Can I get a refund?</summary><div class="answer">
+                <p>Yes, if you change your mind within <%= terms.REFUND_DAYS %> days of buying and have watched no more than <%= terms.REFUND_MAX_MINUTES_WATCHED %> minutes. If a film won't play and we can't fix it within <%= terms.FAULT_FIX_BUSINESS_DAYS %> business days, you get a full refund.</p>
+                <p>To ask for a refund, <a href="/contact?topic=Billing%20or%20refunds">contact us</a> with your receipt number. The full rules are in our <a href="/purchase-terms">Pricing &amp; Refunds policy</a>.</p>
+            </div></details>
+            <details><summary>I paid but the film still says "Buy". What now?</summary><div class="answer">
+                <p>Refresh the film page first. If it still isn't unlocked, <a href="/contact?topic=Billing%20or%20refunds">contact us</a> with the Paystack reference from your payment confirmation and we'll sort it out. You won't be charged twice for the same film.</p>
+            </div></details>
+        </section>
+
+        <section id="watching" aria-labelledby="watching-h">
+            <h2 id="watching-h" class="display-font text-xl font-bold text-[#fcaa13] mb-2">Watching</h2>
+            <details><summary>Which devices can I watch on?</summary><div class="answer">
+                <p>Any phone, tablet or computer with an up-to-date web browser (Chrome, Safari, Edge or Firefox). There's no app to install. On a phone you can add Cultured Africa to your home screen so it opens like an app.</p>
+            </div></details>
+            <details><summary>How do I add Cultured Africa to my phone's home screen?</summary><div class="answer">
+                <ul>
+                    <li><strong>Android (Chrome):</strong> open the site, tap the ⋮ menu, then <strong>Add to Home screen</strong> or <strong>Install app</strong>.</li>
+                    <li><strong>iPhone or iPad (Safari):</strong> open the site, tap the Share button, then <strong>Add to Home Screen</strong>.</li>
+                </ul>
+                <p>The Cultured Africa icon then opens the site full-screen, like an app. Nothing extra is downloaded or installed.</p>
+            </div></details>
+            <details><summary>Can I watch on two devices at once?</summary><div class="answer">
+                <p>No. Each account can play films on <%= terms.DEVICES_AT_ONCE %> device at a time. If you press Play on a second device, the first one pauses and shows "You're watching on another device", with a button to switch back.</p>
+            </div></details>
+            <details><summary>Can I continue where I stopped?</summary><div class="answer">
+                <p>Yes. The film picks up where you left off, on any device. Films you've started appear under <strong>Continue watching</strong> at the top of Home.</p>
+            </div></details>
+            <details><summary>The film won't play or keeps buffering</summary><div class="answer">
+                <ul>
+                    <li>Check your internet connection. Films need a steady connection; Wi-Fi works best.</li>
+                    <li>Refresh the page, or close the tab and open the film again.</li>
+                    <li>Make sure you're not playing a film on another device at the same time.</li>
+                    <li>Update your browser, or try a different one.</li>
+                </ul>
+                <p>Still not working? <a href="/contact?topic=A%20film%20won%27t%20play">Tell us</a> which film, which device and browser you're using, and what you see.</p>
+            </div></details>
+            <details><summary>Can I download films?</summary><div class="answer">
+                <p>No. Films are streamed only, to protect the filmmakers' work. While a film plays, your account email appears faintly over the picture so that recordings can be traced.</p>
+            </div></details>
+            <details><summary>Can I watch trailers without an account?</summary><div class="answer">
+                <p>Yes. Every trailer is free to watch without logging in. You can browse all films and read reviews without an account too.</p>
+            </div></details>
+        </section>
+
+        <section id="ratings" aria-labelledby="ratings-h">
+            <h2 id="ratings-h" class="display-font text-xl font-bold text-[#fcaa13] mb-2">Age ratings</h2>
+            <details><summary>What do the age rating badges mean?</summary><div class="answer">
+                <p>Films carry Film and Publication Board (FPB) age ratings:</p>
+                <ul>
+                    <% ageRatings.forEach(r => { %><li><strong><%= r.code %></strong>: <%= r.description %></li><% }) %>
+                </ul>
+                <p>Letters after a rating are consumer advice: <%= contentAdvisories.map(a => a.code + ' = ' + a.label.toLowerCase()).join(', ') %>.</p>
+            </div></details>
+            <details><summary>Why am I asked if I'm 18 or older?</summary><div class="answer">
+                <p>Films rated 18 can only be bought and watched by adults. The first time you open one, you're asked to confirm you're 18 or older. You only confirm once per account, and we don't ask for or store your date of birth.</p>
+            </div></details>
+        </section>
+
+        <section id="account" aria-labelledby="account-h">
+            <h2 id="account-h" class="display-font text-xl font-bold text-[#fcaa13] mb-2">Your account</h2>
+            <details><summary>I forgot my password</summary><div class="answer">
+                <p>On the <a href="/login">login page</a>, choose <strong>Forgot Password?</strong> and enter your email. We'll send a link to choose a new password. The link works for 30 minutes.</p>
+            </div></details>
+            <details><summary>I didn't get the verification code or reset email</summary><div class="answer">
+                <p>Check your spam or junk folder, and that you typed your email correctly. On the login page you can ask for a new verification code. Codes expire after 15 minutes.</p>
+            </div></details>
+            <details><summary>How do I change my name, email or password?</summary><div class="answer">
+                <p>Go to your <a href="/account">Account page</a>. Changing your email needs your password and a code sent to the new address. Changing your password logs you out on your other devices.</p>
+            </div></details>
+            <details><summary>How do I stay logged in?</summary><div class="answer">
+                <p>Tick <strong>Remember me</strong> when you log in and you'll stay logged in on that device for 30 days. Don't use it on a shared or public computer.</p>
+            </div></details>
+            <details><summary>Can I edit or delete my review?</summary><div class="answer">
+                <p>Yes. On the film page, find your review and choose <strong>Edit or delete</strong>.</p>
+            </div></details>
+            <details><summary>How do I delete my account?</summary><div class="answer">
+                <p>On your <a href="/account">Account page</a>, use <strong>Delete My Account</strong> at the bottom. This permanently removes your profile, purchases, watch history and reviews.</p>
+            </div></details>
+        </section>
+
+        <section id="privacy" aria-labelledby="privacy-h">
+            <h2 id="privacy-h" class="display-font text-xl font-bold text-[#fcaa13] mb-2">Privacy</h2>
+            <details><summary>What do you do with my information?</summary><div class="answer">
+                <p>We only use your details to run your account, process purchases and, if you subscribe, send the newsletter. We never sell or share your information. Read the full <a href="/privacy">Privacy Policy</a>.</p>
+            </div></details>
+            <details><summary>How do I stop newsletter emails?</summary><div class="answer">
+                <p>Use the unsubscribe link at the bottom of any newsletter email, or unsubscribe on your <a href="/account">Account page</a>.</p>
+            </div></details>
+        </section>
+    </div>
+
+    <div class="mt-14 rounded-2xl border border-[#38281f] bg-[#1e1613] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <p class="font-bold text-[#f7efe6]">Still need help?</p>
+            <p class="text-sm text-[#a99a8b]">Send us a message and we'll get back to you by email.</p>
+        </div>
+        <a href="/contact" class="inline-block text-center bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold px-6 py-3 rounded-xl">Contact us</a>
+    </div>
+
+    <%- include('partials/footer') %>
+</main>
+</body>
+</html>

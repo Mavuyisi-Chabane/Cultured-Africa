@@ -9,7 +9,7 @@
 <body class="min-h-screen">
 <%- include('partials/header') %>
 
-<main class="max-w-7xl mx-auto px-6 py-8 relative">
+<main id="main" class="max-w-7xl mx-auto px-6 py-8 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="mb-8">
@@ -46,7 +46,7 @@
                         <div class="h-36 overflow-hidden relative">
                             <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>" loading="lazy" />
                             <span class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span class="w-12 h-12 rounded-full bg-[#fb6b10] text-[#f4ece3] flex items-center justify-center shadow-lg"><i class="fa-solid fa-play"></i></span>
+                                <span class="w-12 h-12 rounded-full bg-[#fb6b10] text-[#140d0a] flex items-center justify-center shadow-lg"><i class="fa-solid fa-play"></i></span>
                             </span>
                             <% if (film.progressPercent !== null) { %>
                                 <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-black/50" role="progressbar" aria-label="Watched" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= film.progressPercent %>">
@@ -85,7 +85,7 @@
                     <option value="<%= o.value %>" <%= filters.sort === o.value ? 'selected' : '' %>>Sort: <%= o.label %></option>
                 <% }) %>
             </select>
-            <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all">Search</button>
+            <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all">Search</button>
         </div>
     </form>
 
@@ -124,7 +124,7 @@
                             <a href="<%= homeUrl({ q: '', culture, price: 'all' }) %>" class="px-4 py-2 rounded-full text-sm border border-[#38281f] bg-[#1e1613] text-[#f7efe6] hover:border-[#fcaa13]"><%= culture %></a>
                         <% }) %>
                     </div>
-                    <a href="<%= basePath %>" class="inline-block bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-6 py-3 rounded-xl font-bold text-sm">See all films</a>
+                    <a href="<%= basePath %>" class="inline-block bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] px-6 py-3 rounded-xl font-bold text-sm">See all films</a>
                 <% } %>
             </div>
         <% } %>
@@ -166,7 +166,7 @@
                                 <span class="block text-[11px] font-normal text-[#a99a8b]">Until <%= film.accessExpiresAt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
                             <% } %>
                         </span>
-                        <span class="bg-[#fb6b10] group-hover:bg-[#ef420f] text-[#f4ece3] px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">
+                        <span class="bg-[#fb6b10] group-hover:bg-[#ef420f] text-[#140d0a] px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">
                             <%= film.comingSoon ? 'Watch trailer' : (film.owned ? 'Watch' : (isGuest ? (film.trailerUrl ? 'Trailer & details' : 'View film') : 'Buy R' + film.price.toFixed(0))) %>
                         </span>
                     </div>

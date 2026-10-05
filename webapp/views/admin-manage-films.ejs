@@ -7,7 +7,7 @@
 <% const active = 'films' %>
 <%- include('partials/admin-header', { active }) %>
 
-<main class="max-w-7xl mx-auto px-6 py-10 relative">
+<main id="main" class="max-w-7xl mx-auto px-6 py-10 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="flex items-center justify-between mb-10 z-10 relative">
@@ -15,7 +15,7 @@
             <h1 class="display-font text-3xl font-bold text-[#f7efe6]">Manage Films</h1>
             <p class="text-[#a99a8b] text-sm mt-1">Your full content catalogue — edit or remove films.</p>
         </div>
-        <a href="/admin/upload" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-6 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all flex items-center gap-2">
+        <a href="/admin/upload" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] px-6 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all flex items-center gap-2">
             <i class="fa-solid fa-plus"></i> Upload Film
         </a>
     </div>

@@ -22,7 +22,7 @@
   const th = 'px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-[#a99a8b]';
 %>
 
-<main class="max-w-7xl mx-auto px-6 py-10 relative">
+<main id="main" class="max-w-7xl mx-auto px-6 py-10 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <a href="<%= backHref %>" class="pdf-hide inline-flex items-center gap-2 text-xs font-bold text-[#fcaa13] hover:underline mb-6 z-10 relative">
@@ -104,7 +104,7 @@
                 <p class="<%= tileLabel %>">Avg Watch Time</p>
             </div>
             <div class="<%= tile %>">
-                <p class="text-2xl font-bold <%= allTime.dropOffRisk === 'High' ? 'text-[#ef420f]' : allTime.dropOffRisk === 'Medium' ? 'text-[#fcaa13]' : 'text-[#9db183]' %>"><%= allTime.dropOffRisk %></p>
+                <p class="text-2xl font-bold <%= allTime.dropOffRisk === 'High' ? 'text-[#ff7a5c]' : allTime.dropOffRisk === 'Medium' ? 'text-[#fcaa13]' : 'text-[#9db183]' %>"><%= allTime.dropOffRisk %></p>
                 <p class="<%= tileLabel %>">Drop-off Risk</p>
             </div>
         <% } else { %>

@@ -1,0 +1,18 @@
+{
+  "name": "Cultured Africa",
+  "short_name": "Cultured Africa",
+  "description": "Short films celebrating South African heritage and culture.",
+  "start_url": "/?source=homescreen",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#140d0a",
+  "theme_color": "#0f0a08",
+  "lang": "en-ZA",
+  "categories": ["entertainment", "education"],
+  "icons": [
+    { "src": "/images/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/images/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/images/brand/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

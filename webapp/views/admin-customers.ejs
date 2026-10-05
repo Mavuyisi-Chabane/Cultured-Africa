@@ -11,7 +11,7 @@
   const returnQuery = new URLSearchParams({ ...(filters.q ? { q: filters.q } : {}), ...(filters.status !== 'all' ? { status: filters.status } : {}) }).toString();
 %>
 
-<main class="max-w-7xl mx-auto px-6 py-10 relative">
+<main id="main" class="max-w-7xl mx-auto px-6 py-10 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="mb-8 z-10 relative">
@@ -27,7 +27,7 @@
             <p class="text-sm font-bold text-[#f7efe6]"><i class="fa-solid fa-envelope-open-text text-[#fcaa13] mr-2"></i>Newsletter: <%= newsletter.confirmed || 0 %> confirmed subscriber<%= newsletter.confirmed === 1 ? '' : 's' %></p>
             <p class="text-xs text-[#a99a8b] mt-1"><%= newsletter.pending || 0 %> waiting to confirm their email. Only confirmed subscribers may be emailed.</p>
         </div>
-        <a href="/admin/customers/newsletter.csv" class="text-xs font-bold text-[#fcaa13] border border-[#fcaa13]/40 hover:bg-[#fcaa13]/10 px-4 py-2 rounded-lg <%= newsletter.confirmed ? '' : 'pointer-events-none opacity-50' %>">
+        <a href="/admin/customers/newsletter.csv" class="text-xs font-bold text-[#fcaa13] border border-[#fcaa13]/40 hover:bg-[#fcaa13]/10 px-4 py-2 rounded-lg <%= newsletter.confirmed ? '' : 'pointer-events-none' %>" <%- newsletter.confirmed ? '' : 'aria-disabled="true"' %>>
             <i class="fa-solid fa-download mr-1"></i> Download subscribers (CSV)
         </a>
     </div>
@@ -51,7 +51,7 @@
                 <option value="<%= o.value %>" <%= filters.status === o.value ? 'selected' : '' %>><%= o.label %></option>
             <% }) %>
         </select>
-        <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all">Search</button>
+        <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] px-6 py-2.5 rounded-full font-bold text-sm shadow-md transition-all">Search</button>
         <% if (filters.q || filters.status !== 'all') { %>
             <a href="/admin/customers" class="text-[#fcaa13] text-sm font-bold hover:underline">Clear</a>
         <% } %>

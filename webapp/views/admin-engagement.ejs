@@ -9,7 +9,7 @@
 <%- include('partials/admin-header', { active }) %>
 <% const filmHref = f => '/admin/reports/film/' + f.slug; %>
 
-<main class="max-w-7xl mx-auto px-6 py-10 relative">
+<main id="main" class="max-w-7xl mx-auto px-6 py-10 relative">
     <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
 
     <div class="mb-10 z-10 relative">
@@ -103,7 +103,7 @@
                             <td class="px-6 py-4 text-sm text-[#a99a8b]" data-sort-value="<%= f.sessions ? f.repeatRate : '' %>"><%= f.sessions ? f.repeatRate + '%' : '—' %></td>
                             <td class="px-6 py-4" data-sort-value="<%= { Low: 1, Medium: 2, High: 3 }[f.dropOffRisk] || '' %>">
                                 <span class="text-[10px] px-2 py-1 rounded font-bold uppercase tracking-widest
-                                    <%= f.dropOffRisk === 'Low' ? 'bg-[#271c17] text-[#9db183]' : f.dropOffRisk === 'Medium' ? 'bg-[#fcaa13]/15 text-[#fcaa13]' : f.dropOffRisk === 'High' ? 'bg-[#b62319]/15 text-[#ef420f]' : 'bg-[#271c17] text-[#a99a8b]' %>">
+                                    <%= f.dropOffRisk === 'Low' ? 'bg-[#271c17] text-[#9db183]' : f.dropOffRisk === 'Medium' ? 'bg-[#fcaa13]/15 text-[#fcaa13]' : f.dropOffRisk === 'High' ? 'bg-[#b62319]/15 text-[#ff7a5c]' : 'bg-[#271c17] text-[#a99a8b]' %>">
                                     <%= f.dropOffRisk %>
                                 </span>
                             </td>

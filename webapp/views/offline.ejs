@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%# Shown by the service worker (public/pwa/sw.js) when there's no connection. Fully
+    self-contained (inline styles, one cached image) so it works offline. %>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f0a08">
+<title>You're offline — Cultured Africa</title>
+<style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #140d0a; color: #f4ece3; font-family: Georgia, 'Times New Roman', serif; text-align: center; padding: 24px; box-sizing: border-box; }
+    img { width: 72px; height: 72px; }
+    h1 { color: #fcaa13; font-size: 28px; margin: 20px 0 8px; }
+    p { color: #d9cbbd; max-width: 340px; margin: 0 auto 24px; line-height: 1.6; }
+    button { background: #fb6b10; color: #140d0a; border: 0; border-radius: 12px; padding: 14px 28px; font: bold 16px Georgia, serif; cursor: pointer; }
+    button:focus-visible { outline: 2px solid #fcaa13; outline-offset: 3px; }
+</style>
+</head>
+<body>
+<main>
+    <img src="/images/brand/sun.png" alt="">
+    <h1>You're offline</h1>
+    <p>Cultured Africa needs an internet connection to stream films. Check your Wi-Fi or mobile data, then try again.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+</main>
+</body>
+</html>

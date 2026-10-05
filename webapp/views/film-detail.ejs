@@ -151,7 +151,7 @@
                             // still the account's active device. On leaving the page, a beacon
                             // (which can't read a reply) just saves the final position.
                             function sendProgress(seconds, completed, leaving) {
-                                var payload = JSON.stringify({ viewId: viewId, progressSeconds: seconds, completed: !!completed, playbackToken: playbackToken, _csrf: csrf });
+                                var payload = JSON.stringify({ viewId: viewId, progressSeconds: seconds, completed: !!completed, playbackToken: playbackToken, durationSeconds: <%= film.durationSeconds ? 'null' : 'Math.round(video.duration) || null' %>, _csrf: csrf });
                                 if (leaving && navigator.sendBeacon) {
                                     navigator.sendBeacon('/film/<%= film.id %>/track-progress', new Blob([payload], { type: 'application/json' }));
                                     return;
@@ -212,7 +212,7 @@
             <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
                 <div>
                     <h1 class="display-font text-3xl font-bold text-[#f7efe6] mb-1"><%= film.title %></h1>
-                    <p class="text-[#a99a8b] text-sm italic"><%= film.culture %> Heritage · <%= film.genre %></p>
+                    <p class="text-[#a99a8b] text-sm italic"><%= [film.culture + ' Heritage', film.genreLabel, film.durationLabel].filter(Boolean).join(' · ') %></p>
                     <div class="mt-4"><%- include('partials/age-rating', { classification: film.classification, detailed: true }) %></div>
                     <% if (film.trailerUrl) { %>
                         <button type="button" data-trailer-src="<%= film.trailerUrl %>" data-trailer-title="<%= film.title %>"

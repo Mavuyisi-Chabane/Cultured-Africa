@@ -1,4 +1,5 @@
 const express = require('express');
+const { GENRES, genreLabel, durationLabel, parseDuration } = require('../config/genres');
 const { describeRating, parseRatingInput, AGE_RATINGS, CONTENT_ADVISORIES } = require('../config/ageRatings');
 const fs = require('fs');
 const path = require('path');
@@ -27,6 +28,7 @@ router.use(requireAdmin);
 // The upload/edit form's age rating options (FPB classifications).
 router.use((req, res, next) => {
   res.locals.ageRatings = AGE_RATINGS;
+  res.locals.genres = GENRES;
   res.locals.contentAdvisories = CONTENT_ADVISORIES;
   next();
 });
@@ -59,6 +61,9 @@ function mapContent(row) {
     title: row.title,
     culture: row.culture_name,
     genre: row.content_type,
+    genreLabel: genreLabel(row.content_type),
+    durationSeconds: row.duration_seconds || 0,
+    durationLabel: durationLabel(row.duration_seconds),
     price: row.price,
     rating: row.avg_rating ? Math.round(row.avg_rating * 10) / 10 : 0,
     videoUrl: row.file_url,
@@ -185,6 +190,7 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
 
   if (req.uploadError) return rejectEdit(req.uploadError);
   if (!title || !description) return rejectEdit('Please fill in all required fields.');
+  if (!GENRES.includes(req.body.genre)) return rejectEdit('Please choose a genre.');
   const ratingResult = parseRatingInput(req.body);
   if (ratingResult.error) return rejectEdit(ratingResult.error);
   const cultureResult = resolveCulture(req.body, req.session.admin);
@@ -212,10 +218,13 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
 
   db.prepare(`
     UPDATE content SET title = ?, description = ?, culture_id = ?, price = ?, file_url = ?, thumbnail_url = ?, trailer_url = ?,
-      age_rating = ?, content_advisories = ?
+      age_rating = ?, content_advisories = ?, content_type = ?, duration_seconds = ?
     WHERE content_id = ?
   `).run(title, description, cultureResult.id, isFree ? 0 : Number(price) || 0, videoUrl, thumbnailUrl, trailerUrl,
-    ratingResult.code, ratingResult.advisoriesCsv, film.id);
+    ratingResult.code, ratingResult.advisoriesCsv, req.body.genre,
+    // Length as read from the video in the browser; a new video without one resets it.
+    parseDuration(req.body.durationSeconds) || (videoFile ? 0 : film.durationSeconds),
+    film.id);
   logActivity(film.comingSoon && videoFile ? 'Film released' : 'Film updated', title, adminActor(req.session.admin));
 
   res.redirect('/admin/films');
@@ -249,17 +258,19 @@ router.post('/upload', handleUploads, (req, res) => {
   }
   const ratingResult = parseRatingInput(req.body);
   if (ratingResult.error) return rejectUpload(ratingResult.error);
+  if (!GENRES.includes(req.body.genre)) return rejectUpload('Please choose a genre.');
   const cultureResult = resolveCulture(req.body, req.session.admin);
   if (cultureResult.error) return rejectUpload(cultureResult.error);
 
   db.prepare(`
-    INSERT INTO content (culture_id, uploaded_by, title, description, content_type, price, file_url, thumbnail_url, trailer_url, age_rating, content_advisories)
-    VALUES (?, ?, ?, ?, 'Uncategorized', ?, ?, ?, ?, ?, ?)
+    INSERT INTO content (culture_id, uploaded_by, title, description, content_type, price, file_url, thumbnail_url, trailer_url, age_rating, content_advisories, duration_seconds)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
-    cultureResult.id, ensureShadowUserForAdmin(req.session.admin), title, description, isFree ? 0 : Number(price) || 0,
+    cultureResult.id, ensureShadowUserForAdmin(req.session.admin), title, description, req.body.genre, isFree ? 0 : Number(price) || 0,
     videoFile ? `/uploads/${videoFile.filename}` : '', thumbnailFile ? `/uploads/${thumbnailFile.filename}` : PLACEHOLDER_THUMBNAIL,
     trailerFile ? `/uploads/${trailerFile.filename}` : '',
-    ratingResult.code, ratingResult.advisoriesCsv
+    ratingResult.code, ratingResult.advisoriesCsv,
+    videoFile ? (parseDuration(req.body.durationSeconds) || 0) : 0
   );
   logActivity('Film uploaded', title, adminActor(req.session.admin));
 

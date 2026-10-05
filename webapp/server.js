@@ -66,6 +66,9 @@ app.use(session({
   store: new SqliteSessionStore(db),
   resave: false,
   saveUninitialized: false,
+  // Sessions end after 4 hours without activity (30 days for customers who tick
+  // "Remember me" at login); each visit pushes the expiry back.
+  rolling: true,
   cookie: { maxAge: 1000 * 60 * 60 * 4, secure: IS_PRODUCTION, httpOnly: true, sameSite: 'lax' }
 }));
 app.use('/uploads', uploadsAccess(db));

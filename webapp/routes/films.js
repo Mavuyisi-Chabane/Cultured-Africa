@@ -1,4 +1,5 @@
 const express = require('express');
+const { GENRES, genreLabel, durationLabel, parseDuration } = require('../config/genres');
 const path = require('path');
 const crypto = require('crypto');
 const { UPLOAD_DIR } = require('../middleware/upload');
@@ -32,6 +33,9 @@ function mapContent(row) {
     title: row.title,
     culture: row.culture_name,
     genre: row.content_type,
+    genreLabel: genreLabel(row.content_type),
+    durationSeconds: row.duration_seconds || 0,
+    durationLabel: durationLabel(row.duration_seconds),
     price: row.price,
     rating: row.avg_rating ? Math.round(row.avg_rating * 10) / 10 : 0,
     videoUrl: row.file_url,
@@ -206,6 +210,31 @@ function highlightMatches(text, words) {
   return html;
 }
 
+// "Continue watching" on Home: films the customer started but didn't finish, most
+// recent first, using the resume positions the player already saves. Only films they
+// can still play (free, or bought and within the access period) are included.
+const CONTINUE_WATCHING_LIMIT = 6;
+function getContinueWatching(userId, activeAccess) {
+  return db.prepare(`
+    SELECT c.*, cu.name AS culture_name, wp.position_seconds,
+      (SELECT AVG(rating) FROM feedback WHERE content_id = c.content_id AND status = 'published') AS avg_rating
+    FROM content c
+    JOIN cultures cu ON cu.culture_id = c.culture_id
+    JOIN watch_progress wp ON wp.content_id = c.content_id AND wp.user_id = ?
+    WHERE c.is_available = 1 AND c.file_url != '' AND wp.completed = 0 AND wp.position_seconds >= 30
+    ORDER BY wp.updated_at DESC
+  `).all(userId).map(row => {
+    const film = mapContent(row);
+    const position = row.position_seconds;
+    const duration = film.durationSeconds;
+    film.progressPercent = duration ? Math.min(100, Math.round((position / duration) * 100)) : null;
+    film.timeLeftLabel = duration ? durationLabel(Math.max(60, duration - position)) : '';
+    film.nearlyDone = duration ? duration - position < 60 : false;
+    return film;
+  }).filter(f => !f.nearlyDone && (f.price === 0 || activeAccess.has(f.id)))
+    .slice(0, CONTINUE_WATCHING_LIMIT);
+}
+
 function renderCatalogue(req, res, basePath) {
   const userId = req.session.user ? req.session.user.id : null;
   const cultures = db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
@@ -260,6 +289,7 @@ function renderCatalogue(req, res, basePath) {
 
   res.render('home', {
     films, cultures, filters, basePath,
+    continueWatching: userId ? getContinueWatching(userId, activeAccess) : [],
     isGuest: !userId,
     sortOptions: Object.entries(HOME_SORTS).map(([value, [label]]) => ({ value, label })),
     priceOptions: Object.entries(HOME_PRICES).map(([value, label]) => ({ value, label }))
@@ -449,6 +479,13 @@ router.post('/film/:id/track-progress', redirectAdminAway, requireLogin, (req, r
   const stillActive = Boolean(playbackToken) && activeRow && activeRow.active_playback_token === playbackToken;
   if (stillActive) {
     db.prepare("UPDATE users SET active_playback_at = datetime('now') WHERE user_id = ?").run(req.session.user.id);
+  }
+
+  // Films uploaded before lengths were recorded: the player reports the video's length
+  // once, while it is actually streaming, and it is stored for the cards and film page.
+  const reportedDuration = parseDuration(req.body.durationSeconds);
+  if (stillActive && reportedDuration) {
+    db.prepare("UPDATE content SET duration_seconds = ? WHERE content_id = ? AND duration_seconds = 0 AND file_url != ''").run(reportedDuration, Number(req.params.id));
   }
 
   if (viewId && typeof progressSeconds === 'number' && Number.isFinite(progressSeconds)) {

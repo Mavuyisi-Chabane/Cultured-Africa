@@ -8,7 +8,7 @@ const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/e
 const { createRateLimiter } = require('../middleware/rateLimit');
 const { PRIVACY_POLICY_VERSION } = require('../config/privacy');
 const business = require('../config/business');
-const { startLoggedInSession, loginRateLimit, TOO_MANY_ATTEMPTS } = require('../utils/loginSession');
+const { startLoggedInSession, loginRateLimit, TOO_MANY_ATTEMPTS, REMEMBER_ME_MS } = require('../utils/loginSession');
 const { safeReturnPath } = require('../middleware/auth');
 
 const router = express.Router();
@@ -80,12 +80,15 @@ router.post('/login', loginRateLimit, (req, res, next) => {
 
   // Read before the session is regenerated, which clears it.
   const returnTo = safeReturnPath(req.session.returnTo) || '/';
+  // "Remember me": stay signed in for 30 days without activity instead of 4 hours.
+  // Logging out, a password change or a suspension still ends the session at once.
+  const remember = req.body.remember === 'yes';
   startLoggedInSession(req, {
     user: {
       id: user.user_id, fullName: user.full_name, email: user.email, role: user.role,
       avatar: user.avatar, sessionVersion: user.session_version
     }
-  }, err => (err ? next(err) : res.redirect(returnTo)));
+  }, err => (err ? next(err) : res.redirect(returnTo)), remember ? REMEMBER_ME_MS : null);
 });
 
 router.get('/register', (req, res) => {

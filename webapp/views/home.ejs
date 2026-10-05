@@ -37,6 +37,33 @@
       const selectCls = 'bg-[#1e1613] border border-[#38281f] rounded-full px-4 py-2.5 text-sm font-bold text-[#f7efe6] cursor-pointer focus:border-[#fcaa13]';
     %>
 
+    <% if (continueWatching.length && !isFiltered) { %>
+        <section class="mb-10 relative" aria-labelledby="continue-heading">
+            <h2 id="continue-heading" class="text-lg font-bold text-[#f7efe6] mb-4">Continue watching</h2>
+            <div class="flex gap-5 overflow-x-auto pb-3 snap-x">
+                <% continueWatching.forEach(film => { %>
+                    <a href="/film/<%= film.id %>#playerFrame" class="snap-start shrink-0 w-64 bg-[#1e1613] rounded-[14px] border border-[#38281f] overflow-hidden group hover:border-[#fcaa13] transition-all">
+                        <div class="h-36 overflow-hidden relative">
+                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="<%= film.thumbnailUrl %>" alt="<%= film.title %>" loading="lazy" />
+                            <span class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="w-12 h-12 rounded-full bg-[#fb6b10] text-[#f4ece3] flex items-center justify-center shadow-lg"><i class="fa-solid fa-play"></i></span>
+                            </span>
+                            <% if (film.progressPercent !== null) { %>
+                                <div class="absolute bottom-0 left-0 right-0 h-1.5 bg-black/50" role="progressbar" aria-label="Watched" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= film.progressPercent %>">
+                                    <div class="h-full bg-[#fb6b10]" style="width: <%= film.progressPercent %>%"></div>
+                                </div>
+                            <% } %>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-[#f7efe6] truncate"><%= film.title %></h3>
+                            <p class="text-xs text-[#a99a8b] mt-1"><%= film.timeLeftLabel ? film.timeLeftLabel + ' left' : 'Resume where you stopped' %></p>
+                        </div>
+                    </a>
+                <% }) %>
+            </div>
+        </section>
+    <% } %>
+
     <form method="get" action="<%= basePath %>" id="film-filters" role="search" class="mb-6 flex flex-col md:flex-row gap-3 md:items-center">
         <div class="relative flex-1">
             <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-[#a99a8b] text-sm pointer-events-none"></i>
@@ -114,7 +141,7 @@
                 </div>
                 <div class="p-6">
                     <h3 class="text-xl font-bold text-[#f7efe6] mb-1"><%= film.title %></h3>
-                    <p class="text-[#a99a8b] text-xs font-medium mb-2 italic"><%= film.culture %> Heritage · <%= film.genre %></p>
+                    <p class="text-[#a99a8b] text-xs font-medium mb-2 italic"><%= [film.culture + ' Heritage', film.genreLabel, film.durationLabel].filter(Boolean).join(' · ') %></p>
                     <p class="text-[#a99a8b] text-sm mb-4 line-clamp-2"><%- film.descriptionHtml %></p>
 
                     <div class="flex items-center gap-1 mb-4 text-[#fcaa13]">

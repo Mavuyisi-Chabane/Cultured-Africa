@@ -27,6 +27,7 @@
             <%- navLink('/admin/reports', 'Reports', reportKeys) %>
             <% if (currentAdmin.role === 'super_admin') { %>
                 <%- navLink('/admin/manage-admins', 'Manage Admins', 'manage-admins') %>
+                <%- navLink('/admin/backups', 'Backups', 'backups') %>
             <% } %>
         </div>
     </div>
@@ -52,7 +53,7 @@
     </div>
 </nav>
 <div id="admin-menu" class="pdf-hide lg:hidden sticky top-[72px] z-40 bg-[#0f0a08] border-t border-b border-[#38281f] px-6 py-3 grid grid-cols-2 sm:grid-cols-3 gap-1" hidden>
-    <% [['/admin/dashboard', 'Dashboard', 'fa-gauge'], ['/admin/activity', 'Recent Activity', 'fa-clock-rotate-left'], ['/admin/films', 'Manage Films', 'fa-film'], ['/admin/cultures', 'Cultures', 'fa-earth-africa'], ['/admin/customers', 'Customers', 'fa-users'], ['/admin/feedback', 'Feedback', 'fa-comments'], ['/admin/reports', 'Reports', 'fa-chart-line']].concat(currentAdmin.role === 'super_admin' ? [['/admin/manage-admins', 'Manage Admins', 'fa-user-shield']] : []).forEach(([href, label, icon]) => { %>
+    <% [['/admin/dashboard', 'Dashboard', 'fa-gauge'], ['/admin/activity', 'Recent Activity', 'fa-clock-rotate-left'], ['/admin/films', 'Manage Films', 'fa-film'], ['/admin/cultures', 'Cultures', 'fa-earth-africa'], ['/admin/customers', 'Customers', 'fa-users'], ['/admin/feedback', 'Feedback', 'fa-comments'], ['/admin/reports', 'Reports', 'fa-chart-line']].concat(currentAdmin.role === 'super_admin' ? [['/admin/manage-admins', 'Manage Admins', 'fa-user-shield'], ['/admin/backups', 'Backups', 'fa-database']] : []).forEach(([href, label, icon]) => { %>
         <a href="<%= href %>" class="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-[#f4ece3] hover:bg-[#1e1613]"><i class="fa-solid <%= icon %> w-5 text-center text-[#fcaa13]"></i><%= label %></a>
     <% }) %>
 </div>

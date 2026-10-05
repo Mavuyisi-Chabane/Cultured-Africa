@@ -101,3 +101,25 @@ test('admins cannot use customer pages, and customers cannot use admin pages', a
   await c.login('not-admin@test.local');
   assert.equal((await c.get('/admin/dashboard')).headers.get('location'), '/admin/login');
 });
+
+test('Backups: a super admin can take a backup and download it', async () => {
+  const taken = await admin.submit('/admin/backups', {}, { from: '/admin/backups' });
+  assert.equal(taken.location, '/admin/backups?msg=created');
+  const { html } = await admin.page('/admin/backups');
+  const name = html.match(/href="\/admin\/backups\/(cultured-africa-[^"]+\.sqlite)"/)[1];
+  const file = await admin.get(`/admin/backups/${name}`);
+  assert.equal(file.status, 200);
+  assert.match(file.headers.get('content-disposition'), /attachment/);
+  const bytes = Buffer.from(await file.arrayBuffer());
+  assert.equal(bytes.subarray(0, 15).toString(), 'SQLite format 3', 'a real database file');
+  assert.ok(app.db.prepare("SELECT 1 FROM admin_audit_log WHERE action = 'downloaded_backup'").get(), 'download is logged');
+});
+
+test('Backups: only super admins, and only files from the backup list', async () => {
+  const plainAdmin = new Client(app);
+  await plainAdmin.adminLogin('ntk.testing12@gmail.com', 'Testing12');
+  assert.equal((await plainAdmin.get('/admin/backups')).status, 403);
+  assert.equal((await new Client(app).get('/admin/backups')).headers.get('location'), '/admin/login');
+  assert.equal((await admin.get('/admin/backups/..%2Ftest.sqlite')).status, 404);
+  assert.equal((await admin.get('/admin/backups/test.sqlite')).status, 404);
+});

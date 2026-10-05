@@ -157,3 +157,76 @@ test('one device at a time: pressing Play elsewhere stops the first device', asy
   const beat = await phone.postJson(`/film/${filmId}/track-progress`, { playbackToken: tokenA }, { from: `/film/${filmId}` });
   assert.deepEqual(await beat.json(), { active: false }, 'heartbeat tells the first device to stop');
 });
+
+// ---------- Paystack webhook: payments are saved even if the customer never returns ----------
+const crypto = require('node:crypto');
+async function webhook(event, { signWith = 'sk_test_fake', signature } = {}) {
+  const body = JSON.stringify(event);
+  const sig = signature || crypto.createHmac('sha512', signWith).update(body).digest('hex');
+  return fetch(app.url + '/paystack/webhook', { method: 'POST', headers: { 'content-type': 'application/json', 'x-paystack-signature': sig }, body });
+}
+const charge = (reference, email, filmId, userId) => ({ event: 'charge.success', data: { reference, status: 'success', customer: { email }, metadata: { filmId, userId } } });
+
+test('webhook: a paid customer who never returns to the site still gets the film and receipt', async () => {
+  const id = app.createCustomer({ email: 'closed-tab@test.local' });
+  const filmId = app.filmId('Echoes of the Highveld');
+  app.paystack.pay('REF-WH-1', { amountRand: 50, email: 'closed-tab@test.local' });
+  const res = await webhook(charge('REF-WH-1', 'closed-tab@test.local', filmId, id));
+  assert.equal(res.status, 200);
+  assert.equal(purchases(id, filmId).length, 1);
+  assert.match((await app.mail('closed-tab@test.local')).subject, /receipt/);
+  // Paystack retrying the same event changes nothing.
+  assert.equal((await webhook(charge('REF-WH-1', 'closed-tab@test.local', filmId, id))).status, 200);
+  assert.equal(purchases(id, filmId).length, 1);
+});
+
+test('webhook: requests without a valid Paystack signature are rejected', async () => {
+  const id = app.createCustomer({ email: 'forged@test.local' });
+  const filmId = app.filmId('Threads of Venda');
+  app.paystack.pay('REF-WH-FORGED', { amountRand: 50, email: 'forged@test.local' });
+  assert.equal((await webhook(charge('REF-WH-FORGED', 'forged@test.local', filmId, id), { signWith: 'wrong-key' })).status, 401);
+  assert.equal((await webhook(charge('REF-WH-FORGED', 'forged@test.local', filmId, id), { signature: 'abc' })).status, 401);
+  assert.equal(purchases(id, filmId).length, 0);
+});
+
+test('webhook: a payment that does not verify with Paystack is not recorded', async () => {
+  const id = app.createCustomer({ email: 'underpaid@test.local' });
+  const filmId = app.filmId('Threads of Venda');   // R50
+  app.paystack.pay('REF-WH-LOW', { amountRand: 1, email: 'underpaid@test.local' });
+  assert.equal((await webhook(charge('REF-WH-LOW', 'underpaid@test.local', filmId, id))).status, 200);
+  assert.equal(purchases(id, filmId).length, 0);
+});
+
+test('webhook first, browser second: the customer just sees their film', async () => {
+  const id = app.createCustomer({ email: 'both@test.local' });
+  const filmId = app.filmId('The Rhythm of Tsonga');
+  app.paystack.pay('REF-WH-BOTH', { amountRand: 50, email: 'both@test.local' });
+  await webhook(charge('REF-WH-BOTH', 'both@test.local', filmId, id));
+  await app.mail('both@test.local');
+  const c = new Client(app);
+  await c.login('both@test.local');
+  const { location, html } = await buy(c, filmId, 'REF-WH-BOTH');
+  assert.equal(location, `/film/${filmId}`, html.slice(0, 200));
+  assert.equal(purchases(id, filmId).length, 1);
+});
+
+test('browser first, webhook second: still only one purchase', async () => {
+  const id = app.createCustomer({ email: 'browser-first@test.local' });
+  const filmId = app.filmId('Fulan Fehan Festival');   // R60
+  app.paystack.pay('REF-WH-B1', { amountRand: 60, email: 'browser-first@test.local' });
+  const c = new Client(app);
+  await c.login('browser-first@test.local');
+  await buy(c, filmId, 'REF-WH-B1');
+  assert.equal((await webhook(charge('REF-WH-B1', 'browser-first@test.local', filmId, id))).status, 200);
+  assert.equal(purchases(id, filmId).length, 1);
+  await app.mail('browser-first@test.local');
+});
+
+test("webhook: a payment cannot be credited to a different customer's account", async () => {
+  const victim = app.createCustomer({ email: 'victim@test.local' });
+  app.createCustomer({ email: 'payer@test.local' });
+  const filmId = app.filmId('Ukudweba');
+  app.paystack.pay('REF-WH-MISMATCH', { amountRand: 50, email: 'payer@test.local' });
+  await webhook(charge('REF-WH-MISMATCH', 'payer@test.local', filmId, victim));
+  assert.equal(purchases(victim, filmId).length, 0);
+});

@@ -7,6 +7,7 @@ db/*.sqlite-journal
 db/*.sqlite-wal
 db/*.sqlite-shm
 db/backups/
+db/*.sqlite.*
 db/dev-inbox/
 .env.*
 !.env.example

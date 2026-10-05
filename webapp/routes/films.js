@@ -7,8 +7,7 @@ const { describeRating, AGE_CONFIRMATION_RATINGS } = require('../config/ageRatin
 const { db, logActivity, customerActor, notify } = require('../db');
 const { requireLogin, redirectAdminAway } = require('../middleware/auth');
 const paystack = require('../config/paystack');
-const { getReceipt } = require('../utils/receipts');
-const { sendPurchaseReceipt } = require('../services/email');
+const { verifyPayment, recordPurchase } = require('../utils/purchases');
 const { containsProfanity } = require('../utils/profanityFilter');
 const { startOfWeek, toSqlDateTime, parseDbDate } = require('../utils/dates');
 
@@ -547,49 +546,26 @@ router.post('/film/:id/buy', redirectAdminAway, requireLogin, async (req, res) =
 
   // A Paystack reference can only ever pay for one purchase (also enforced by a unique
   // index) — otherwise one successful payment could be replayed to unlock other films.
-  if (db.prepare('SELECT 1 FROM purchases WHERE transaction_ref = ?').get(reference)) {
+  // If Paystack's webhook already saved this exact payment for this customer and film,
+  // the purchase is done: just show the film.
+  const existing = db.prepare('SELECT user_id, content_id FROM purchases WHERE transaction_ref = ?').get(reference);
+  if (existing) {
+    if (existing.user_id === req.session.user.id && existing.content_id === film.id) return res.redirect(`/film/${film.id}`);
     return renderError('This payment has already been used for a purchase. If you were charged twice, please contact us.');
   }
 
   try {
-    const result = await paystack.verifyTransaction(reference);
-    const tx = result && result.data;
-    const expectedAmount = Math.round(film.price * 100);
-    const paymentOk = result && result.status && tx
-      && tx.status === 'success'
-      && tx.amount === expectedAmount
-      && String(tx.currency || '').toUpperCase() === paystack.PAYSTACK_CURRENCY.toUpperCase()
-      && tx.customer && String(tx.customer.email || '').toLowerCase() === req.session.user.email.toLowerCase();
-
-    if (!paymentOk) {
+    const tx = await verifyPayment(reference, film, req.session.user.email);
+    if (!tx) {
       return renderError('Payment could not be verified. You have not been charged for this film. Please try again.');
     }
-
-    const auth = tx.authorization || {};
-    let purchaseId;
-    try {
-      purchaseId = db.prepare(`
-        INSERT INTO purchases (user_id, content_id, amount_paid, payment_status, transaction_ref, payment_channel, card_brand, card_last4)
-        VALUES (?, ?, ?, 'completed', ?, ?, ?, ?)
-      `).run(
-        req.session.user.id, film.id, film.price, reference,
-        tx.channel || null, auth.brand || auth.card_type || null,
-        /^\d{4}$/.test(String(auth.last4 || '')) ? String(auth.last4) : null
-      ).lastInsertRowid;
-    } catch (err) {
-      // Two tabs submitting the same reference at once: the unique index catches the second.
-      if (String(err.message).includes('UNIQUE')) {
+    const { alreadyRecorded } = recordPurchase({ user: req.session.user, film, reference, tx });
+    if (alreadyRecorded) {
+      const row = db.prepare('SELECT user_id, content_id FROM purchases WHERE transaction_ref = ?').get(reference);
+      if (!row || row.user_id !== req.session.user.id || row.content_id !== film.id) {
         return renderError('This payment has already been used for a purchase.');
       }
-      throw err;
     }
-    logActivity('Purchase made', film.title, customerActor(req.session.user.fullName));
-    notify(req.session.user.id, 'purchase_confirmation', `Your purchase of "${film.title}" was successful. Enjoy the film! Your receipt has been emailed to you and is also on your Account page.`);
-
-    // The purchase is already saved, so a mail problem must never undo it or show an error.
-    const receipt = getReceipt(purchaseId, req.session.user.id);
-    sendPurchaseReceipt(receipt).catch(err => console.error(`Receipt email for purchase ${purchaseId} failed:`, err.message));
-
     res.redirect(`/film/${film.id}`);
   } catch (err) {
     console.error('Paystack verification failed:', err);

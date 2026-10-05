@@ -14,6 +14,20 @@ const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
+// Restoring a backup: copy it next to the database as "<DB_PATH>.restore" and restart the
+// app. Before the database is opened, the current file is kept as
+// "<DB_PATH>.before-restore-<time>" and the backup takes its place (see DEPLOYMENT.md).
+const RESTORE_PATH = `${DB_PATH}.restore`;
+if (fs.existsSync(RESTORE_PATH)) {
+  const kept = `${DB_PATH}.before-restore-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}Z`;
+  // The old file's -wal/-shm move with it, so the kept copy is complete.
+  for (const suffix of ['', '-wal', '-shm']) {
+    if (fs.existsSync(DB_PATH + suffix)) fs.renameSync(DB_PATH + suffix, kept + suffix);
+  }
+  fs.renameSync(RESTORE_PATH, DB_PATH);
+  console.log(`Database restored from backup. The previous database was kept as ${path.basename(kept)}`);
+}
+
 const db = new DatabaseSync(DB_PATH);
 // WAL lets pages keep reading while a write (a purchase, a progress update) is saved,
 // and is more robust if the server stops mid-write. busy_timeout waits briefly instead

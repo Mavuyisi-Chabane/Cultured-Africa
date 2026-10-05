@@ -59,3 +59,34 @@ test('backups: a complete copy is made and only the newest are kept', async () =
     fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   }
 });
+
+test('restoring: a "<database>.restore" file replaces the database on the next start', () => {
+  const { spawnSync } = require('node:child_process');
+  const { DatabaseSync } = require('node:sqlite');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cultured-africa-restore-test-'));
+  try {
+    const env = { ...process.env, NODE_ENV: 'test', SEED_DEMO_DATA: 'false', DB_PATH: path.join(dir, 'app.sqlite'), BACKUP_DIR: path.join(dir, 'backups') };
+    const run = args => spawnSync(process.execPath, args, { cwd: path.join(__dirname, '..'), env, encoding: 'utf8' });
+    // A database with one culture, backed up; then a second culture added after the backup.
+    assert.equal(run(['-e', "require('./db').db.prepare(\"INSERT INTO cultures (name) VALUES ('Before backup')\").run()"]).status, 0);
+    assert.equal(run(['scripts/backup-db.js']).status, 0);
+    assert.equal(run(['-e', "require('./db').db.prepare(\"INSERT INTO cultures (name) VALUES ('After backup')\").run()"]).status, 0);
+
+    const backup = fs.readdirSync(env.BACKUP_DIR)[0];
+    fs.copyFileSync(path.join(env.BACKUP_DIR, backup), env.DB_PATH + '.restore');
+    const started = run(['-e', "require('./db')"]);
+    assert.match(started.stdout, /Database restored from backup/);
+
+    const names = db => db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
+    const live = new DatabaseSync(env.DB_PATH);
+    assert.deepEqual(names(live), ['Before backup'], 'the backup is now the database');
+    live.close();
+    assert.ok(!fs.existsSync(env.DB_PATH + '.restore'), 'restore file used up');
+    const kept = fs.readdirSync(dir).find(f => f.startsWith('app.sqlite.before-restore-') && f.endsWith('Z'));
+    const old = new DatabaseSync(path.join(dir, kept));
+    assert.deepEqual(names(old), ['After backup', 'Before backup'], 'the previous database is kept, complete');
+    old.close();
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  }
+});

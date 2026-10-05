@@ -284,7 +284,7 @@
                                 amount: <%= Math.round(film.price * 100) %>,
                                 currency: '<%= paystackCurrency %>',
                                 ref: 'HS-<%= film.id %>-' + Date.now(),
-                                metadata: { filmId: <%= film.id %>, filmTitle: <%- JSON.stringify(film.title) %> },
+                                metadata: { filmId: <%= film.id %>, userId: <%= currentUser.id %>, filmTitle: <%- JSON.stringify(film.title) %> },
                                 callback: function (response) {
                                     document.getElementById('paystackReference').value = response.reference;
                                     document.getElementById('paystackBuyForm').submit();

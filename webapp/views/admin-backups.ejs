@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('partials/head', { title: 'Cultured Africa — Backups' }) %>
+</head>
+<body class="min-h-screen">
+<% const active = 'backups' %>
+<%- include('partials/admin-header', { active }) %>
+
+<main id="main" class="max-w-4xl mx-auto px-6 py-10 relative">
+    <div class="absolute inset-0 pattern-overlay pointer-events-none"></div>
+
+    <div class="mb-8 z-10 relative flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+            <h1 class="display-font text-3xl font-bold text-[#f7efe6]">Backups</h1>
+            <p class="text-[#a99a8b] text-sm mt-1">A full copy of the database is taken automatically every day; the newest <%= keep %> are kept here.</p>
+        </div>
+        <form method="POST" action="/admin/backups">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold px-5 py-2.5 rounded-xl text-sm"><i class="fa-solid fa-database mr-1"></i> Take a backup now</button>
+        </form>
+    </div>
+
+    <% if (message) { %>
+        <div role="status" class="mb-6 px-4 py-3 rounded-xl bg-[#271c17] <%= failed ? 'text-[#ff7a5c]' : 'text-[#9db183]' %> text-sm font-medium z-10 relative"><%= message %></div>
+    <% } %>
+
+    <div class="mb-8 z-10 relative rounded-2xl border border-[#fcaa13]/30 bg-[#1e1613] p-5 text-sm text-[#f7efe6]">
+        <p class="font-bold mb-2"><i class="fa-solid fa-triangle-exclamation text-[#fcaa13] mr-1"></i> Keep a copy off the server</p>
+        <p class="text-[#a99a8b]">These copies are stored on the same disk as the website, so they can't help if that disk is lost. Download the newest backup at least once a week and keep it somewhere safe that only Cultured Africa can open, such as a password-protected company cloud folder. Backups contain every customer's personal information, so never email them or share them publicly.</p>
+    </div>
+
+    <div class="bg-[#1e1613] rounded-[24px] border border-[#38281f] z-10 relative overflow-hidden">
+        <% if (backups.length === 0) { %>
+            <p class="p-8 text-center text-[#a99a8b] text-sm">No backups yet. The first one is taken a minute after the website starts, or use "Take a backup now".</p>
+        <% } else { %>
+            <ul class="divide-y divide-[#38281f]">
+                <% backups.forEach((b, i) => { %>
+                    <li class="px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-bold text-[#f7efe6]"><%= b.createdLabel %><% if (i === 0) { %> <span class="ml-2 text-[10px] uppercase tracking-widest text-[#fcaa13]">Newest</span><% } %></p>
+                            <p class="text-xs text-[#a99a8b]"><%= b.name %> · <%= b.sizeLabel %></p>
+                        </div>
+                        <a href="/admin/backups/<%= encodeURIComponent(b.name) %>" class="text-xs font-bold text-[#fcaa13] border border-[#fcaa13]/40 hover:bg-[#fcaa13]/10 px-4 py-2 rounded-lg"><i class="fa-solid fa-download mr-1"></i> Download</a>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } %>
+    </div>
+
+    <p class="mt-6 text-xs text-[#a99a8b] z-10 relative">To restore a backup, see "Restoring a backup" in the deployment guide.</p>
+</main>
+</body>
+</html>

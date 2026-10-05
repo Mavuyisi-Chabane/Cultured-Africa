@@ -23,6 +23,7 @@ const notificationRoutes = require('./routes/notifications');
 const privacyRoutes = require('./routes/privacy');
 const newsletterRoutes = require('./routes/newsletter');
 const helpRoutes = require('./routes/help');
+const adminBackupRoutes = require('./routes/adminBackups');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,6 +53,9 @@ app.set('trust proxy', 1);
 
 app.disable('x-powered-by');
 app.use(securityHeaders(IS_PRODUCTION));
+// Paystack's payment notifications: needs the exact raw body to check the signature, so it
+// is registered before the body parsers (and before sessions/CSRF: no cookies involved).
+app.post('/paystack/webhook', express.raw({ type: '*/*', limit: '200kb' }), require('./routes/paystackWebhook'));
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 app.use(express.json({ limit: '100kb' }));
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
@@ -162,6 +166,7 @@ app.use('/', filmRoutes);
 app.use('/', notificationRoutes);
 app.use('/admin', adminAuthRoutes);
 app.use('/admin', adminManageRoutes);
+app.use('/admin', adminBackupRoutes);
 app.use('/admin', adminRoutes);
 
 app.use((req, res) => {

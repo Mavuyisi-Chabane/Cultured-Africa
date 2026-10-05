@@ -4,7 +4,7 @@
   "description": "Cultured Africa streaming platform (SQLite via node:sqlite)",
   "main": "server.js",
   "engines": {
-    "node": ">=22.5.0"
+    "node": ">=22.13.0"
   },
   "scripts": {
     "start": "node server.js",

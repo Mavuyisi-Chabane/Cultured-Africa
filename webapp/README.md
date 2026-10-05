@@ -69,6 +69,10 @@ to `.env` and fill in the values:
 
 ## Deploying to production
 
+Step-by-step instructions for Render (domain, email, Paystack, backups, go-live checklist)
+are in [DEPLOYMENT.md](DEPLOYMENT.md). In short:
+
+
 1. Set `NODE_ENV=production` and a random `SESSION_SECRET` of at least 32 characters
    (the app will not start without one). Set `APP_BASE_URL` to the site's real address so
    links in emails work. See `.env.example` for every setting.
@@ -86,8 +90,7 @@ to `.env` and fill in the values:
    persistent disk (e.g. `/var/data/backups`); the newest 14 are kept (`BACKUP_KEEP`).
    Take one by hand with `npm run backup`. Backups on the same disk don't survive losing
    that disk, so download a copy regularly (or use the host's disk snapshots).
-   **To restore:** stop the app, copy a backup over the database file (`DB_PATH`), delete
-   any `-wal`/`-shm` files next to it, and start the app.
+   **To restore:** see "Restoring a backup" in DEPLOYMENT.md.
 6. `GET /health` returns `{"status":"ok"}` for your host's uptime checks.
 
 Full films are only ever served through `/film/:id/stream` to logged-in customers who own

@@ -1,0 +1,62 @@
+# Render Blueprint for the Cultured Africa website (see webapp/DEPLOYMENT.md).
+# In Render: New → Blueprint → choose this GitHub repository. Render creates the web
+# service and its persistent disk from this file, then asks for the values marked
+# "sync: false" (secrets and addresses that must not be stored in Git).
+services:
+  - type: web
+    name: cultured-africa
+    runtime: node
+    rootDir: webapp
+    plan: starter            # a persistent disk needs a paid instance
+    region: frankfurt        # Render has no South African region; Frankfurt is closest
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true         # every push to the main branch redeploys the site
+    disk:
+      name: data
+      mountPath: /var/data   # database, uploaded films and backups live here
+      sizeGB: 20             # can be increased later (never decreased)
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DB_PATH
+        value: /var/data/cultured-africa.sqlite
+      - key: UPLOADS_DIR
+        value: /var/data/uploads
+      - key: BACKUP_DIR
+        value: /var/data/backups
+      - key: BACKUP_KEEP
+        value: "14"
+      - key: APP_BASE_URL          # e.g. https://culturedafrica.co.za (no trailing slash)
+        sync: false
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYSTACK_CURRENCY
+        value: ZAR
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM             # e.g. Cultured Africa <no-reply@culturedafrica.co.za>
+        sync: false
+      - key: BUSINESS_NAME
+        value: Cultured Africa
+      - key: BUSINESS_EMAIL
+        value: info@culturedafrica.co.za
+      - key: BUSINESS_ADDRESS
+        value: Wits Ehub, The Matrix Shop 3, Wits University, Johannesburg
+      - key: BUSINESS_REG_NO
+        sync: false
+      - key: BUSINESS_VAT_NO
+        sync: false

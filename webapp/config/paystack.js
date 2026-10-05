@@ -16,6 +16,7 @@ async function verifyTransaction(reference) {
 
 module.exports = {
   PAYSTACK_PUBLIC_KEY,
+  PAYSTACK_SECRET_KEY,   // server-side only: verifying payments and webhook signatures
   PAYSTACK_CURRENCY,
   isConfigured,
   verifyTransaction

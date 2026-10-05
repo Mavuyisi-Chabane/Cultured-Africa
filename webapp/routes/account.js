@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { db, logActivity, customerActor, notify } = require('../db');
 const { requireLogin, redirectAdminAway } = require('../middleware/auth');
 const { hashToken } = require('../utils/verification');
-const { toSqlDateTime } = require('../utils/dates');
+const { toSqlDateTime, parseDbDate } = require('../utils/dates');
 const { sendEmailChangeVerification, sendPasswordChangedEmail } = require('../services/email');
 const { getPasswordRequirementFailures } = require('../utils/password');
 const { createRateLimiter } = require('../middleware/rateLimit');
@@ -36,7 +36,7 @@ const verifyEmailChangeLimiter = createRateLimiter({
 function getNewsletterStatus(email) {
   const row = db.prepare('SELECT status, confirmed_at FROM newsletter_subscribers WHERE email = ?').get(String(email).toLowerCase());
   const subscribed = Boolean(row && row.status === 'confirmed');
-  return { subscribed, since: subscribed && row.confirmed_at ? new Date(row.confirmed_at.replace(' ', 'T') + 'Z') : null };
+  return { subscribed, since: subscribed ? parseDbDate(row.confirmed_at) : null };
 }
 
 function renderAccount(req, res, state) {
@@ -44,8 +44,8 @@ function renderAccount(req, res, state) {
   const consent = db.prepare('SELECT privacy_consent_at, adult_confirmed_at FROM users WHERE user_id = ?').get(req.session.user.id);
   res.render('account', {
     user: req.session.user,
-    consentAt: consent && consent.privacy_consent_at ? new Date(consent.privacy_consent_at.replace(' ', 'T') + 'Z') : null,
-    adultConfirmedAt: consent && consent.adult_confirmed_at ? new Date(consent.adult_confirmed_at.replace(' ', 'T') + 'Z') : null,
+    consentAt: consent ? parseDbDate(consent.privacy_consent_at) : null,
+    adultConfirmedAt: consent ? parseDbDate(consent.adult_confirmed_at) : null,
     purchases: listPurchases(req.session.user.id),
     newsletter: getNewsletterStatus(req.session.user.email),
     pendingEmail: pending ? pending.newEmail : null,

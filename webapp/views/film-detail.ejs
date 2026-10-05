@@ -221,7 +221,7 @@
                         </button>
                     <% } %>
                 </div>
-                <% const formatAccessDate = d => d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }); %>
+                <% const formatAccessDate = d => formatDate(d, { day: 'numeric', month: 'long', year: 'numeric' }); %>
                 <% if (film.comingSoon) { %>
                     <div class="text-right">
                         <span class="px-4 py-2 rounded-xl bg-[#fcaa13]/10 text-[#fcaa13] text-sm font-bold inline-flex items-center gap-2"><i class="fa-solid fa-clock"></i> Coming soon</span>

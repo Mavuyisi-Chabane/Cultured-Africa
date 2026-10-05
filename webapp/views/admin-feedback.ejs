@@ -136,7 +136,7 @@
                                 <% } else { %>
                                     <span class="text-[#a99a8b] text-[10px] uppercase tracking-widest font-bold">No rating</span>
                                 <% } %>
-                                <span class="text-[#a99a8b] ml-2"><%= r.createdAt.toLocaleString() %></span>
+                                <span class="text-[#a99a8b] ml-2"><%= formatDateTime(r.createdAt) %></span>
                             </div>
                         </div>
                         <% if (r.comment) { %>
@@ -171,10 +171,10 @@
                                     data-film="<%= r.film ? r.film.title : 'Deleted film' %>"
                                     data-rating="<%= r.rating || '' %>"
                                     data-comment="<%= (r.comment || '(No comment left)').replace(/"/g, '&quot;') %>"
-                                    data-date="<%= r.createdAt.toLocaleString() %>"
+                                    data-date="<%= formatDateTime(r.createdAt) %>"
                                     data-status="<%= r.status %>"
                                     data-removed-by="<%= r.removedBy || '' %>"
-                                    data-removed-at="<%= r.removedAt ? r.removedAt.toLocaleString() : '' %>"
+                                    data-removed-at="<%= r.removedAt ? formatDateTime(r.removedAt) : '' %>"
                                     data-removal-reason="<%= r.removalReason || '' %>"
                                     title="View detail">
                                     <i class="fa-solid fa-eye"></i>
@@ -202,7 +202,7 @@
 
                         <% if (r.status === 'removed' && (r.removedBy || r.removalReason)) { %>
                             <p class="text-[10px] text-[#a99a8b] mt-3">
-                                Removed<% if (r.removalReason) { %> for <span class="font-medium"><%= r.removalReason %></span><% } %><% if (r.removedAt) { %> on <%= r.removedAt.toLocaleString() %><% } %>
+                                Removed<% if (r.removalReason) { %> for <span class="font-medium"><%= r.removalReason %></span><% } %><% if (r.removedAt) { %> on <%= formatDateTime(r.removedAt) %><% } %>
                             </p>
                         <% } %>
                     </div>

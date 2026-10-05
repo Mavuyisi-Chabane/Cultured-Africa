@@ -7,7 +7,7 @@ const business = require('../config/business');
 // Only used when SMTP isn't configured. Captures the composed email locally so the
 // flow can be tested end-to-end without a real mail server. Never written to the
 // console/application logs, and gitignored — not something a production deploy uses.
-const DEV_INBOX_DIR = path.join(__dirname, '..', 'db', 'dev-inbox');
+const DEV_INBOX_DIR = process.env.DEV_INBOX_DIR || path.join(__dirname, '..', 'db', 'dev-inbox');
 
 function getTransporter() {
   if (config.isConfigured) {

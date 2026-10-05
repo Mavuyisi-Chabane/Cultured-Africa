@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const { db, logActivity, adminActor, notify, logAudit, ensureShadowUserForAdmin } = require('../db');
 const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
 const handleUploads = require('../middleware/upload');
-const { startOfWeek, endOfWeek, toSqlDateTime, formatWeekLabel } = require('../utils/dates');
+const { startOfWeek, endOfWeek, toSqlDateTime, formatWeekLabel, parseDbDate } = require('../utils/dates');
 const mockReports = require('../data/mockReports');
 const { buildScreenshotPdf } = require('../utils/screenshotPdf');
 const { THRESHOLDS, flagLevel } = require('../utils/reportThresholds');
@@ -75,7 +75,7 @@ function mapContent(row) {
     classification: describeRating(row.age_rating, row.content_advisories),
     description: row.description,
     isAvailable: Boolean(row.is_available),
-    uploadedAt: new Date(row.upload_date)
+    uploadedAt: parseDbDate(row.upload_date)
   };
 }
 
@@ -135,7 +135,7 @@ router.get('/activity', (req, res) => {
   const recentActivity = db.prepare('SELECT type, entity, actor_name, actor_role, created_at FROM activity_log ORDER BY created_at DESC, id DESC LIMIT 200')
     .all()
     .map(a => ({
-      type: a.type, entity: a.entity, timestamp: new Date(a.created_at),
+      type: a.type, entity: a.entity, timestamp: parseDbDate(a.created_at),
       actor: a.actor_name ? { name: a.actor_name, role: a.actor_role } : null
     }));
 
@@ -314,9 +314,9 @@ router.get('/feedback', (req, res) => {
     adminReply: r.admin_reply,
     status: r.status,
     removedBy: r.removed_by,
-    removedAt: r.removed_at ? new Date(r.removed_at) : null,
+    removedAt: parseDbDate(r.removed_at),
     removalReason: r.removal_reason,
-    createdAt: new Date(r.submitted_date),
+    createdAt: parseDbDate(r.submitted_date),
     userId: r.user_id,
     contentId: r.content_id,
     film: { title: r.film_title },
@@ -461,8 +461,8 @@ router.get('/manage-admins', requireSuperAdmin, (req, res) => {
       status: a.status,
       pending: !a.password_hash,
       isSelf: a.admin_id === req.session.admin.id,
-      invite: invite ? { id: invite.id, status: invite.status, expiresAt: new Date(invite.expires_at) } : null,
-      createdAt: new Date(a.created_at)
+      invite: invite ? { id: invite.id, status: invite.status, expiresAt: parseDbDate(invite.expires_at) } : null,
+      createdAt: parseDbDate(a.created_at)
     };
   });
 

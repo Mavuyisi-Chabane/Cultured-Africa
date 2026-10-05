@@ -4,6 +4,9 @@ public/uploads/*
 !public/uploads/.gitkeep
 db/*.sqlite
 db/*.sqlite-journal
+db/*.sqlite-wal
+db/*.sqlite-shm
+db/backups/
 db/dev-inbox/
 .env.*
 !.env.example

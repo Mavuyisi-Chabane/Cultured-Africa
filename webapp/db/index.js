@@ -15,6 +15,11 @@ const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 const db = new DatabaseSync(DB_PATH);
+// WAL lets pages keep reading while a write (a purchase, a progress update) is saved,
+// and is more robust if the server stops mid-write. busy_timeout waits briefly instead
+// of failing if two writes meet.
+db.exec('PRAGMA journal_mode = WAL');
+db.exec('PRAGMA busy_timeout = 5000');
 db.exec('PRAGMA foreign_keys = ON');
 db.exec(fs.readFileSync(SCHEMA_PATH, 'utf8'));
 
@@ -256,4 +261,4 @@ function logAudit(adminId, action, targetType, targetId, details) {
   `).run(String(adminId), action, targetType, targetId === null || targetId === undefined ? null : String(targetId), details || null);
 }
 
-module.exports = { db, logActivity, adminActor, customerActor, notify, logAudit, ensureShadowUserForAdmin };
+module.exports = { db, DB_PATH, logActivity, adminActor, customerActor, notify, logAudit, ensureShadowUserForAdmin };

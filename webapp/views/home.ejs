@@ -163,7 +163,7 @@
                         <span class="<%= film.price > 0 && !film.owned ? 'text-[#9db183]' : 'text-[#fcaa13]' %> font-bold text-lg leading-tight">
                             <%= film.comingSoon ? 'Coming soon' : (film.price === 0 ? 'Free' : (film.owned ? 'Owned' : 'R' + film.price.toFixed(0))) %>
                             <% if (film.accessExpiresAt) { %>
-                                <span class="block text-[11px] font-normal text-[#a99a8b]">Until <%= film.accessExpiresAt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
+                                <span class="block text-[11px] font-normal text-[#a99a8b]">Until <%= formatDate(film.accessExpiresAt, { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
                             <% } %>
                         </span>
                         <span class="bg-[#fb6b10] group-hover:bg-[#ef420f] text-[#140d0a] px-6 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-[#fb6b10]/20 transition-all">

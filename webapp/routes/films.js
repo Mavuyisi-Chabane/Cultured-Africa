@@ -10,7 +10,7 @@ const paystack = require('../config/paystack');
 const { getReceipt } = require('../utils/receipts');
 const { sendPurchaseReceipt } = require('../services/email');
 const { containsProfanity } = require('../utils/profanityFilter');
-const { startOfWeek, toSqlDateTime } = require('../utils/dates');
+const { startOfWeek, toSqlDateTime, parseDbDate } = require('../utils/dates');
 
 const router = express.Router();
 
@@ -49,7 +49,7 @@ function mapContent(row) {
     advisoryCodes: String(row.content_advisories || '').split(',').filter(Boolean),
     classification: describeRating(row.age_rating, row.content_advisories),
     description: row.description,
-    uploadedAt: new Date(row.upload_date)
+    uploadedAt: parseDbDate(row.upload_date)
   };
 }
 
@@ -70,9 +70,6 @@ router.use((req, res, next) => {
 });
 
 // SQLite datetime() values are UTC 'YYYY-MM-DD HH:MM:SS' with no zone marker.
-function parseDbDate(value) {
-  return value ? new Date(value.replace(' ', 'T') + 'Z') : null;
-}
 
 // The user's most recent completed purchase of a film, or null if they never bought it.
 function getAccess(userId, contentId) {
@@ -110,7 +107,7 @@ function getFilmDetailContext(film, userId) {
     rating: r.rating,
     comment: r.comment,
     adminReply: r.admin_reply,
-    createdAt: new Date(r.submitted_date),
+    createdAt: parseDbDate(r.submitted_date),
     edited: Boolean(r.edited_at),
     userId: r.user_id,
     user: { fullName: r.user_full_name }
@@ -372,7 +369,7 @@ router.get('/recap', redirectAdminAway, requireLogin, (req, res) => {
     JOIN content c ON c.content_id = p.content_id
     WHERE p.user_id = ? AND p.payment_status = 'completed' AND p.purchase_date >= ?
     ORDER BY p.purchase_date DESC
-  `).all(userId, periodStartSql).map(r => ({ title: r.title, amountPaid: r.amount_paid, purchasedAt: new Date(r.purchase_date) }));
+  `).all(userId, periodStartSql).map(r => ({ title: r.title, amountPaid: r.amount_paid, purchasedAt: parseDbDate(r.purchase_date) }));
 
   res.render('recap', {
     period, periodLabel,

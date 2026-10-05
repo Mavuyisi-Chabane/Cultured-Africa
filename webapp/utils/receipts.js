@@ -4,11 +4,7 @@ const { ACCESS_MONTHS } = require('../config/access');
 const { PAYSTACK_CURRENCY } = require('../config/paystack');
 const { describeRating } = require('../config/ageRatings');
 
-const TIME_ZONE = 'Africa/Johannesburg';
-
-function parseDbDate(value) {
-  return value ? new Date(value.replace(' ', 'T') + 'Z') : null;
-}
+const { TIME_ZONE, parseDbDate } = require('./dates');
 
 function formatMoney(amount) {
   return `R${Number(amount).toFixed(2)}`;

@@ -1,4 +1,5 @@
 const express = require('express');
+const { parseDbDate } = require('../utils/dates');
 const { db, logActivity, adminActor, logAudit, notify } = require('../db');
 const { requireAdmin } = require('../middleware/auth');
 const { validateCultureName } = require('../utils/cultureNames');
@@ -7,9 +8,6 @@ const { validateCultureName } = require('../utils/cultureNames');
 const router = express.Router();
 router.use(['/customers', '/cultures'], requireAdmin);
 
-function parseDbDate(value) {
-  return value ? new Date(value.replace(' ', 'T') + 'Z') : null;
-}
 
 // Result messages are passed as short codes in the redirect URL, never as free text,
 // so nobody can craft a link that shows arbitrary text on an admin page.

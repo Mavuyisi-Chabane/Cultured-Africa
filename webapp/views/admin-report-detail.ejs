@@ -15,7 +15,6 @@
   const backHref = isFilm ? '/admin/reports' + weeksQuery : '/admin/analytics';
   const backLabel = isFilm ? 'Revenue & Content report' : 'User Analytics report';
   const selfPath = '/admin/reports/' + kind + '/' + slug;
-  const formatDate = d => d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
   const stars = n => '★'.repeat(n) + '☆'.repeat(5 - n);
   const tile = 'bg-[#1e1613] rounded-2xl p-6 text-center border border-[#38281f]';
   const tileLabel = 'text-[10px] font-bold uppercase tracking-widest text-[#a99a8b] mt-1';

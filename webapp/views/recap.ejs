@@ -82,7 +82,7 @@
                             <tr>
                                 <td class="px-6 py-4 text-sm font-bold text-[#f7efe6]"><%= p.title %></td>
                                 <td class="px-6 py-4 text-sm text-[#9db183] font-bold">R<%= p.amountPaid.toFixed(0) %></td>
-                                <td class="px-6 py-4 text-xs text-[#a99a8b]"><%= p.purchasedAt.toLocaleDateString() %></td>
+                                <td class="px-6 py-4 text-xs text-[#a99a8b]"><%= formatDate(p.purchasedAt) %></td>
                             </tr>
                         <% }) %>
                     </tbody>

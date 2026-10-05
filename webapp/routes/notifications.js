@@ -1,4 +1,5 @@
 const express = require('express');
+const { parseDbDate } = require('../utils/dates');
 const { db } = require('../db');
 const { requireLogin, redirectAdminAway } = require('../middleware/auth');
 
@@ -12,7 +13,7 @@ router.get('/notifications', redirectAdminAway, requireLogin, (req, res) => {
       type: n.type,
       message: n.message,
       isRead: Boolean(n.is_read),
-      sentAt: new Date(n.sent_date)
+      sentAt: parseDbDate(n.sent_date)
     }));
 
   res.render('notifications', { notifications });

@@ -21,6 +21,21 @@ Then open <http://localhost:3000>.
 On first start the app creates `db/cultured-africa.sqlite` and fills it with demo data
 automatically. To reset to a clean demo state, stop the server, delete that file, and start again.
 
+## Automated tests
+
+```bash
+npm test
+```
+
+Runs about 70 checks of the main flows in roughly 20 seconds: registration and email
+verification, login, Remember me, password reset, consent, the Account page, buying with
+Paystack, receipts, the 6-month access period, 18+ confirmation, one device at a time,
+reviews, search, Continue watching, the admin portal (customers, cultures, films,
+feedback), Help and Contact, emails, security (CSRF, headers, protected streaming), dates
+and backups. Each test file starts its own copy of the app on a temporary database with
+demo data and a fake Paystack, so it never touches your real database, inbox or payments.
+Run it before every commit and before deploying; all tests should pass.
+
 ## Styles (CSS)
 
 Page styles come from `public/css/app.css`, built by Tailwind from the classes used in
@@ -67,7 +82,13 @@ to `.env` and fill in the values:
    Further admins can then be invited from **Manage Admins** in the admin portal.
 4. HTTPS is required for "Add to Home screen" (the service worker in `public/pwa/sw.js`)
    to work on phones.
-5. `GET /health` returns `{"status":"ok"}` for your host's uptime checks.
+5. Daily database backups run automatically in production. Set `BACKUP_DIR` on the
+   persistent disk (e.g. `/var/data/backups`); the newest 14 are kept (`BACKUP_KEEP`).
+   Take one by hand with `npm run backup`. Backups on the same disk don't survive losing
+   that disk, so download a copy regularly (or use the host's disk snapshots).
+   **To restore:** stop the app, copy a backup over the database file (`DB_PATH`), delete
+   any `-wal`/`-shm` files next to it, and start the app.
+6. `GET /health` returns `{"status":"ok"}` for your host's uptime checks.
 
 Full films are only ever served through `/film/:id/stream` to logged-in customers who own
 them; `/uploads` serves thumbnails and trailers only.

@@ -70,6 +70,12 @@ app.get('/sw.js', (req, res) => {
 });
 app.get('/offline', (req, res) => res.render('offline'));
 app.locals.isProduction = IS_PRODUCTION;
+// Dates in every view are shown in South African time (utils/dates.js).
+const { formatDate, formatDateTime } = require('./utils/dates');
+app.locals.formatDate = formatDate;
+app.locals.formatDateTime = formatDateTime;
+// Daily database backups in production (or wherever BACKUP_DIR is set).
+if (IS_PRODUCTION || process.env.BACKUP_DIR) require('./utils/backup').scheduleDailyBackups();
 app.locals.cssVersion = Math.floor(fs.statSync(path.join(__dirname, 'public', 'css', 'app.css')).mtimeMs).toString(36);
 
 // For the host's uptime checks: confirms the app is running and the database answers.

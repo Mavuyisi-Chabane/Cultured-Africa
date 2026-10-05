@@ -36,7 +36,7 @@
                 </div>
                 <div class="flex-1">
                     <p class="text-sm text-[#f7efe6]"><%= n.message %></p>
-                    <p class="text-[10px] text-[#a99a8b] mt-1 uppercase tracking-widest"><%= n.sentAt.toLocaleString() %></p>
+                    <p class="text-[10px] text-[#a99a8b] mt-1 uppercase tracking-widest"><%= formatDateTime(n.sentAt) %></p>
                 </div>
                 <% if (!n.isRead) { %>
                     <span class="w-2 h-2 rounded-full bg-[#fb6b10] mt-1.5 flex-shrink-0"></span>

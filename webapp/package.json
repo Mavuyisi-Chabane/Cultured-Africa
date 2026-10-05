@@ -11,7 +11,9 @@
     "dev": "node --watch server.js",
     "create-admin": "node scripts/create-admin.js",
     "build:css": "tailwindcss -i ./src/styles.css -o ./public/css/app.css --minify",
-    "watch:css": "tailwindcss -i ./src/styles.css -o ./public/css/app.css --watch"
+    "watch:css": "tailwindcss -i ./src/styles.css -o ./public/css/app.css --watch",
+    "backup": "node scripts/backup-db.js",
+    "test": "node --test --test-concurrency=4 test/*.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -7,7 +7,7 @@
 <% const active = 'customers' %>
 <%- include('partials/admin-header', { active }) %>
 <%
-  const fmtDate = d => d ? d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+  const fmtDate = d => d ? formatDate(d, { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
   const returnQuery = new URLSearchParams({ ...(filters.q ? { q: filters.q } : {}), ...(filters.status !== 'all' ? { status: filters.status } : {}) }).toString();
 %>
 

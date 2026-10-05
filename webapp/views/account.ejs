@@ -155,7 +155,7 @@
         <h2 class="text-sm font-bold uppercase tracking-widest text-[#f7efe6] mb-1">Newsletter</h2>
         <% if (newsletter.subscribed) { %>
             <p class="text-[#a99a8b] text-sm mb-4">
-                You're subscribed to news about new films and releases<% if (newsletter.since) { %> (since <span class="text-[#f7efe6] font-medium"><%= newsletter.since.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>)<% } %>. We send it to <span class="text-[#f7efe6] font-medium"><%= user.email %></span>.
+                You're subscribed to news about new films and releases<% if (newsletter.since) { %> (since <span class="text-[#f7efe6] font-medium"><%= formatDate(newsletter.since, { day: 'numeric', month: 'long', year: 'numeric' }) %></span>)<% } %>. We send it to <span class="text-[#f7efe6] font-medium"><%= user.email %></span>.
             </p>
             <form method="POST" action="/account/newsletter">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -178,14 +178,14 @@
         <% if (consentAt) { %>
             <p class="text-[#a99a8b] text-sm mb-3">
                 You agreed to our <a href="/privacy" class="text-[#fcaa13] font-bold underline">Privacy Policy</a> on
-                <span class="text-[#f7efe6] font-medium"><%= consentAt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>.
+                <span class="text-[#f7efe6] font-medium"><%= formatDate(consentAt, { day: 'numeric', month: 'long', year: 'numeric' }) %></span>.
             </p>
         <% } else { %>
             <p class="text-[#a99a8b] text-sm mb-3">You haven't agreed to our <a href="/privacy" class="text-[#fcaa13] font-bold underline">Privacy Policy</a> yet. <a href="/consent" class="text-[#fcaa13] font-bold underline">Review it now</a>.</p>
         <% } %>
         <p class="text-[#a99a8b] text-sm mb-3">
             <% if (adultConfirmedAt) { %>
-                You confirmed you are 18 or older on <span class="text-[#f7efe6] font-medium"><%= adultConfirmedAt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>, so you can watch films rated 18.
+                You confirmed you are 18 or older on <span class="text-[#f7efe6] font-medium"><%= formatDate(adultConfirmedAt, { day: 'numeric', month: 'long', year: 'numeric' }) %></span>, so you can watch films rated 18.
             <% } else { %>
                 You haven't confirmed your age. You'll be asked to the first time you open a film rated 18.
             <% } %>

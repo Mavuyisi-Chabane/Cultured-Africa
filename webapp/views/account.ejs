@@ -109,6 +109,28 @@
         <% } %>
     </div>
 
+    <!-- Newsletter -->
+    <div class="bg-[#1e1613] rounded-[24px] border border-[#38281f] p-8 shadow-sm z-10 relative mb-8">
+        <h2 class="text-sm font-bold uppercase tracking-widest text-[#f7efe6] mb-1">Newsletter</h2>
+        <% if (newsletter.subscribed) { %>
+            <p class="text-[#a99a8b] text-sm mb-4">
+                You're subscribed to news about new films and releases<% if (newsletter.since) { %> (since <span class="text-[#f7efe6] font-medium"><%= newsletter.since.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' }) %></span>)<% } %>. We send it to <span class="text-[#f7efe6] font-medium"><%= user.email %></span>.
+            </p>
+            <form method="POST" action="/account/newsletter">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="subscribe" value="no">
+                <button type="submit" class="text-sm font-bold text-[#a99a8b] border border-[#38281f] hover:border-[#fcaa13] hover:text-[#f7efe6] px-5 py-2.5 rounded-xl">Unsubscribe</button>
+            </form>
+        <% } else { %>
+            <p class="text-[#a99a8b] text-sm mb-4">Get an email when new films are released. We'll send it to <span class="text-[#f7efe6] font-medium"><%= user.email %></span>, never share your address, and you can unsubscribe at any time.</p>
+            <form method="POST" action="/account/newsletter">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="subscribe" value="yes">
+                <button type="submit" class="text-sm font-bold bg-[#fb6b10] hover:bg-[#ef420f] text-[#f4ece3] px-5 py-2.5 rounded-xl"><i class="fa-solid fa-envelope-open-text mr-1"></i> Subscribe to the newsletter</button>
+            </form>
+        <% } %>
+    </div>
+
     <!-- Privacy & consent -->
     <div class="bg-[#1e1613] rounded-[24px] border border-[#38281f] p-8 shadow-sm z-10 relative mb-8">
         <h2 class="text-sm font-bold uppercase tracking-widest text-[#f7efe6] mb-1">Privacy &amp; Consent</h2>

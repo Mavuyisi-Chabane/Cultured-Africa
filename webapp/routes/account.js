@@ -30,6 +30,14 @@ const verifyEmailChangeLimiter = createRateLimiter({
   keyFn: req => `${req.ip}:${req.session.user.id}`
 });
 
+// The customer's newsletter subscription, matched on their account email (the same list
+// the landing-page sign-up feeds). Returns { subscribed, since } .
+function getNewsletterStatus(email) {
+  const row = db.prepare('SELECT status, confirmed_at FROM newsletter_subscribers WHERE email = ?').get(String(email).toLowerCase());
+  const subscribed = Boolean(row && row.status === 'confirmed');
+  return { subscribed, since: subscribed && row.confirmed_at ? new Date(row.confirmed_at.replace(' ', 'T') + 'Z') : null };
+}
+
 function renderAccount(req, res, state) {
   const pending = req.session.pendingEmailChange;
   const consent = db.prepare('SELECT privacy_consent_at, adult_confirmed_at FROM users WHERE user_id = ?').get(req.session.user.id);
@@ -38,6 +46,7 @@ function renderAccount(req, res, state) {
     consentAt: consent && consent.privacy_consent_at ? new Date(consent.privacy_consent_at.replace(' ', 'T') + 'Z') : null,
     adultConfirmedAt: consent && consent.adult_confirmed_at ? new Date(consent.adult_confirmed_at.replace(' ', 'T') + 'Z') : null,
     purchases: listPurchases(req.session.user.id),
+    newsletter: getNewsletterStatus(req.session.user.email),
     pendingEmail: pending ? pending.newEmail : null,
     error: null,
     success: null,
@@ -121,8 +130,14 @@ router.post('/account/email/verify', redirectAdminAway, requireLogin, verifyEmai
     return renderAccount(req, res, { pendingEmail: request.new_email, error: 'Incorrect code.' });
   }
 
-  const user = db.prepare('SELECT full_name FROM users WHERE user_id = ?').get(userId);
+  const user = db.prepare('SELECT full_name, email FROM users WHERE user_id = ?').get(userId);
   db.prepare('UPDATE users SET email = ? WHERE user_id = ?').run(request.new_email, userId);
+  // Keep any newsletter subscription with the account's new address.
+  const subscription = db.prepare('SELECT id FROM newsletter_subscribers WHERE email = ?').get(String(user.email).toLowerCase());
+  if (subscription) {
+    db.prepare('DELETE FROM newsletter_subscribers WHERE email = ? AND id != ?').run(String(request.new_email).toLowerCase(), subscription.id);
+    db.prepare('UPDATE newsletter_subscribers SET email = ? WHERE id = ?').run(String(request.new_email).toLowerCase(), subscription.id);
+  }
   db.prepare('DELETE FROM email_change_requests WHERE id = ?').run(request.id);
   logActivity('Email address changed', user.full_name, customerActor(user.full_name));
 
@@ -135,6 +150,28 @@ router.post('/account/email/cancel', redirectAdminAway, requireLogin, (req, res)
   db.prepare('DELETE FROM email_change_requests WHERE user_id = ?').run(req.session.user.id);
   req.session.pendingEmailChange = null;
   res.redirect('/account');
+});
+
+router.post('/account/newsletter', redirectAdminAway, requireLogin, (req, res) => {
+  const email = String(req.session.user.email).toLowerCase();
+  const row = db.prepare('SELECT id, status FROM newsletter_subscribers WHERE email = ?').get(email);
+
+  if (req.body.subscribe === 'yes') {
+    if (row) {
+      db.prepare("UPDATE newsletter_subscribers SET status = 'confirmed', confirmed_at = datetime('now'), unsubscribed_at = NULL, source = 'account page' WHERE id = ?").run(row.id);
+    } else {
+      db.prepare("INSERT INTO newsletter_subscribers (email, status, token, source, confirmed_at) VALUES (?, 'confirmed', ?, 'account page', datetime('now'))")
+        .run(email, crypto.randomBytes(24).toString('hex'));
+    }
+    logActivity('Newsletter subscribed', req.session.user.fullName, customerActor(req.session.user.fullName));
+    return renderAccount(req, res, { success: "You're subscribed to the Cultured Africa newsletter." });
+  }
+
+  if (row && row.status !== 'unsubscribed') {
+    db.prepare("UPDATE newsletter_subscribers SET status = 'unsubscribed', unsubscribed_at = datetime('now') WHERE id = ?").run(row.id);
+    logActivity('Newsletter unsubscribed', req.session.user.fullName, customerActor(req.session.user.fullName));
+  }
+  renderAccount(req, res, { success: "You've been unsubscribed from the newsletter." });
 });
 
 router.post('/account/delete', redirectAdminAway, requireLogin, (req, res) => {
@@ -150,6 +187,7 @@ router.post('/account/delete', redirectAdminAway, requireLogin, (req, res) => {
   // regular customer's user_id is never referenced by content.uploaded_by, so this
   // never runs into the FK that only matters for admin shadow rows (see db/index.js).
   db.prepare('DELETE FROM users WHERE user_id = ?').run(user.user_id);
+  db.prepare('DELETE FROM newsletter_subscribers WHERE email = ?').run(String(user.email).toLowerCase());
   logActivity('Account deleted', user.full_name, customerActor(user.full_name));
 
   req.session.destroy(() => res.redirect('/login'));

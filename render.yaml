@@ -16,7 +16,7 @@ services:
     disk:
       name: data
       mountPath: /var/data   # database, uploaded films and backups live here
-      sizeGB: 20             # can be increased later (never decreased)
+      sizeGB: 5              # school phase; can be increased later (never decreased)
     envVars:
       - key: NODE_VERSION
         value: "24"

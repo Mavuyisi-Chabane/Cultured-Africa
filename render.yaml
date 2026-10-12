@@ -40,20 +40,24 @@ services:
         sync: false
       - key: PAYSTACK_CURRENCY
         value: ZAR
+      # Email is sent through the project Gmail during the school phase (switch to the
+      # company domain's email service at handover; see DEPLOYMENT.md step 4).
       - key: SMTP_HOST
-        sync: false
+        value: smtp.gmail.com
       - key: SMTP_PORT
-        sync: false
+        value: "587"
       - key: SMTP_USER
+        value: culturedafrica.isdp@gmail.com
+      - key: SMTP_PASS             # the Gmail app password (16 characters, no spaces)
         sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: MAIL_FROM             # e.g. Cultured Africa <no-reply@culturedafrica.co.za>
-        sync: false
+      - key: MAIL_FROM             # must be the same Gmail address as SMTP_USER
+        value: Cultured Africa <culturedafrica.isdp@gmail.com>
       - key: BUSINESS_NAME
         value: Cultured Africa
-      - key: BUSINESS_EMAIL
+      - key: BUSINESS_EMAIL        # shown to customers on the site, receipts and emails
         value: info@culturedafrica.co.za
+      - key: CONTACT_EMAIL         # where Contact-page messages go (school phase: the team inbox)
+        value: culturedafrica.isdp@gmail.com
       - key: BUSINESS_ADDRESS
         value: Wits Ehub, The Matrix Shop 3, Wits University, Johannesburg
       - key: BUSINESS_REG_NO

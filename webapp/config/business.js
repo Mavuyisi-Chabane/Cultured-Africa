@@ -7,5 +7,8 @@ module.exports = {
   BUSINESS_VAT_NO: process.env.BUSINESS_VAT_NO || '',
   BUSINESS_ADDRESS: process.env.BUSINESS_ADDRESS || 'Wits Ehub, The Matrix Shop 3, Wits University, Johannesburg',
   BUSINESS_EMAIL: process.env.BUSINESS_EMAIL || 'info@culturedafrica.co.za',
+  // Where Contact-page messages are delivered. Defaults to the public address above; set
+  // CONTACT_EMAIL to send them elsewhere (e.g. the project team's inbox during testing).
+  CONTACT_EMAIL: process.env.CONTACT_EMAIL || process.env.BUSINESS_EMAIL || 'info@culturedafrica.co.za',
   VAT_RATE: 0.15
 };

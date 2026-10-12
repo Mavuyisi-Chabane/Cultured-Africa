@@ -188,7 +188,7 @@ async function sendContactMessage({ name, email, topic, message, accountEmail })
   const b = business;
   const accountLine = accountEmail ? `Sent while logged in as ${accountEmail}.` : 'Sent by a visitor who was not logged in.';
   await sendBranded({
-    to: b.BUSINESS_EMAIL,
+    to: b.CONTACT_EMAIL,
     replyTo: `"${name.replace(/["\r\n]/g, '')}" <${email}>`,
     subject: `Website message: ${topic} (from ${name})`,
     preheader: message.slice(0, 120),

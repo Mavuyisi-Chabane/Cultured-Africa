@@ -30,6 +30,11 @@ router.use((req, res, next) => {
   res.locals.ageRatings = AGE_RATINGS;
   res.locals.genres = GENRES;
   res.locals.contentAdvisories = CONTENT_ADVISORIES;
+  res.locals.uploadLimits = { videoBytes: handleUploads.MAX_VIDEO_BYTES, imageBytes: handleUploads.MAX_IMAGE_BYTES };
+  // Set by a rejected upload/edit: which field to highlight, and whether chosen files were
+  // dropped (browsers can't refill a file input, so they have to be chosen again).
+  res.locals.errorField = null;
+  res.locals.filesDropped = false;
   next();
 });
 
@@ -183,18 +188,23 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
   const thumbnailFile = req.files && req.files.thumbnailFile && req.files.thumbnailFile[0];
   const trailerFile = req.files && req.files.trailerFile && req.files.trailerFile[0];
 
-  const rejectEdit = error => {
+  const rejectEdit = (error, errorField) => {
+    const filesDropped = Boolean(videoFile || thumbnailFile || trailerFile || req.uploadError);
     [videoFile, thumbnailFile, trailerFile].forEach(f => { if (f) deleteUploadedFile(`/uploads/${f.filename}`); });
-    res.render('admin-upload', { editing: { ...film, ...req.body, advisories: req.body.advisories || [] }, cultures: listCultures(), error, success: false });
+    res.render('admin-upload', {
+      editing: { ...film, ...req.body, advisories: req.body.advisories || [] },
+      cultures: listCultures(), error, errorField, filesDropped, success: false
+    });
   };
 
-  if (req.uploadError) return rejectEdit(req.uploadError);
-  if (!title || !description) return rejectEdit('Please fill in all required fields.');
-  if (!GENRES.includes(req.body.genre)) return rejectEdit('Please choose a genre.');
+  if (req.uploadError) return rejectEdit(req.uploadError, req.uploadErrorField);
+  if (!title) return rejectEdit('Please enter the film\'s title.', 'title');
+  if (!description) return rejectEdit('Please enter a description.', 'description');
+  if (!GENRES.includes(req.body.genre)) return rejectEdit('Please choose a genre.', 'genre');
   const ratingResult = parseRatingInput(req.body);
-  if (ratingResult.error) return rejectEdit(ratingResult.error);
+  if (ratingResult.error) return rejectEdit(ratingResult.error, 'ageRating');
   const cultureResult = resolveCulture(req.body, req.session.admin);
-  if (cultureResult.error) return rejectEdit(cultureResult.error);
+  if (cultureResult.error) return rejectEdit(cultureResult.error, req.body.culture === OTHER_CULTURE ? 'newCulture' : 'culture');
 
   let videoUrl = film.videoUrl;
   let thumbnailUrl = film.thumbnailUrl;
@@ -205,7 +215,7 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
     videoUrl = `/uploads/${videoFile.filename}`;
   }
   if (!videoUrl && !trailerUrl && !trailerFile) {
-    return rejectEdit('A "Coming soon" film needs a trailer until its full video is added.');
+    return rejectEdit('A "Coming soon" film needs a trailer until its full video is added.', 'trailerFile');
   }
   if (thumbnailFile) {
     deleteUploadedFile(film.thumbnailUrl);
@@ -240,27 +250,27 @@ router.post('/upload', handleUploads, (req, res) => {
   const thumbnailFile = req.files && req.files.thumbnailFile && req.files.thumbnailFile[0];
   const trailerFile = req.files && req.files.trailerFile && req.files.trailerFile[0];
 
-  const rejectUpload = error => {
+  const rejectUpload = (error, errorField) => {
+    const filesDropped = Boolean(videoFile || thumbnailFile || trailerFile || req.uploadError);
     [videoFile, thumbnailFile, trailerFile].forEach(f => { if (f) deleteUploadedFile(`/uploads/${f.filename}`); });
-    res.render('admin-upload', { editing: req.body, cultures: listCultures(), error, success: false });
+    res.render('admin-upload', { editing: req.body, cultures: listCultures(), error, errorField, filesDropped, success: false });
   };
 
-  if (req.uploadError) return rejectUpload(req.uploadError);
+  if (req.uploadError) return rejectUpload(req.uploadError, req.uploadErrorField);
   const comingSoon = req.body.comingSoon === 'yes';
-  if (!title || !description) {
-    return rejectUpload('Please fill in all required fields.');
-  }
+  if (!title) return rejectUpload('Please enter the film\'s title.', 'title');
+  if (!description) return rejectUpload('Please enter a description.', 'description');
   if (!videoFile && !comingSoon) {
-    return rejectUpload('Please choose the film\'s video file, or tick "Coming soon" if you only have the trailer for now.');
+    return rejectUpload('Please choose the film\'s video file, or tick "Coming soon" if you only have the trailer for now.', 'videoFile');
   }
   if (!videoFile && !trailerFile) {
-    return rejectUpload('A "Coming soon" film needs a trailer, so customers have something to watch until the full film is added.');
+    return rejectUpload('A "Coming soon" film needs a trailer, so customers have something to watch until the full film is added.', 'trailerFile');
   }
   const ratingResult = parseRatingInput(req.body);
-  if (ratingResult.error) return rejectUpload(ratingResult.error);
-  if (!GENRES.includes(req.body.genre)) return rejectUpload('Please choose a genre.');
+  if (ratingResult.error) return rejectUpload(ratingResult.error, 'ageRating');
+  if (!GENRES.includes(req.body.genre)) return rejectUpload('Please choose a genre.', 'genre');
   const cultureResult = resolveCulture(req.body, req.session.admin);
-  if (cultureResult.error) return rejectUpload(cultureResult.error);
+  if (cultureResult.error) return rejectUpload(cultureResult.error, req.body.culture === OTHER_CULTURE ? 'newCulture' : 'culture');
 
   db.prepare(`
     INSERT INTO content (culture_id, uploaded_by, title, description, content_type, price, file_url, thumbnail_url, trailer_url, age_rating, content_advisories, duration_seconds)

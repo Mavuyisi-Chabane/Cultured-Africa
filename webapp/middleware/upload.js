@@ -52,17 +52,23 @@ const storage = multer.diskStorage({
 
 function fileFilter(req, file, cb) {
   const types = allowedTypesFor(file.fieldname);
-  if (!types) return cb(new UploadError('Unexpected file field.'));
+  if (!types) return cb(new UploadError('Unexpected file field.', file.fieldname));
   const ext = path.extname(file.originalname).toLowerCase();
   if (!types[ext] || !types[ext].includes(file.mimetype)) {
     const isVideo = VIDEO_FIELDS.has(file.fieldname);
     const label = file.fieldname === 'trailerFile' ? 'Trailer' : (isVideo ? 'Video' : 'Thumbnail');
-    return cb(new UploadError(`${label} "${file.originalname}" isn't a supported format. Please upload ${isVideo ? VIDEO_FORMATS_LABEL : IMAGE_FORMATS_LABEL}.`));
+    return cb(new UploadError(`${label} "${file.originalname}" isn't a supported format. Please upload ${isVideo ? VIDEO_FORMATS_LABEL : IMAGE_FORMATS_LABEL}.`, file.fieldname));
   }
   cb(null, true);
 }
 
-class UploadError extends Error {}
+// `field` is the form field the problem is with, so the form can highlight it.
+class UploadError extends Error {
+  constructor(message, field) {
+    super(message);
+    this.field = field;
+  }
+}
 
 const upload = multer({
   storage,
@@ -80,12 +86,14 @@ function removeFiles(files) {
 }
 
 // Never throws into Express: on any problem the uploaded files are deleted and
-// req.uploadError holds a message the route shows on the form.
+// req.uploadError holds a message the route shows on the form (req.uploadErrorField
+// names the file field it's about, when known).
 function handleUploads(req, res, next) {
   upload(req, res, err => {
     if (err) {
       removeFiles(req.files);
       req.files = {};
+      req.uploadErrorField = err.field || null;
       if (err instanceof UploadError) req.uploadError = err.message;
       else if (err.code === 'LIMIT_FILE_SIZE') req.uploadError = `That file is too large. Videos can be at most ${+(MAX_VIDEO_BYTES / GB).toFixed(1)} GB — please compress it and try again.`;
       else req.uploadError = 'The upload could not be completed. Please try again.';
@@ -95,6 +103,7 @@ function handleUploads(req, res, next) {
     if (thumb && thumb.size > MAX_IMAGE_BYTES) {
       removeFiles(req.files);
       req.files = {};
+      req.uploadErrorField = 'thumbnailFile';
       req.uploadError = `The thumbnail image is too large. Images can be at most ${MAX_IMAGE_BYTES / (1024 * 1024)} MB.`;
     }
     next();
@@ -103,6 +112,8 @@ function handleUploads(req, res, next) {
 
 module.exports = handleUploads;
 module.exports.UPLOAD_DIR = UPLOAD_DIR;
+module.exports.MAX_VIDEO_BYTES = MAX_VIDEO_BYTES;
+module.exports.MAX_IMAGE_BYTES = MAX_IMAGE_BYTES;
 module.exports.VIDEO_EXTENSIONS = Object.keys(VIDEO_TYPES);
 module.exports.IMAGE_EXTENSIONS = Object.keys(IMAGE_TYPES);
 module.exports.VIDEO_FORMATS_LABEL = VIDEO_FORMATS_LABEL;

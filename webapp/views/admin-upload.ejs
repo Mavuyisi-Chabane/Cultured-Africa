@@ -2,6 +2,11 @@
 <html lang="en">
 <head>
 <%- include('partials/head', { title: editing ? 'Cultured Africa — Edit Film' : 'Cultured Africa — Admin Upload' }) %>
+<style>
+    /* A field with a problem: red outline here, and its message right under it. */
+    #filmForm .field-invalid { border-color: #ff7a5c !important; box-shadow: 0 0 0 2px rgba(255, 122, 92, 0.35); }
+    #filmForm .field-error { color: #ff7a5c; font-size: 12px; font-weight: 600; margin-top: 6px; }
+</style>
 </head>
 <body class="min-h-screen">
 <% const active = 'films' %>
@@ -25,21 +30,30 @@
                 </div>
             <% } %>
 
-            <% if (error) { %>
-                <div class="mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ff7a5c] text-sm font-medium"><%= error %></div>
-            <% } %>
+            <div id="formErrorSummary" role="alert" class="<%= error ? '' : 'hidden' %> mb-6 px-4 py-3 rounded-xl bg-[#b62319]/15 text-[#ff7a5c] text-sm font-medium">
+                <p id="formErrorText"><%= error ? error + (errorField ? ' The field to fix is highlighted below.' : '') : '' %></p>
+                <% if (error && filesDropped) { %>
+                    <p class="mt-1 text-[#f7efe6]/80 font-normal">Everything you typed has been kept, but browsers can't keep chosen files after an error. Please choose your video, trailer and thumbnail files again.</p>
+                <% } %>
+            </div>
 
-            <form class="space-y-6" method="POST" enctype="multipart/form-data" action="<%= editing && editing.id ? '/admin/films/' + editing.id + '/edit' : '/admin/upload' %>?_csrf=<%= csrfToken %>">
+            <form id="filmForm" class="space-y-6" method="POST" enctype="multipart/form-data" novalidate
+                data-error-field="<%= errorField || '' %>" data-error="<%= error || '' %>"
+                data-editing="<%= editing && editing.id ? 'yes' : '' %>"
+                data-has-video="<%= editing && editing.id && editing.videoUrl ? 'yes' : '' %>"
+                data-has-trailer="<%= editing && editing.id && editing.trailerUrl ? 'yes' : '' %>"
+                data-max-video-bytes="<%= uploadLimits.videoBytes %>" data-max-image-bytes="<%= uploadLimits.imageBytes %>"
+                action="<%= editing && editing.id ? '/admin/films/' + editing.id + '/edit' : '/admin/upload' %>?_csrf=<%= csrfToken %>">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Film Title <span class="text-[#fcaa13]">*</span></label>
-                        <input type="text" name="title" placeholder="Enter film name" value="<%= editing ? editing.title || '' : '' %>" required
+                        <label for="titleInput" class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Film Title <span class="text-[#fcaa13]">*</span></label>
+                        <input type="text" name="title" id="titleInput" placeholder="Enter film name" value="<%= editing ? editing.title || '' : '' %>" required
                             class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all">
                     </div>
 
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Description <span class="text-[#fcaa13]">*</span></label>
-                        <textarea name="description" rows="4" placeholder="Describe the film and its cultural significance..." required
+                        <label for="descriptionInput" class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Description <span class="text-[#fcaa13]">*</span></label>
+                        <textarea name="description" id="descriptionInput" rows="4" placeholder="Describe the film and its cultural significance..." required
                             class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all resize-none"><%= editing ? editing.description || '' : '' %></textarea>
                     </div>
 
@@ -92,7 +106,12 @@
 
                     <div class="md:col-span-2 flex items-center gap-3 py-2">
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="isFree" value="true" class="sr-only peer" aria-label="This film is free" <%= editing && editing.price === 0 ? 'checked' : '' %>>
+                            <%
+                            // After a rejected submit, `editing` is the form (isFree is 'true' or missing);
+                            // on the edit page it's the saved film (free means price 0).
+                            const freeChecked = editing && (editing.isFree !== undefined ? editing.isFree === 'true' : editing.price === 0);
+                        %>
+                            <input type="checkbox" name="isFree" id="isFreeInput" value="true" class="sr-only peer" aria-label="This film is free" <%= freeChecked ? 'checked' : '' %>>
                             <div class="w-11 h-6 bg-[#38281f] peer-focus-visible:ring-2 peer-focus-visible:ring-[#fcaa13] rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-[#38281f] after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-[#1e1613] after:border-[#38281f] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#fb6b10]"></div>
                         </label>
                         <span class="text-sm font-medium text-[#f7efe6]">This film is free</span>
@@ -173,23 +192,20 @@
                             editing.trailerUrl.startsWith('/uploads/') && /\.(mp4|webm|mov|m4v|ogv)$/i.test(editing.trailerUrl));
                     %>
                     <div class="md:col-span-2">
-                        <label for="thumbnailInput" class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">
-                            Thumbnail Image <span class="font-normal normal-case tracking-normal text-[#a99a8b]">(Optional)</span>
-                        </label>
-                        <input type="file" name="thumbnailFile" id="thumbnailInput" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
-                            class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#fb6b10] file:text-[#f4ece3] hover:file:bg-[#ef420f] file:cursor-pointer cursor-pointer">
-                        <p class="text-[11px] text-[#a99a8b] mt-2">
-                            Supported formats: JPG, PNG, WebP, GIF. Maximum 10 MB.
+                        <p class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">
+                            Thumbnail <span class="font-normal normal-case tracking-normal text-[#a99a8b]">(Optional)</span>
+                        </p>
+                        <p class="text-[11px] text-[#a99a8b]">
                             <% if (editing && editing.id) { %>
-                                Or pick a frame from the video below.
+                                Pick a frame from the video, or upload your own image below.
                             <% } else { %>
-                                No image? Leave this empty. A frame from the video (or trailer) is used automatically, or a Cultured Africa placeholder if no frame can be taken. You can add a real thumbnail later through Edit.
+                                A frame is picked automatically once you choose the video (or trailer) file. Drag the slider to choose a different moment, or upload your own image below. If no frame can be taken, a Cultured Africa placeholder is used.
                             <% } %>
                         </p>
                         <% if (editing && editing.thumbnailUrl) { %>
                             <img src="<%= editing.thumbnailUrl %>" class="mt-3 w-24 h-16 object-cover rounded-lg border border-[#38281f]" alt="Current thumbnail">
                             <% if (editing.usesPlaceholderThumbnail) { %>
-                                <p class="text-[11px] text-[#fcaa13] mt-2">This film is using the Cultured Africa placeholder image. Upload a thumbnail or pick a frame from the video to replace it.</p>
+                                <p class="text-[11px] text-[#fcaa13] mt-2">This film is using the Cultured Africa placeholder image. Pick a frame from the video or upload a thumbnail to replace it.</p>
                             <% } %>
                         <% } %>
                         <% if (editing && editing.id) { %>
@@ -217,6 +233,11 @@
                                 </div>
                             </div>
                         </div>
+
+                        <label for="thumbnailInput" class="block text-[11px] font-bold uppercase tracking-widest text-[#f7efe6] mt-5 mb-2">Or upload an image</label>
+                        <input type="file" name="thumbnailFile" id="thumbnailInput" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif"
+                            class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#fb6b10] file:text-[#f4ece3] hover:file:bg-[#ef420f] file:cursor-pointer cursor-pointer">
+                        <p class="text-[11px] text-[#a99a8b] mt-2">Supported formats: JPG, PNG, WebP, GIF. Maximum 10 MB.<% if (!(editing && editing.id)) { %> You can also change the thumbnail later through Edit.<% } %></p>
                     </div>
 
                     <div class="md:col-span-2">
@@ -278,6 +299,151 @@
         }
         box.addEventListener('change', sync);
         sync();
+    })();
+
+    // Checks the form in the browser before anything is sent, so a mistake never costs the
+    // admin their chosen files (browsers can't refill a file input after the page reloads).
+    // Each problem outlines its field in red with the message right under it. The server
+    // repeats these checks; when it rejects something, the field it names is marked the same way.
+    (function () {
+        const form = document.getElementById('filmForm');
+        const summary = document.getElementById('formErrorSummary');
+        const summaryText = document.getElementById('formErrorText');
+        const isEditing = form.dataset.editing === 'yes';
+        const VIDEO_EXT = ['mp4', 'm4v', 'webm', 'mov'];
+        const IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        const maxVideo = Number(form.dataset.maxVideoBytes);
+        const maxImage = Number(form.dataset.maxImageBytes);
+        const GB = 1024 * 1024 * 1024;
+        // The message box at the top is about highlighted fields (so it goes once they're
+        // all fixed), rather than a general problem that should stay on screen.
+        let summaryIsAboutFields = false;
+
+        const field = name => form.elements[name];
+        // Where the message goes: under the price box as a whole, otherwise under the field.
+        const anchorFor = el => el.id === 'priceInput' ? el.parentElement : el;
+
+        function clearError(name) {
+            const el = field(name);
+            if (!el) return;
+            el.classList.remove('field-invalid');
+            el.removeAttribute('aria-invalid');
+            const msg = document.getElementById('err-' + name);
+            if (msg) msg.remove();
+            if (summaryIsAboutFields && !form.querySelector('.field-invalid')) summary.classList.add('hidden');
+        }
+
+        function showError(name, message) {
+            const el = field(name);
+            if (!el) return false;
+            clearError(name);
+            el.classList.add('field-invalid');
+            el.setAttribute('aria-invalid', 'true');
+            const msg = document.createElement('p');
+            msg.id = 'err-' + name;
+            msg.className = 'field-error';
+            msg.innerHTML = '<i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> ';
+            msg.appendChild(document.createTextNode(message));
+            anchorFor(el).insertAdjacentElement('afterend', msg);
+            el.setAttribute('aria-describedby', msg.id);
+            return true;
+        }
+
+        const ext = file => (file.name.split('.').pop() || '').toLowerCase();
+        const chosen = name => field(name) && field(name).files && field(name).files[0];
+
+        function checkVideoFile(name, label) {
+            const file = chosen(name);
+            if (!file) return null;
+            if (!VIDEO_EXT.includes(ext(file))) return label + ' must be an MP4, WebM or MOV file.';
+            if (file.size > maxVideo) return label + ' is too large. Videos can be at most ' + +(maxVideo / GB).toFixed(1) + ' GB, so please compress it first.';
+            return null;
+        }
+
+        function validate() {
+            const errors = [];
+            const add = (name, message) => errors.push({ name, message });
+            const comingSoon = document.getElementById('comingSoon');
+            const isComingSoon = Boolean(comingSoon && comingSoon.checked);
+
+            if (!field('title').value.trim()) add('title', 'Please enter the film\'s title.');
+            if (!field('description').value.trim()) add('description', 'Please enter a description.');
+
+            if (field('culture').value === '__other__') {
+                const name = field('newCulture').value.trim().replace(/\s+/g, ' ');
+                if (!name) add('newCulture', 'Please type the name of the culture.');
+                else if (name.length > 50) add('newCulture', 'Culture names must be 50 characters or fewer.');
+                else if (!/^\p{L}[\p{L}\p{M}' -]*$/u.test(name)) add('newCulture', 'Culture names may only contain letters, spaces, hyphens and apostrophes.');
+            }
+
+            if (!document.getElementById('isFreeInput').checked) {
+                const price = field('price').value.trim();
+                if (price === '' || isNaN(Number(price))) add('price', 'Please enter a price, or switch on "This film is free".');
+                else if (Number(price) < 0) add('price', 'The price can\'t be negative.');
+            }
+
+            if (!field('genre').value) add('genre', 'Please choose a genre.');
+            if (!field('ageRating').value) add('ageRating', 'Please choose an age rating for this film.');
+
+            const videoProblem = checkVideoFile('videoFile', 'The video');
+            if (videoProblem) add('videoFile', videoProblem);
+            else if (!isEditing && !isComingSoon && !chosen('videoFile')) {
+                add('videoFile', 'Please choose the film\'s video file, or tick "Coming soon" if you only have the trailer for now.');
+            }
+
+            const trailerProblem = checkVideoFile('trailerFile', 'The trailer');
+            if (trailerProblem) add('trailerFile', trailerProblem);
+            else if (!chosen('trailerFile')) {
+                const needsTrailer = isEditing
+                    ? form.dataset.hasVideo !== 'yes' && form.dataset.hasTrailer !== 'yes' && !chosen('videoFile')
+                    : isComingSoon;
+                if (needsTrailer) add('trailerFile', 'A "Coming soon" film needs a trailer, so customers have something to watch until the full film is added.');
+            }
+
+            const thumb = chosen('thumbnailFile');
+            if (thumb && !IMAGE_EXT.includes(ext(thumb))) add('thumbnailFile', 'The thumbnail must be a JPG, PNG, WebP or GIF image.');
+            else if (thumb && thumb.size > maxImage) add('thumbnailFile', 'The thumbnail image is too large. Images can be at most ' + maxImage / (1024 * 1024) + ' MB.');
+
+            return errors;
+        }
+
+        function report(errors) {
+            errors.forEach(e => showError(e.name, e.message));
+            summaryText.textContent = errors.length === 1
+                ? 'Please fix the highlighted field below. Nothing has been lost.'
+                : 'Please fix the ' + errors.length + ' highlighted fields below. Nothing has been lost.';
+            summary.classList.remove('hidden');
+            summaryIsAboutFields = true;
+            const first = field(errors[0].name);
+            first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            first.focus({ preventScroll: true });
+        }
+
+        form.addEventListener('submit', event => {
+            form.querySelectorAll('.field-invalid').forEach(el => clearError(el.name));
+            const errors = validate();
+            if (errors.length) {
+                event.preventDefault();
+                report(errors);
+            }
+        });
+
+        // Fixing a field clears its message straight away.
+        form.addEventListener('input', event => { if (event.target.name) clearError(event.target.name); });
+        form.addEventListener('change', event => {
+            if (!event.target.name) return;
+            clearError(event.target.name);
+            if (event.target.name === 'comingSoon') { clearError('videoFile'); clearError('trailerFile'); }
+            if (event.target.name === 'isFree') clearError('price');
+            if (event.target.name === 'culture') clearError('newCulture');
+        });
+
+        // The server turned the form down: mark the field it named.
+        if (form.dataset.errorField && showError(form.dataset.errorField, form.dataset.error)) {
+            summaryIsAboutFields = true;
+            const el = field(form.dataset.errorField);
+            el.scrollIntoView({ block: 'center' });
+        }
     })();
 
     // Film length: read from the video's own metadata in the browser (only the start of

@@ -123,3 +123,41 @@ test('Backups: only super admins, and only files from the backup list', async ()
   assert.equal((await admin.get('/admin/backups/..%2Ftest.sqlite')).status, 404);
   assert.equal((await admin.get('/admin/backups/test.sqlite')).status, 404);
 });
+
+// Posts the upload form as the browser does (multipart), with an optional file.
+async function postUploadForm(fields, file) {
+  const token = await admin.token('/admin/upload');
+  const form = new FormData();
+  for (const [k, v] of Object.entries(fields)) form.append(k, v);
+  if (file) form.append(file.field, new Blob([file.content], { type: file.type }), file.name);
+  const res = await admin.request(`/admin/upload?_csrf=${token}`, { method: 'POST', body: form });
+  return { res, html: await res.text() };
+}
+
+const VALID_FILM = { title: 'Field Error Film', description: 'A test film.', culture: 'Zulu', price: '45', genre: 'Drama', ageRating: 'PG' };
+
+test('a rejected upload keeps what was typed and highlights the field to fix', async () => {
+  const { res, html } = await postUploadForm({ ...VALID_FILM, title: '' },
+    { field: 'thumbnailFile', name: 'thumb.png', type: 'image/png', content: 'not really a png' });
+  assert.equal(res.status, 200);
+  assert.match(html, /data-error-field="title"/);
+  assert.match(html, /The field to fix is highlighted below/);
+  assert.match(html, /A test film\./, 'the description is kept');
+  assert.match(html, /name="price" id="priceInput" value="45"/, 'the price is kept');
+  assert.match(html, /<option value="Drama" selected>/, 'the genre is kept');
+  assert.match(html, /choose your video, trailer and thumbnail files again/, 'says chosen files must be picked again');
+});
+
+test('a file in the wrong format highlights that file field', async () => {
+  const { html } = await postUploadForm(VALID_FILM,
+    { field: 'trailerFile', name: 'trailer.avi', type: 'video/x-msvideo', content: 'x' });
+  assert.match(html, /data-error-field="trailerFile"/);
+  assert.match(html, /isn(&#39;|')t a supported format/);
+});
+
+test('an invalid new culture name highlights the culture box', async () => {
+  const { html } = await postUploadForm({ ...VALID_FILM, culture: '__other__', newCulture: 'Zulu2' },
+    { field: 'videoFile', name: 'film.mp4', type: 'video/mp4', content: 'x' });
+  assert.match(html, /data-error-field="newCulture"/);
+  assert.match(html, /value="Zulu2"/, 'the typed culture is kept');
+});

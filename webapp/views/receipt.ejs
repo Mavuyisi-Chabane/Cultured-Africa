@@ -89,7 +89,7 @@
                 <tr>
                     <td>
                         <strong><%= receipt.film.title %></strong>
-                        <small><%= receipt.film.culture %> · Age rating <%= receipt.film.rating %></small>
+                        <small><%= receipt.film.culture %><% if (receipt.film.rating) { %> · Age rating <%= receipt.film.rating %><% } %></small>
                         <small>Streaming access: unlimited viewing for <%= receipt.accessMonths %> months, until <%= receipt.accessUntilLabel %></small>
                     </td>
                     <td><%= receipt.totalLabel %></td>

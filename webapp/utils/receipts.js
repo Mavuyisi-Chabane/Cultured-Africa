@@ -2,7 +2,7 @@ const { db } = require('../db');
 const business = require('../config/business');
 const { ACCESS_MONTHS } = require('../config/access');
 const { PAYSTACK_CURRENCY } = require('../config/paystack');
-const { describeRating } = require('../config/ageRatings');
+const { describeRating, AGE_RATINGS_ENABLED } = require('../config/ageRatings');
 
 const { TIME_ZONE, parseDbDate } = require('./dates');
 
@@ -62,7 +62,11 @@ function getReceipt(purchaseId, userId) {
     accessUntilLabel: formatDate(parseDbDate(row.access_until), false),
     accessMonths: ACCESS_MONTHS,
     customer: { name: row.full_name, email: row.email },
-    film: { id: row.content_id, title: row.title, culture: row.culture, rating: rating ? `${rating.code} (${rating.label})` : 'Not yet rated' },
+    film: {
+      id: row.content_id, title: row.title, culture: row.culture,
+      // null while age ratings are switched off: the receipt then leaves the line out.
+      rating: AGE_RATINGS_ENABLED ? (rating ? `${rating.code} (${rating.label})` : 'Not yet rated') : null
+    },
     currency: PAYSTACK_CURRENCY,
     totalLabel: formatMoney(total),
     vatLabel: vatIncluded === null ? null : formatMoney(vatIncluded),

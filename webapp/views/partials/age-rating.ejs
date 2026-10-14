@@ -4,7 +4,9 @@
     detailed       — true on the film page: adds the rating's meaning and full advice labels
 %>
 <% const ar = classification.rating; const adv = classification.advisories; %>
-<% if (typeof detailed !== 'undefined' && detailed) { %>
+<% if (classification.enabled === false) { %>
+    <%# Age ratings are switched off (config/ageRatings.js): show nothing. %>
+<% } else if (typeof detailed !== 'undefined' && detailed) { %>
     <div class="flex items-start gap-3">
         <% if (ar) { %>
             <span class="inline-flex items-center justify-center min-w-[3rem] h-10 px-2 rounded-lg text-white font-bold text-sm shadow-md flex-shrink-0" style="background-color: <%= ar.color %>" aria-hidden="true"><%= ar.code %></span>

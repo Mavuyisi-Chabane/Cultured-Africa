@@ -5,6 +5,7 @@
 <style>
     /* A field with a problem: red outline here, and its message right under it. */
     #filmForm .field-invalid { border-color: #ff7a5c !important; box-shadow: 0 0 0 2px rgba(255, 122, 92, 0.35); }
+    #filmForm .label-invalid { color: #ff7a5c !important; }
     #filmForm .field-error { color: #ff7a5c; font-size: 12px; font-weight: 600; margin-top: 6px; }
 </style>
 </head>
@@ -59,17 +60,21 @@
 
                     <div>
                         <label for="cultureSelect" class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Culture Category <span class="text-[#fcaa13]">*</span></label>
-                        <% const otherCulture = editing && editing.culture === '__other__'; %>
+                        <%
+                            const otherCulture = editing && editing.culture === '__other__';
+                            const listedCulture = editing && cultures.includes(editing.culture);
+                        %>
                         <select name="culture" id="cultureSelect" class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all appearance-none cursor-pointer">
+                            <option value="" <%= otherCulture || listedCulture ? '' : 'selected' %> disabled>Choose a culture…</option>
                             <% cultures.forEach(c => { %>
                                 <option value="<%= c %>" <%= editing && editing.culture === c ? 'selected' : '' %>><%= c %></option>
                             <% }) %>
-                            <option value="__other__" <%= otherCulture ? 'selected' : '' %>>Other (type a new culture)…</option>
+                            <option value="__other__" <%= otherCulture ? 'selected' : '' %>>Other (not in the list): type it in…</option>
                         </select>
                         <div id="newCultureField" class="mt-3 <%= otherCulture ? '' : 'hidden' %>">
                             <input type="text" name="newCulture" id="newCultureInput" maxlength="50"
                                 value="<%= editing && editing.newCulture ? editing.newCulture : '' %>"
-                                placeholder="e.g. Ndebele"
+                                placeholder="Type the culture's name, e.g. Lobedu"
                                 <%= otherCulture ? 'required' : 'disabled' %>
                                 class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all">
                             <p class="text-[11px] text-[#a99a8b] mt-1">It will be added to the culture list for future uploads. If it already exists, the existing culture is used.</p>
@@ -117,6 +122,7 @@
                         <span class="text-sm font-medium text-[#f7efe6]">This film is free</span>
                     </div>
 
+                    <% if (ageRatingsEnabled) { %>
                     <%
                         // On a re-render after a validation error, `editing` is the submitted form
                         // (ageRating / advisories); when opening the edit page, it's the saved film.
@@ -149,6 +155,7 @@
                         </div>
                         <p class="text-[11px] text-[#a99a8b] mt-2">Tick anything viewers should be warned about.</p>
                     </fieldset>
+                    <% } %>
 
                     <%
                         const isEditingFilm = Boolean(editing && editing.id);
@@ -275,13 +282,15 @@
         const select = document.getElementById('cultureSelect');
         const field = document.getElementById('newCultureField');
         const input = document.getElementById('newCultureInput');
-        select.addEventListener('change', () => {
+        function sync(focus) {
             const isOther = select.value === '__other__';
             field.classList.toggle('hidden', !isOther);
             input.disabled = !isOther;
             input.required = isOther;
-            if (isOther) input.focus();
-        });
+            if (isOther && focus) input.focus();
+        }
+        select.addEventListener('change', () => sync(true));
+        sync(false); // match the box to whatever the list shows when the page opens
     })();
 
     // "Coming soon": the full video becomes optional and the trailer becomes required.
@@ -328,6 +337,8 @@
             if (!el) return;
             el.classList.remove('field-invalid');
             el.removeAttribute('aria-invalid');
+            const label = el.id && form.querySelector('label[for="' + el.id + '"]');
+            if (label) label.classList.remove('label-invalid');
             const msg = document.getElementById('err-' + name);
             if (msg) msg.remove();
             if (summaryIsAboutFields && !form.querySelector('.field-invalid')) summary.classList.add('hidden');
@@ -339,6 +350,8 @@
             clearError(name);
             el.classList.add('field-invalid');
             el.setAttribute('aria-invalid', 'true');
+            const label = el.id && form.querySelector('label[for="' + el.id + '"]');
+            if (label) label.classList.add('label-invalid');
             const msg = document.createElement('p');
             msg.id = 'err-' + name;
             msg.className = 'field-error';
@@ -369,7 +382,8 @@
             if (!field('title').value.trim()) add('title', 'Please enter the film\'s title.');
             if (!field('description').value.trim()) add('description', 'Please enter a description.');
 
-            if (field('culture').value === '__other__') {
+            if (!field('culture').value) add('culture', 'Please choose a culture, or choose "Other" at the bottom of the list and type it in.');
+            else if (field('culture').value === '__other__') {
                 const name = field('newCulture').value.trim().replace(/\s+/g, ' ');
                 if (!name) add('newCulture', 'Please type the name of the culture.');
                 else if (name.length > 50) add('newCulture', 'Culture names must be 50 characters or fewer.');
@@ -383,7 +397,7 @@
             }
 
             if (!field('genre').value) add('genre', 'Please choose a genre.');
-            if (!field('ageRating').value) add('ageRating', 'Please choose an age rating for this film.');
+            if (field('ageRating') && !field('ageRating').value) add('ageRating', 'Please choose an age rating for this film.');
 
             const videoProblem = checkVideoFile('videoFile', 'The video');
             if (videoProblem) add('videoFile', videoProblem);
@@ -407,7 +421,12 @@
             return errors;
         }
 
+        // Something to scroll to that is actually on screen (a hidden field has no position).
+        const onScreen = el => el.getClientRects().length ? el : (el.closest('div:not(.hidden)') || form);
+
         function report(errors) {
+            // Top of the page first, so the scroll goes to the first problem you'd meet.
+            errors.sort((a, b) => field(a.name).compareDocumentPosition(field(b.name)) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
             errors.forEach(e => showError(e.name, e.message));
             summaryText.textContent = errors.length === 1
                 ? 'Please fix the highlighted field below. Nothing has been lost.'
@@ -415,7 +434,7 @@
             summary.classList.remove('hidden');
             summaryIsAboutFields = true;
             const first = field(errors[0].name);
-            first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            onScreen(first).scrollIntoView({ behavior: 'smooth', block: 'center' });
             first.focus({ preventScroll: true });
         }
 
@@ -442,7 +461,8 @@
         if (form.dataset.errorField && showError(form.dataset.errorField, form.dataset.error)) {
             summaryIsAboutFields = true;
             const el = field(form.dataset.errorField);
-            el.scrollIntoView({ block: 'center' });
+            onScreen(el).scrollIntoView({ block: 'center' });
+            el.focus({ preventScroll: true });
         }
     })();
 
@@ -491,6 +511,7 @@
     (function () {
         const select = document.getElementById('ageRating');
         const help = document.getElementById('ageRatingHelp');
+        if (!select) return; // age ratings are switched off
         const defaultHelp = help.textContent;
         function update() {
             const opt = select.options[select.selectedIndex];

@@ -1,6 +1,7 @@
 const express = require('express');
 const { GENRES, genreLabel, durationLabel, parseDuration } = require('../config/genres');
-const { describeRating, parseRatingInput, AGE_RATINGS, CONTENT_ADVISORIES } = require('../config/ageRatings');
+const { describeRating, parseRatingInput, AGE_RATINGS_ENABLED, AGE_RATINGS, CONTENT_ADVISORIES } = require('../config/ageRatings');
+const { DEFAULT_CULTURES } = require('../config/cultures');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
@@ -27,6 +28,7 @@ router.use(requireAdmin);
 
 // The upload/edit form's age rating options (FPB classifications).
 router.use((req, res, next) => {
+  res.locals.ageRatingsEnabled = AGE_RATINGS_ENABLED;
   res.locals.ageRatings = AGE_RATINGS;
   res.locals.genres = GENRES;
   res.locals.contentAdvisories = CONTENT_ADVISORIES;
@@ -97,8 +99,21 @@ function verifyOwnPassword(req, password) {
 // Value of the "Other (type a new culture)" option in admin-upload.ejs's culture select.
 const OTHER_CULTURE = '__other__';
 
+// The Culture Category list: the built-in cultures plus any added since, A to Z.
 function listCultures() {
-  return db.prepare('SELECT name FROM cultures ORDER BY name').all().map(r => r.name);
+  const saved = db.prepare('SELECT name FROM cultures').all().map(r => r.name);
+  const names = new Map([...DEFAULT_CULTURES, ...saved].map(n => [n.toLowerCase(), n]));
+  return [...names.values()].sort((a, b) => a.localeCompare(b));
+}
+
+// The culture_id for a name, adding the culture first if it isn't saved yet.
+function cultureIdFor(name, admin) {
+  const existing = db.prepare('SELECT culture_id FROM cultures WHERE lower(name) = lower(?)').get(name);
+  if (existing) return existing.culture_id;
+  const id = db.prepare("INSERT INTO cultures (name, description, region, banner_image_url) VALUES (?, '', '', '')")
+    .run(name).lastInsertRowid;
+  logActivity('Culture added', name, adminActor(admin));
+  return id;
 }
 
 // Turns the upload form's culture fields into a culture_id: either a culture picked from
@@ -107,21 +122,20 @@ function listCultures() {
 // Returns { id } or { error } — never silently falls back to some other culture.
 function resolveCulture(body, admin) {
   if (body.culture !== OTHER_CULTURE) {
-    const row = db.prepare('SELECT culture_id FROM cultures WHERE name = ?').get(body.culture);
-    return row ? { id: row.culture_id } : { error: 'Please choose a culture category.' };
+    const listed = listCultures().find(n => n === body.culture);
+    return listed ? { id: cultureIdFor(listed, admin) } : { error: 'Please choose a culture category.' };
   }
 
   const checked = validateCultureName(body.newCulture);
   if (checked.error) return { error: checked.error };
-  const { name } = checked;
+  return { id: cultureIdFor(checked.name, admin) };
+}
 
-  const existing = db.prepare('SELECT culture_id FROM cultures WHERE lower(name) = lower(?)').get(name);
-  if (existing) return { id: existing.culture_id };
-
-  const id = db.prepare("INSERT INTO cultures (name, description, region, banner_image_url) VALUES (?, '', '', '')")
-    .run(name).lastInsertRowid;
-  logActivity('Culture added', name, adminActor(admin));
-  return { id };
+// The age rating to save: checked when ratings are on; otherwise none is asked for, so a
+// new film gets none and an edited film keeps whatever it already had.
+function ratingFromForm(body, film) {
+  if (AGE_RATINGS_ENABLED) return parseRatingInput(body);
+  return { code: film ? film.ageRatingCode || null : null, advisoriesCsv: film ? film.advisoryCodes.join(',') : '' };
 }
 
 router.get('/dashboard', (req, res) => {
@@ -201,7 +215,7 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
   if (!title) return rejectEdit('Please enter the film\'s title.', 'title');
   if (!description) return rejectEdit('Please enter a description.', 'description');
   if (!GENRES.includes(req.body.genre)) return rejectEdit('Please choose a genre.', 'genre');
-  const ratingResult = parseRatingInput(req.body);
+  const ratingResult = ratingFromForm(req.body, film);
   if (ratingResult.error) return rejectEdit(ratingResult.error, 'ageRating');
   const cultureResult = resolveCulture(req.body, req.session.admin);
   if (cultureResult.error) return rejectEdit(cultureResult.error, req.body.culture === OTHER_CULTURE ? 'newCulture' : 'culture');
@@ -266,7 +280,7 @@ router.post('/upload', handleUploads, (req, res) => {
   if (!videoFile && !trailerFile) {
     return rejectUpload('A "Coming soon" film needs a trailer, so customers have something to watch until the full film is added.', 'trailerFile');
   }
-  const ratingResult = parseRatingInput(req.body);
+  const ratingResult = ratingFromForm(req.body, null);
   if (ratingResult.error) return rejectUpload(ratingResult.error, 'ageRating');
   if (!GENRES.includes(req.body.genre)) return rejectUpload('Please choose a genre.', 'genre');
   const cultureResult = resolveCulture(req.body, req.session.admin);

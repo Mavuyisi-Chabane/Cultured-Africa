@@ -122,20 +122,18 @@ test('"Coming soon" films cannot be bought', async () => {
   assert.match(html, /isn't available yet/);
 });
 
-test('18-rated films need a one-time age confirmation before buying or playing', async () => {
+test('age ratings are switched off: even a film saved as 18 is bought without an age check', async () => {
   const { id, c } = await customer('teen-check@test.local');
   const filmId = app.filmId('Threads of Venda');
   app.db.prepare("UPDATE content SET age_rating = '18' WHERE content_id = ?").run(filmId);
+  const page = await c.page(`/film/${filmId}`);
+  assert.doesNotMatch(page.html, /18 or older|Age rating|Not yet rated/);
   app.paystack.pay('REF-18', { amountRand: 50, email: 'teen-check@test.local' });
-  const refused = await buy(c, filmId, 'REF-18');
-  assert.match(refused.html, /confirm you are 18 or older/);
-  assert.equal(purchases(id, filmId).length, 0);
-
-  await c.submit(`/film/${filmId}/confirm-age`, { ageConfirm: 'yes' }, { from: `/film/${filmId}` });
-  assert.ok(app.db.prepare('SELECT adult_confirmed_at FROM users WHERE user_id = ?').get(id).adult_confirmed_at);
   const { location } = await buy(c, filmId, 'REF-18');
   assert.equal(location, `/film/${filmId}`);
-  await app.mail('teen-check@test.local');
+  assert.equal(purchases(id, filmId).length, 1);
+  const receipt = await app.mail('teen-check@test.local');
+  assert.doesNotMatch(receipt.text + receipt.html, /Age rating/);
   app.db.prepare('UPDATE content SET age_rating = NULL WHERE content_id = ?').run(filmId);
 });
 

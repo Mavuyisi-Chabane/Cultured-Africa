@@ -2,6 +2,11 @@
 // advice. Admins pick one rating (required) and any advisories when uploading a film;
 // the badge partial (views/partials/age-rating.ejs) renders them everywhere a film shows.
 // X18 / XX are deliberately absent — that content isn't distributed on this platform.
+//
+// Switched off at Cultured Africa's request (Oct 2026): no rating is asked for on upload,
+// no badges are shown and nobody is asked to confirm they're 18. Ratings already saved
+// stay in the database, so setting this back to true restores the whole feature.
+const AGE_RATINGS_ENABLED = false;
 const AGE_RATINGS = [
   { code: 'A', label: 'All ages', description: 'Suitable for all ages.', color: '#2f7d32' },
   { code: 'PG', label: 'Parental guidance', description: 'Parental guidance is advised for young viewers.', color: '#2f7d32' },
@@ -24,17 +29,19 @@ const CONTENT_ADVISORIES = [
 
 // Ratings a customer must confirm they're old enough for before buying or watching
 // (a one-time "I am 18 or older" per account; no date of birth is collected).
-const AGE_CONFIRMATION_RATINGS = new Set(['18']);
+const AGE_CONFIRMATION_RATINGS = new Set(AGE_RATINGS_ENABLED ? ['18'] : []);
 
 const RATINGS_BY_CODE = new Map(AGE_RATINGS.map(r => [r.code, r]));
 const ADVISORIES_BY_CODE = new Map(CONTENT_ADVISORIES.map(a => [a.code, a]));
 
 // Stored as content.age_rating (a code, or NULL for films uploaded before ratings
 // existed) and content.content_advisories (codes joined with commas, e.g. "V,L").
+// `enabled` is false while ratings are switched off, and the badge partial then shows nothing.
 function describeRating(code, advisoriesCsv) {
+  if (!AGE_RATINGS_ENABLED) return { enabled: false, rating: null, advisories: [] };
   const rating = RATINGS_BY_CODE.get(code) || null;
   const advisories = String(advisoriesCsv || '').split(',').map(c => ADVISORIES_BY_CODE.get(c)).filter(Boolean);
-  return { rating, advisories };
+  return { enabled: true, rating, advisories };
 }
 
 // Validates form input: returns { code, advisoriesCsv } or { error }.
@@ -46,4 +53,4 @@ function parseRatingInput(body) {
   return { code: rating.code, advisoriesCsv };
 }
 
-module.exports = { AGE_RATINGS, CONTENT_ADVISORIES, AGE_CONFIRMATION_RATINGS, describeRating, parseRatingInput };
+module.exports = { AGE_RATINGS_ENABLED, AGE_RATINGS, CONTENT_ADVISORIES, AGE_CONFIRMATION_RATINGS, describeRating, parseRatingInput };

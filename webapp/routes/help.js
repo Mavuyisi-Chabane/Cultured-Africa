@@ -3,7 +3,7 @@ const { logActivity, customerActor } = require('../db');
 const business = require('../config/business');
 const purchaseTerms = require('../config/purchaseTerms');
 const { ACCESS_MONTHS } = require('../config/access');
-const { AGE_RATINGS, CONTENT_ADVISORIES } = require('../config/ageRatings');
+const { AGE_RATINGS_ENABLED, AGE_RATINGS, CONTENT_ADVISORIES } = require('../config/ageRatings');
 const { createRateLimiter } = require('../middleware/rateLimit');
 const { sendContactMessage } = require('../services/email');
 
@@ -16,7 +16,7 @@ const CONTACT_TOPICS = ['Billing or refunds', 'A film won\'t play', 'My account'
 const contactLimiter = createRateLimiter({ windowMs: 60 * 60 * 1000, max: 5, keyFn: req => `contact:${req.ip}` });
 
 router.get('/help', (req, res) => {
-  res.render('help', { business, terms: purchaseTerms, accessMonths: ACCESS_MONTHS, ageRatings: AGE_RATINGS, contentAdvisories: CONTENT_ADVISORIES });
+  res.render('help', { business, terms: purchaseTerms, accessMonths: ACCESS_MONTHS, ageRatingsEnabled: AGE_RATINGS_ENABLED, ageRatings: AGE_RATINGS, contentAdvisories: CONTENT_ADVISORIES });
 });
 
 function renderContact(req, res, state = {}) {

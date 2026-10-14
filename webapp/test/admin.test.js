@@ -161,3 +161,25 @@ test('an invalid new culture name highlights the culture box', async () => {
   assert.match(html, /data-error-field="newCulture"/);
   assert.match(html, /value="Zulu2"/, 'the typed culture is kept');
 });
+
+test('the culture list offers the built-in cultures; choosing one not saved yet adds it', async () => {
+  const { html } = await admin.page('/admin/upload');
+  assert.match(html, /<option value="" selected disabled>Choose a culture…<\/option>/);
+  assert.match(html, /<option value="Pedi"/, 'built-in cultures are listed');
+  assert.match(html, /value="__other__"/, 'with an Other option');
+  assert.doesNotMatch(html, /name="ageRating"/, 'no age rating is asked for');
+  assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM cultures WHERE name = 'Pedi'").get().n, 0);
+
+  const { res } = await postUploadForm({ ...VALID_FILM, title: 'Pedi Film', culture: 'Pedi', ageRating: '' },
+    { field: 'videoFile', name: 'film.mp4', type: 'video/mp4', content: 'x' });
+  assert.equal(res.status, 302, 'uploads without an age rating');
+  const film = app.db.prepare("SELECT c.age_rating, cu.name FROM content c JOIN cultures cu USING (culture_id) WHERE c.title = 'Pedi Film'").get();
+  assert.equal(film.name, 'Pedi');
+  assert.equal(film.age_rating, null);
+});
+
+test('no culture chosen highlights the culture list', async () => {
+  const { html } = await postUploadForm({ ...VALID_FILM, culture: '' },
+    { field: 'videoFile', name: 'film.mp4', type: 'video/mp4', content: 'x' });
+  assert.match(html, /data-error-field="culture"/);
+});

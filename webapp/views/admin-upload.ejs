@@ -286,11 +286,27 @@
                 </div>
 
                 <div class="pt-6">
-                    <button type="submit"
+                    <button type="submit" id="submitBtn"
                         class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                         <i class="fa-solid fa-upload"></i>
                         <%= editing && editing.id ? 'Save Changes' : 'Upload Film' %>
                     </button>
+
+                    <div id="uploadProgress" class="hidden mt-5 rounded-xl border border-[#38281f] bg-[#271c17]/40 p-5" role="status" aria-live="polite">
+                        <div class="flex items-baseline justify-between gap-4">
+                            <p id="uploadTitle" class="text-sm font-bold text-[#f7efe6]">Uploading…</p>
+                            <p id="uploadPercent" class="text-2xl font-bold text-[#fcaa13] tabular-nums">0%</p>
+                        </div>
+                        <div class="mt-3 h-3 rounded-full bg-[#140d0a] overflow-hidden" role="progressbar" aria-label="Upload progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="uploadBarTrack">
+                            <div id="uploadBar" class="h-full w-0 rounded-full bg-gradient-to-r from-[#ef420f] via-[#fb6b10] to-[#fcaa13] transition-[width] duration-300"></div>
+                        </div>
+                        <div class="mt-2 flex flex-wrap justify-between gap-2 text-xs text-[#a99a8b]">
+                            <span id="uploadSent">0 MB of 0 MB</span>
+                            <span id="uploadEta"></span>
+                        </div>
+                        <p class="mt-3 text-[11px] text-[#a99a8b]">Keep this page open until the upload finishes. Large films can take a while on a slow connection.</p>
+                        <button type="button" id="uploadCancel" class="mt-3 text-xs font-bold text-[#fb6b10] hover:text-[#ef420f] hover:underline">Cancel upload</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -485,6 +501,114 @@
             onScreen(el).scrollIntoView({ block: 'center' });
             el.focus({ preventScroll: true });
         }
+    })();
+
+    // Upload progress: once the form passes its checks, it's sent in the background so a bar can
+    // show how much has gone up and roughly how long is left. The server replies exactly as it
+    // would to a normal submit: a redirect when the film is saved (followed here), or the form
+    // again with an error, which then replaces this page. Leaving mid-upload asks first.
+    (function () {
+        const form = document.getElementById('filmForm');
+        const button = document.getElementById('submitBtn');
+        const box = document.getElementById('uploadProgress');
+        const title = document.getElementById('uploadTitle');
+        const percent = document.getElementById('uploadPercent');
+        const bar = document.getElementById('uploadBar');
+        const track = document.getElementById('uploadBarTrack');
+        const sent = document.getElementById('uploadSent');
+        const eta = document.getElementById('uploadEta');
+        const cancel = document.getElementById('uploadCancel');
+        if (!window.FormData || !window.XMLHttpRequest) return; // old browser: a normal submit
+
+        let xhr = null;
+        const warnOnLeave = event => { event.preventDefault(); event.returnValue = ''; };
+
+        function size(bytes) {
+            return bytes >= 1024 ** 3 ? (bytes / 1024 ** 3).toFixed(2) + ' GB' : Math.max(0.1, bytes / 1024 ** 2).toFixed(1) + ' MB';
+        }
+        function duration(seconds) {
+            if (!isFinite(seconds) || seconds <= 0) return '';
+            if (seconds < 60) return 'less than a minute left';
+            const m = Math.round(seconds / 60);
+            return m < 60 ? 'about ' + m + ' min left' : 'about ' + Math.floor(m / 60) + ' h ' + (m % 60) + ' min left';
+        }
+        function finish() {
+            window.removeEventListener('beforeunload', warnOnLeave);
+            xhr = null;
+        }
+        function reset(message) {
+            finish();
+            box.classList.add('hidden');
+            button.disabled = false;
+            button.classList.remove('opacity-60', 'cursor-not-allowed');
+            if (message) {
+                const summary = document.getElementById('formErrorSummary');
+                document.getElementById('formErrorText').textContent = message;
+                summary.classList.remove('hidden');
+                summary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        form.addEventListener('submit', event => {
+            if (event.defaultPrevented || xhr) return; // the checks found a problem, or already sending
+            event.preventDefault();
+
+            const req = xhr = new XMLHttpRequest(); // `xhr` is cleared when done; `req` stays for the handlers
+            const started = Date.now();
+            let rate = 0; // bytes per second, smoothed
+
+            button.disabled = true;
+            button.classList.add('opacity-60', 'cursor-not-allowed');
+            box.classList.remove('hidden');
+            title.textContent = 'Uploading…';
+            window.addEventListener('beforeunload', warnOnLeave);
+
+            req.upload.addEventListener('progress', e => {
+                if (!e.lengthComputable) return;
+                const pct = Math.min(100, Math.floor(e.loaded / e.total * 100));
+                percent.textContent = pct + '%';
+                bar.style.width = pct + '%';
+                track.setAttribute('aria-valuenow', pct);
+                sent.textContent = size(e.loaded) + ' of ' + size(e.total);
+                const elapsed = (Date.now() - started) / 1000;
+                if (elapsed > 2) {
+                    const now = e.loaded / elapsed;
+                    rate = rate ? rate * 0.7 + now * 0.3 : now;
+                    eta.textContent = duration((e.total - e.loaded) / rate);
+                }
+            });
+            req.upload.addEventListener('load', () => {
+                percent.textContent = '100%';
+                bar.style.width = '100%';
+                title.textContent = 'Upload complete. Saving the film…';
+                eta.textContent = '';
+                cancel.classList.add('hidden');
+            });
+
+            req.addEventListener('load', () => {
+                // A redirect means it was saved (it lands on a different address, e.g. ?success=1).
+                const redirected = req.responseURL && req.responseURL !== new URL(form.action, location.href).href;
+                finish();
+                if (req.status >= 200 && req.status < 300 && redirected) {
+                    location.href = req.responseURL; // saved: go where the server sent us
+                } else if (req.status >= 200 && req.status < 300) {
+                    document.open(); document.write(req.responseText); document.close(); // the form, with its error
+                } else if (req.status === 413) {
+                    reset('These files are too large for the server to accept. Please compress the video and try again.');
+                } else {
+                    reset('The upload could not be completed (error ' + req.status + '). Please try again.');
+                }
+            });
+            req.addEventListener('error', () => reset('The upload stopped because the connection was lost. Please check your internet and try again; nothing was saved.'));
+            req.addEventListener('abort', () => reset('Upload cancelled. Nothing was saved, and your details are still filled in.'));
+
+            req.open('POST', form.action);
+            req.send(new FormData(form));
+        });
+
+        cancel.addEventListener('click', () => {
+            if (xhr && confirm('Cancel this upload? Nothing will be saved.')) xhr.abort();
+        });
     })();
 
     // Film length: read from the video's own metadata in the browser (only the start of

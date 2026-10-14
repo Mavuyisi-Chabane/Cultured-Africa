@@ -9,8 +9,9 @@
     #filmForm .thumb-choice { display: flex; cursor: pointer; position: relative; }
     #filmForm .thumb-choice input { position: absolute; opacity: 0; pointer-events: none; }
     #filmForm .thumb-choice span { flex: 1; display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-radius: 12px;
-        border: 1px solid #38281f; background: rgba(39, 28, 23, 0.5); color: #a99a8b; font-size: 13px; font-weight: 700; transition: all .15s; }
-    #filmForm .thumb-choice input:checked + span { border-color: #fcaa13; color: #fcaa13; background: rgba(252, 170, 19, 0.08); }
+        border: 1px solid #fb6b10; background: transparent; color: #fb6b10; font-size: 13px; font-weight: 700; transition: all .15s; }
+    #filmForm .thumb-choice:hover span { background: rgba(251, 107, 16, 0.12); }
+    #filmForm .thumb-choice input:checked + span { background: #fb6b10; border-color: #fb6b10; color: #140d0a; }
     #filmForm .thumb-choice input:focus-visible + span { outline: 2px solid #fcaa13; outline-offset: 2px; }
     #filmForm .label-invalid { color: #ff7a5c !important; }
     #filmForm .field-error { color: #ff7a5c; font-size: 12px; font-weight: 600; margin-top: 6px; }
@@ -275,7 +276,7 @@
                     <div class="md:col-span-2">
                         <label for="trailerInput" class="block text-xs font-bold uppercase tracking-widest text-[#f7efe6] mb-2">Trailer File <% if (trailerRequired) { %><span class="text-[#fcaa13]">*</span><% } %></label>
                         <input type="file" name="trailerFile" id="trailerInput" <%= trailerRequired ? 'required' : '' %> accept=".mp4,.m4v,.webm,.mov,video/mp4,video/webm,video/quicktime"
-                            class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#271c17] file:text-[#f7efe6] hover:file:bg-[#38281f] file:cursor-pointer cursor-pointer">
+                            class="w-full px-4 py-3 bg-[#271c17]/50 border border-[#38281f] rounded-xl focus:border-[#fcaa13] transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:uppercase file:tracking-wider file:bg-[#fb6b10] file:text-[#f4ece3] hover:file:bg-[#ef420f] file:cursor-pointer cursor-pointer">
                         <p class="text-[11px] text-[#a99a8b] mt-2">Every film needs a trailer. Supported formats: MP4 (recommended), WebM, MOV. Maximum 9 GB.</p>
                         <p class="text-[11px] text-[#fcaa13] mt-1">Trailers are featured on the public home page, where anyone can watch them without logging in. MP4 plays in every browser.</p>
                         <% if (editing && editing.trailerUrl) { %>
@@ -286,7 +287,7 @@
 
                 <div class="pt-6">
                     <button type="submit"
-                        class="w-full bg-[#0f0a08] hover:bg-[#0a0605] text-[#fcaa13] font-bold py-4 rounded-xl shadow-lg border border-[#fcaa13]/30 transform transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                        class="w-full bg-[#fb6b10] hover:bg-[#ef420f] text-[#140d0a] font-bold py-4 rounded-xl shadow-lg shadow-[#fb6b10]/20 transform transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                         <i class="fa-solid fa-upload"></i>
                         <%= editing && editing.id ? 'Save Changes' : 'Upload Film' %>
                     </button>

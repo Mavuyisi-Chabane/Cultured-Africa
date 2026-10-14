@@ -217,6 +217,9 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
   if (!GENRES.includes(req.body.genre)) return rejectEdit('Please choose a genre.', 'genre');
   const ratingResult = ratingFromForm(req.body, film);
   if (ratingResult.error) return rejectEdit(ratingResult.error, 'ageRating');
+  // Every film needs a trailer: one already saved, or a new one now.
+  if (!film.trailerUrl && !trailerFile) return rejectEdit('Please choose the film\'s trailer. Every film needs one, so viewers can preview it before buying.', 'trailerFile');
+  if (req.body.thumbnailMode === 'upload' && !thumbnailFile) return rejectEdit('Please choose your image, or pick "Use a frame from the video" instead.', 'thumbnailFile');
   const cultureResult = resolveCulture(req.body, req.session.admin);
   if (cultureResult.error) return rejectEdit(cultureResult.error, req.body.culture === OTHER_CULTURE ? 'newCulture' : 'culture');
 
@@ -228,10 +231,8 @@ router.post('/films/:id/edit', handleUploads, (req, res) => {
     deleteUploadedFile(film.videoUrl);
     videoUrl = `/uploads/${videoFile.filename}`;
   }
-  if (!videoUrl && !trailerUrl && !trailerFile) {
-    return rejectEdit('A "Coming soon" film needs a trailer until its full video is added.', 'trailerFile');
-  }
-  if (thumbnailFile) {
+  // "Keep the current thumbnail" sends no image; anything else replaces it.
+  if (thumbnailFile && req.body.thumbnailMode !== 'keep') {
     deleteUploadedFile(film.thumbnailUrl);
     thumbnailUrl = `/uploads/${thumbnailFile.filename}`;
   }
@@ -277,9 +278,8 @@ router.post('/upload', handleUploads, (req, res) => {
   if (!videoFile && !comingSoon) {
     return rejectUpload('Please choose the film\'s video file, or tick "Coming soon" if you only have the trailer for now.', 'videoFile');
   }
-  if (!videoFile && !trailerFile) {
-    return rejectUpload('A "Coming soon" film needs a trailer, so customers have something to watch until the full film is added.', 'trailerFile');
-  }
+  if (!trailerFile) return rejectUpload('Please choose the film\'s trailer. Every film needs one, so viewers can preview it before buying.', 'trailerFile');
+  if (req.body.thumbnailMode === 'upload' && !thumbnailFile) return rejectUpload('Please choose your image, or pick "Use a frame from the video" instead.', 'thumbnailFile');
   const ratingResult = ratingFromForm(req.body, null);
   if (ratingResult.error) return rejectUpload(ratingResult.error, 'ageRating');
   if (!GENRES.includes(req.body.genre)) return rejectUpload('Please choose a genre.', 'genre');

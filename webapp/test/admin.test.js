@@ -124,16 +124,18 @@ test('Backups: only super admins, and only files from the backup list', async ()
   assert.equal((await admin.get('/admin/backups/test.sqlite')).status, 404);
 });
 
-// Posts the upload form as the browser does (multipart), with an optional file.
-async function postUploadForm(fields, file) {
+// Posts the upload form as the browser does (multipart), with optional files.
+async function postUploadForm(fields, files) {
   const token = await admin.token('/admin/upload');
   const form = new FormData();
   for (const [k, v] of Object.entries(fields)) form.append(k, v);
-  if (file) form.append(file.field, new Blob([file.content], { type: file.type }), file.name);
+  for (const file of [].concat(files || [])) form.append(file.field, new Blob([file.content], { type: file.type }), file.name);
   const res = await admin.request(`/admin/upload?_csrf=${token}`, { method: 'POST', body: form });
   return { res, html: await res.text() };
 }
 
+const VIDEO = { field: 'videoFile', name: 'film.mp4', type: 'video/mp4', content: 'x' };
+const TRAILER = { field: 'trailerFile', name: 'trailer.mp4', type: 'video/mp4', content: 'x' };
 const VALID_FILM = { title: 'Field Error Film', description: 'A test film.', culture: 'Zulu', price: '45', genre: 'Drama', ageRating: 'PG' };
 
 test('a rejected upload keeps what was typed and highlights the field to fix', async () => {
@@ -156,8 +158,7 @@ test('a file in the wrong format highlights that file field', async () => {
 });
 
 test('an invalid new culture name highlights the culture box', async () => {
-  const { html } = await postUploadForm({ ...VALID_FILM, culture: '__other__', newCulture: 'Zulu2' },
-    { field: 'videoFile', name: 'film.mp4', type: 'video/mp4', content: 'x' });
+  const { html } = await postUploadForm({ ...VALID_FILM, culture: '__other__', newCulture: 'Zulu2' }, [VIDEO, TRAILER]);
   assert.match(html, /data-error-field="newCulture"/);
   assert.match(html, /value="Zulu2"/, 'the typed culture is kept');
 });
@@ -170,8 +171,7 @@ test('the culture list offers the built-in cultures; choosing one not saved yet 
   assert.doesNotMatch(html, /name="ageRating"/, 'no age rating is asked for');
   assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM cultures WHERE name = 'Pedi'").get().n, 0);
 
-  const { res } = await postUploadForm({ ...VALID_FILM, title: 'Pedi Film', culture: 'Pedi', ageRating: '' },
-    { field: 'videoFile', name: 'film.mp4', type: 'video/mp4', content: 'x' });
+  const { res } = await postUploadForm({ ...VALID_FILM, title: 'Pedi Film', culture: 'Pedi', ageRating: '' }, [VIDEO, TRAILER]);
   assert.equal(res.status, 302, 'uploads without an age rating');
   const film = app.db.prepare("SELECT c.age_rating, cu.name FROM content c JOIN cultures cu USING (culture_id) WHERE c.title = 'Pedi Film'").get();
   assert.equal(film.name, 'Pedi');
@@ -179,7 +179,43 @@ test('the culture list offers the built-in cultures; choosing one not saved yet 
 });
 
 test('no culture chosen highlights the culture list', async () => {
-  const { html } = await postUploadForm({ ...VALID_FILM, culture: '' },
-    { field: 'videoFile', name: 'film.mp4', type: 'video/mp4', content: 'x' });
+  const { html } = await postUploadForm({ ...VALID_FILM, culture: '' }, [VIDEO, TRAILER]);
   assert.match(html, /data-error-field="culture"/);
+});
+
+test('every new film needs a trailer, even when the full video is there', async () => {
+  const { html } = await postUploadForm({ ...VALID_FILM, title: 'No Trailer Film' }, VIDEO);
+  assert.match(html, /data-error-field="trailerFile"/);
+  assert.match(html, /Every film needs one/);
+  assert.equal(app.db.prepare("SELECT COUNT(*) AS n FROM content WHERE title = 'No Trailer Film'").get().n, 0);
+});
+
+test('thumbnail: choosing "Upload my own image" needs an image; a frame or the placeholder otherwise', async () => {
+  const page = (await admin.page('/admin/upload')).html;
+  assert.match(page, /name="thumbnailMode" value="frame" checked/, 'a frame from the video is the default');
+  assert.match(page, /name="thumbnailMode" value="upload"/);
+
+  const missing = await postUploadForm({ ...VALID_FILM, title: 'Own Image Film', thumbnailMode: 'upload' }, [VIDEO, TRAILER]);
+  assert.match(missing.html, /data-error-field="thumbnailFile"/);
+  assert.match(missing.html, /name="thumbnailMode" value="upload" checked/, 'the chosen option is kept');
+
+  const framed = await postUploadForm({ ...VALID_FILM, title: 'Frame Film', thumbnailMode: 'frame' }, [VIDEO, TRAILER,
+    { field: 'thumbnailFile', name: 'thumbnail.jpg', type: 'image/jpeg', content: 'jpeg' }]);
+  assert.equal(framed.res.status, 302);
+  assert.match(app.db.prepare("SELECT thumbnail_url FROM content WHERE title = 'Frame Film'").get().thumbnail_url, /^\/uploads\/.+\.jpg$/);
+});
+
+test('editing: the current thumbnail is kept unless another option is chosen', async () => {
+  const filmId = app.db.prepare("SELECT content_id FROM content WHERE title = 'Frame Film'").get().content_id;
+  const before = app.db.prepare('SELECT thumbnail_url FROM content WHERE content_id = ?').get(filmId).thumbnail_url;
+  const { html } = await admin.page(`/admin/films/${filmId}/edit`);
+  assert.match(html, /name="thumbnailMode" value="keep" checked/);
+  assert.doesNotMatch(html, /<label for="trailerInput"[^>]*>Trailer File <span/, 'a film with a trailer needs no new one');
+
+  const token = await admin.token(`/admin/films/${filmId}/edit`);
+  const form = new FormData();
+  for (const [k, v] of Object.entries({ ...VALID_FILM, title: 'Frame Film', thumbnailMode: 'keep' })) form.append(k, v);
+  const res = await admin.request(`/admin/films/${filmId}/edit?_csrf=${token}`, { method: 'POST', body: form });
+  assert.equal(res.status, 302);
+  assert.equal(app.db.prepare('SELECT thumbnail_url FROM content WHERE content_id = ?').get(filmId).thumbnail_url, before);
 });

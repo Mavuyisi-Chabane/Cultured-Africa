@@ -153,8 +153,17 @@ app.use((req, res, next) => {
 
 app.use(csrfProtection);
 
+// "Our Films" on the About page comes straight from the catalogue: released films (with a
+// full video) first as Completed, then trailer-only films as Coming soon.
 app.get('/about', (req, res) => {
-  res.render('about');
+  const films = db.prepare(`
+    SELECT c.content_id AS id, c.title, c.description, c.thumbnail_url AS thumbnailUrl,
+      COALESCE(c.file_url, '') != '' AS released, cu.name AS culture
+    FROM content c JOIN cultures cu ON cu.culture_id = c.culture_id
+    WHERE c.is_available = 1
+    ORDER BY released DESC, c.upload_date ASC, c.content_id ASC
+  `).all();
+  res.render('about', { films });
 });
 
 app.use('/', privacyRoutes);

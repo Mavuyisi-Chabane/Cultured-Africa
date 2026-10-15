@@ -132,57 +132,34 @@
                 <h2 class="display-font text-4xl font-bold text-[#f7efe6] mb-4">Our Films</h2>
                 <p class="text-[#a99a8b] text-lg">Exploring the practices, traditions, and beliefs of South African cultures</p>
             </div>
-            <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Film 1: Nandi -->
-                <div class="bg-[#1e1613] rounded-2xl shadow-lg border border-[#38281f] overflow-hidden group">
-                    <div class="h-56 overflow-hidden">
-                        <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_856bc0ae42_0ce3107f0a33c8b3.png" alt="Zulu cultural imagery, historical film still, traditional Zulu attire" />
-                    </div>
-                    <div class="p-6">
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="text-xl font-bold text-[#f7efe6]">Nandi</h3>
-                            <span class="text-[10px] font-bold text-[#fcaa13] uppercase tracking-widest bg-[#271c17] px-2 py-1 rounded">Completed</span>
+            <%# Filled from the catalogue (server.js /about): released films, then those coming soon. %>
+            <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 <%= films.length >= 4 ? 'lg:grid-cols-4' : 'lg:grid-cols-3' %> gap-8">
+                <% films.forEach(film => { %>
+                    <a href="/film/<%= film.id %>" class="bg-[#1e1613] rounded-2xl shadow-lg border border-[#38281f] overflow-hidden group flex flex-col hover:border-[#fcaa13]/50 transition-colors">
+                        <div class="h-48 overflow-hidden bg-[#140d0a]">
+                            <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                src="<%= film.thumbnailUrl || '/images/brand/film-placeholder.jpg' %>" alt="<%= film.title %>" loading="lazy" />
                         </div>
-                        <p class="text-xs font-bold text-[#fcaa13] uppercase tracking-widest mb-3">Zulu Culture</p>
-                        <p class="text-sm text-[#a99a8b] leading-relaxed">
-                            A 15-minute short film exploring the beauty and depth of Zulu traditions of courtship.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Film 2: Yanga -->
-                <div class="bg-[#1e1613] rounded-2xl shadow-lg border border-[#38281f] overflow-hidden group">
-                    <div class="h-56 overflow-hidden">
-                        <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_765085bb62_1f09c7a6a597f3e8.png" alt="Xhosa cultural imagery, virginity ceremony tradition, cinematic cultural portrait" />
-                    </div>
-                    <div class="p-6">
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="text-xl font-bold text-[#f7efe6]">Yanga</h3>
-                            <span class="text-[10px] font-bold text-[#9db183] uppercase tracking-widest bg-[#271c17] px-2 py-1 rounded">In Production</span>
+                        <div class="p-6 flex flex-col flex-1 text-left">
+                            <div class="flex justify-between items-start gap-3 mb-2">
+                                <h3 class="text-xl font-bold text-[#f7efe6]"><%= film.title %></h3>
+                                <% if (film.released) { %>
+                                    <span class="flex-shrink-0 text-[10px] font-bold text-[#fcaa13] uppercase tracking-widest bg-[#271c17] px-2 py-1 rounded">Completed</span>
+                                <% } else { %>
+                                    <span class="flex-shrink-0 text-[10px] font-bold text-[#9db183] uppercase tracking-widest bg-[#271c17] px-2 py-1 rounded">Coming soon</span>
+                                <% } %>
+                            </div>
+                            <p class="text-xs font-bold text-[#fcaa13] uppercase tracking-widest mb-3"><%= film.culture %> Culture</p>
+                            <p class="text-sm text-[#a99a8b] leading-relaxed" style="display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden"><%= film.description %></p>
+                            <p class="mt-auto pt-4 text-xs font-bold text-[#fb6b10] group-hover:text-[#ef420f]">
+                                <%= film.released ? 'Watch the film' : 'Watch the trailer' %> <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </p>
                         </div>
-                        <p class="text-xs font-bold text-[#fcaa13] uppercase tracking-widest mb-3">Xhosa Culture</p>
-                        <p class="text-sm text-[#a99a8b] leading-relaxed">
-                            A cinematic portrayal of the Xhosa tradition of Inckiyo (virginity ceremony).
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Film 3: Malome -->
-                <div class="bg-[#1e1613] rounded-2xl shadow-lg border border-[#38281f] overflow-hidden group">
-                    <div class="h-56 overflow-hidden">
-                        <img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://storage.googleapis.com/uxpilot-auth.appspot.com/gen_e51b0c4630_c8dc56182030d922.png" alt="Venda cultural imagery, traditional Venda art and landscape, mystical tone" />
-                    </div>
-                    <div class="p-6">
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="text-xl font-bold text-[#f7efe6]">Malome</h3>
-                            <span class="text-[10px] font-bold text-[#a99a8b] uppercase tracking-widest bg-[#271c17] px-2 py-1 rounded">Planned 2026</span>
-                        </div>
-                        <p class="text-xs font-bold text-[#fcaa13] uppercase tracking-widest mb-3">Venda Culture</p>
-                        <p class="text-sm text-[#a99a8b] leading-relaxed">
-                            Exploring the traditions and beliefs of the Venda people.
-                        </p>
-                    </div>
-                </div>
+                    </a>
+                <% }) %>
+                <% if (!films.length) { %>
+                    <p class="col-span-full text-center text-[#a99a8b]">Our first films are on their way.</p>
+                <% } %>
             </div>
         </section>
 

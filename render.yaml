@@ -7,12 +7,12 @@ services:
     name: cultured-africa
     runtime: node
     rootDir: webapp
-    plan: starter            # a persistent disk needs a paid instance
+    plan: 0.5c-512mb         # smallest paid instance (formerly "Starter"); a persistent disk needs a paid instance
     region: frankfurt        # Render has no South African region; Frankfurt is closest
     buildCommand: npm ci --omit=dev
     startCommand: npm start
     healthCheckPath: /health
-    autoDeploy: true         # every push to the main branch redeploys the site
+    autoDeployTrigger: commit  # every push to the main branch redeploys the site
     disk:
       name: data
       mountPath: /var/data   # database, uploaded films and backups live here
@@ -32,6 +32,8 @@ services:
         value: /var/data/backups
       - key: BACKUP_KEEP
         value: "14"
+      - key: MAX_VIDEO_GB          # largest film upload; keep well under the disk size (5 GB, shared with the database and backups)
+        value: "2"
       - key: APP_BASE_URL          # e.g. https://culturedafrica.co.za (no trailing slash)
         sync: false
       - key: PAYSTACK_PUBLIC_KEY

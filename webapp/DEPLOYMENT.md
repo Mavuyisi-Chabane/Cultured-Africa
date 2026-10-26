@@ -29,7 +29,7 @@ npm test        # all tests must pass
 ```
 
 **Cost guide** (check current prices on each provider's site before quoting the client):
-Render Starter instance plus a 20 GB disk, roughly USD 12 a month; domain around R100–R200 a
+Render's smallest paid instance (0.5 CPU, 512 MB; formerly "Starter") plus a 5 GB disk, roughly USD 8.25 (about R150) a month; domain around R100–R200 a
 year; an email service has free tiers for low volumes; Paystack charges a fee per payment.
 
 ---
@@ -38,7 +38,7 @@ year; an email service has free tiers for low volumes; Paystack charges a fee pe
 
 1. Sign in to Render with the Cultured Africa account and connect GitHub.
 2. **New → Blueprint**, choose this repository. Render reads `render.yaml` (in the
-   repository root) and proposes a web service called `cultured-africa` with a 20 GB disk.
+   repository root) and proposes a web service called `cultured-africa` with a 5 GB disk.
 3. Render asks for the values that aren't stored in Git. For now enter:
    - `APP_BASE_URL`: the address Render gives the service, e.g.
      `https://cultured-africa.onrender.com` (change it to the real domain in step 3)
@@ -49,7 +49,8 @@ year; an email service has free tiers for low volumes; Paystack charges a fee pe
    `https://<your-service>.onrender.com/health`. It should show `{"status":"ok"}`.
 
 What `render.yaml` already sets: Node 24, production mode, a random `SESSION_SECRET`, the
-database, uploads and backups on the disk (`/var/data`), health checks, and auto-deploy.
+database, uploads and backups on the disk (`/var/data`), a 2 GB upload limit per video
+(`MAX_VIDEO_GB`), health checks, and auto-deploy.
 
 > The site starts with an **empty** database: no films, no customers, no demo accounts.
 
@@ -170,7 +171,9 @@ Render's **Logs** tab shows errors (e.g. "Receipt email failed", "Paystack webho
 
 ### Disk space
 Render → service → **Disks** shows usage. Each film uses roughly its file size. Increase the
-disk size there before it fills up (it can grow but not shrink).
+disk size there before it fills up (it can grow but not shrink). If the disk is enlarged,
+`MAX_VIDEO_GB` (the largest video an admin can upload, 2 GB by default here) can be raised
+too, but keep it well below the free space.
 
 ---
 
